@@ -1,0 +1,14 @@
+{
+    "name": "mac3dview",
+    "dependencies": {
+        "electron": "^23.0.0-beta.5"
+    },
+    "scripts": {
+        "start": "electron ."
+    },
+    "main": "main.js",
+    "version": "1.0.0",
+    "license": "MIT",
+    "description": "3d viewer for Macos",
+    "author": "@sanyabeast"
+}
