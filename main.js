@@ -55,6 +55,7 @@ function create_window(initial_opened_file) {
             ]
         }
     })
+    main_window.setMenuBarVisibility(false)
     main_window.loadFile(`index.html`)
     if (IS_DEVELOPMENT) {
         main_window.webContents.openDevTools()

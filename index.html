@@ -129,6 +129,19 @@
             opacity: 1;
         }
 
+        body.development .pane {
+            opacity: 0.5;
+            transition: opacity 0.3s ease-in-out;
+        }
+
+        body.development:hover .pane {
+            opacity: 0.5;
+        }
+
+        body.development:hover .pane:hover {
+            opacity: 1;
+        }
+
         .pane.inspect {
             right: auto;
             left: 8px;
@@ -183,40 +196,40 @@
         import { UnrealBloomPass } from 'three/addons/postprocessing/UnrealBloomPass.js';
         import { RenderPass } from 'three/addons/postprocessing/RenderPass.js';
 
-        let about_text = `
-Feature-rich 
-ed models viewer
+        let about_text =
+            `Feature-rich meshes preview
+for Windows, Macos and Linux.
 
-* * *
+[${window.PACKAGE_INFO.version}]
 
-Author:
-  Prototyped and implemented: 
-    @sanyabeast
-  Icon: 
-    @nataleesha
-  Kyiv, Ukraine, 2023;
+Authors:
+  * Prototyped and implemented: 
+    - @sanyabeast
+  * Icon: 
+    - @nataleesha
 
-* * *
+Credids:
+  * Mr. Doob & THREE.js team
+  * Electron team
+  * Tweakpane team
 
-Special thaks to:
-  Mr. Doob 
-    and THREE.js team
-  Electron team
-  Tweakpane team
-        `;
+Kyiv, Ukraine, 2023;
+`;
 
-        let info_text = `
-Keycodes:
-  Frame scene:
-    F
-    Space
-    Numpad .
-    \
-  Open file:
-    Enter
-  Reload scene:
-    R
-        `;
+        let info_text =
+            `Keycodes:
+  * Frame scene:
+    - F
+    - Space
+    - Numpad .
+    - \
+  * Open file:
+    - Enter
+  * Reload scene:
+    - R
+  * Collapse GUI:
+    - Esc
+            `;
 
         let prev_frame_date = +new Date()
         let target_fps = 60
@@ -253,10 +266,10 @@ Keycodes:
             show_gizmo: true,
             torch_light: false,
             about_data: [
-                { label: 'preview_3d', value: info_text }
+                { label: '', value: about_text }
             ],
             info_data: [
-                { label: 'preview_3d', value: about_text }
+                { label: '', value: info_text }
             ],
             check_updates: true,
             inspect_mode: '',
@@ -599,6 +612,23 @@ Keycodes:
             });
         }
 
+        function _collapse_gui_item(item, skip_item) {
+            if (skip_item != true && 'expanded' in item) {
+                item.expanded = false
+            }
+            if ('children' in item) {
+                item.children.forEach((child) => {
+                    _collapse_gui_item(child)
+                })
+            }
+        }
+
+        function collapse_gui() {
+            _collapse_gui_item(main_pane, true)
+            _collapse_gui_item(about_pane, true)
+            _collapse_gui_item(inspect_pane, true)
+        }
+
         function setup_controls() {
             document.body.addEventListener('dragenter', handle_drag_and_drop, false)
             document.body.addEventListener('dragleave', handle_drag_and_drop, false)
@@ -628,11 +658,23 @@ Keycodes:
                         break;
                     }
                     case 13: {
+                        event.preventDefault()
                         file_input.click()
                         break;
                     }
                     case 82: {
+                        event.preventDefault()
                         load_scene()
+                        break;
+                    }
+                    case 18: {
+                        event.preventDefault()
+                        load_scene()
+                        break;
+                    }
+                    case 27: {
+                        event.preventDefault()
+                        collapse_gui()
                         break;
                     }
                     default: {
