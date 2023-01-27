@@ -216,7 +216,7 @@
 
             /* loading assets */
             loaders['hdr'](env_params.texture_src)
-            load_model()
+            load_scene()
         }
 
         function set_active_scene(scene) {
@@ -244,7 +244,7 @@
             if (event.dataTransfer && event.dataTransfer.files.length > 0) {
                 let file_path = event.dataTransfer.files[0].path
                 params.scene_src = file_path
-                load_model()
+                load_scene()
             }
         }
 
@@ -349,7 +349,11 @@
             dracoLoader.setDecoderPath('lib/three/examples/jsm/libs/draco/gltf/');
         }
 
-        function load_model() {
+        function load_scene(scene_src) {
+            if (scene_src !== undefined) {
+                params.scene_src = scene_src
+            }
+
             let model_format = node_tools.path.extname(params.scene_src).replace(".", '')
             try {
                 document.getElementById("info").innerHTML = params.scene_src
@@ -376,6 +380,10 @@
             } else {
                 renderer.render(global_scene, camera);
             }
+        }
+
+        window.load_file = function (file_path) {
+            load_scene(file_path)
         }
     </script>
 

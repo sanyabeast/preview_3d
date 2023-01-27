@@ -1,4 +1,5 @@
 const path = require('path')
+const ipcRenderer = window.require('electron').ipcRenderer;
 
 let node_tools = {
     path: path
@@ -11,7 +12,12 @@ process.argv.forEach((arg, index) => {
     }
 })
 
-
+ipcRenderer.on('open_file', function (evt, message) {
+    console.log(`nwe file open request: ${message.path}`)
+    if ('load_file' in window) {
+        window.load_file(message.path)
+    }
+});
 
 console.log(process.argv)
 
