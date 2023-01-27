@@ -13,5 +13,8 @@
     "version": "1.0.1-3",
     "license": "MIT",
     "description": "Preview 3d Scenes",
-    "author": "@sanyabeast"
+    "author": "@sanyabeast",
+    "dependencies": {
+        "jsonfile": "^6.1.0"
+    }
 }
