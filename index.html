@@ -57,37 +57,33 @@
         import { UnrealBloomPass } from 'three/addons/postprocessing/UnrealBloomPass.js';
         import { RenderPass } from 'three/addons/postprocessing/RenderPass.js';
 
+        let prev_frame_date = +new Date()
+        let target_fps = 45
         let os_tools = window.os_tools
         let controls
         let camera, global_scene, renderer;
         let torch_light
         let axes_helper, grid_helper_10, grid_helper_100, grid_helper_1000
         let composer
-        let env_params = {
-            enabled: true,
-            texture_src: 'assets/atelier.hdr',
-            default_background: null,
-            default_texture: null,
-            texture: null
-        }
-        let postfx_params = {
-            enabled: false
-        }
-        let camera_params = {
-            fov: 45
-        }
+
         let params = {
+            env_enabled: true,
+            env_texture_src: 'assets/atelier.hdr',
+            env_default_background: null,
+            env_default_texture: null,
+            env_texture: null,
+            postfx_enabled: false,
+            postfx_bloom_exposure: 1,
+            postfx_bloom_bloomStrength: 0.2,
+            postfx_bloom_bloomThreshold: 0.5,
+            postfx_bloom_bloomRadius: 0.2,
+            camera_fov: 45,
             scene_src: window.file_to_open,
             resolution_scale: 1,
             active_scene: null,
             show_gizmo: true,
-            torch_light: false,
-            bloom_params: {
-                exposure: 1,
-                bloomStrength: 0.5,
-                bloomThreshold: 0.5,
-                bloomRadius: 1
-            }
+            torch_light: false
+
         }
 
         /** loaders */
@@ -100,7 +96,7 @@
         let loaders = {
             hdr: (texture_src) => {
                 new RGBELoader().load(texture_src, function (texture) {
-                    env_params.texture = texture
+                    params.env_texture = texture
                     texture.mapping = THREE.EquirectangularReflectionMapping;
                     global_scene.background = texture;
                     global_scene.environment = texture;
@@ -173,7 +169,7 @@
             renderer.outputEncoding = THREE.sRGBEncoding;
             container.appendChild(renderer.domElement);
             /* main scene setup */
-            camera = new THREE.PerspectiveCamera(camera_params.fov, window.innerWidth / window.innerHeight, 1, 1000000);
+            camera = new THREE.PerspectiveCamera(params.camera_fov, window.innerWidth / window.innerHeight, 1, 1000000);
             camera.position.set(0, 100, 0);
 
             setup_global_scene()
@@ -189,7 +185,7 @@
             setup_gui()
 
             /* loading assets */
-            loaders['hdr'](env_params.texture_src)
+            loaders['hdr'](params.env_texture_src)
             load_scene()
         }
 
@@ -270,38 +266,39 @@
             grid_helper_1000.visible = params.show_gizmo
             global_scene.add(grid_helper_1000);
 
-            env_params.default_background = global_scene.background
-            env_params.default_texture = global_scene.environment
+            params.env_default_background = global_scene.background
+            params.env_default_texture = global_scene.environment
         }
 
         function setup_postfx() {
             const render_pass = new RenderPass(global_scene, camera);
-            const bloom_pass = new UnrealBloomPass(new THREE.Vector2(window.innerWidth / 2, window.innerHeight / 2), 1.5, 0.4, 0.85);
-            bloom_pass.threshold = params.bloom_params.bloomThreshold;
-            bloom_pass.strength = params.bloom_params.bloomStrength;
-            bloom_pass.radius = params.bloom_params.bloomRadius;
-            const ssao_pass = new SSAOPass(global_scene, camera, window.innerWidth / 2, window.innerHeight / 2);
+            const bloom_pass = new UnrealBloomPass(new THREE.Vector2(window.innerWidth, window.innerHeight), 1.5, 0.4, 0.85);
+            bloom_pass.threshold = params.postfx_bloom_bloomThreshold;
+            bloom_pass.strength = params.postfx_bloom_bloomStrength;
+            bloom_pass.radius = params.postfx_bloom_bloomRadius;
+            const ssao_pass = new SSAOPass(global_scene, camera, window.innerWidth, window.innerHeight);
             ssao_pass.kernelRadius = 8;
             composer = new EffectComposer(renderer);
             composer.addPass(render_pass);
-            composer.addPass(ssao_pass);
             composer.addPass(bloom_pass);
+            //composer.addPass(ssao_pass);
+
         }
 
         function setup_gui() {
             const gui = new GUI();
-            gui.add(postfx_params, 'enabled', 0.0, 1.0).name('Postfx').onChange(render);
-            gui.add(env_params, 'enabled', 0.0, 1.0).name('Environment').onChange(_.debounce((value) => {
+            gui.add(params, 'postfx_enabled', 0.0, 1.0).name('Postfx').onChange(render);
+            gui.add(params, 'env_enabled', 0.0, 1.0).name('Environment').onChange(_.debounce((value) => {
                 if (value) {
-                    global_scene.background = env_params.texture;
-                    global_scene.environment = env_params.texture;
+                    global_scene.background = params.env_texture;
+                    global_scene.environment = params.env_texture;
                 } else {
-                    global_scene.background = env_params.default_background;
-                    global_scene.environment = env_params.default_texture;
+                    global_scene.background = params.env_default_background;
+                    global_scene.environment = params.env_default_texture;
                 }
                 render()
             }, 100));
-            gui.add(camera_params, 'fov', 1, 119).name("Camera FOV").onChange(function (value) {
+            gui.add(params, 'camera_fov', 1, 119).name("Camera FOV").onChange(function (value) {
                 camera.fov = value
                 camera.updateProjectionMatrix()
                 render()
@@ -312,7 +309,9 @@
             });
             gui.add(params, 'show_gizmo').name("Show Gizmo").onChange(function (value) {
                 axes_helper.visible = value
-                grid_helper.visible = value
+                grid_helper_10.visible = value
+                grid_helper_100.visible = value
+                grid_helper_1000.visible = value
                 render()
             });
 
@@ -405,10 +404,16 @@
             }
             render()
         }
+
+
+
         function render() {
+            if (+new Date() - prev_frame_date < 1000 / target_fps) return
+            prev_frame_date = +new Date()
+            /** --- */
             torch_light.position.copy(camera.position)
 
-            if (postfx_params.enabled) {
+            if (params.postfx_enabled) {
                 composer.render();
             } else {
                 renderer.render(global_scene, camera);
