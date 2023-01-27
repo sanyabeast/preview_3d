@@ -102,14 +102,27 @@
         import { RenderPass } from 'three/addons/postprocessing/RenderPass.js';
 
         let info_text = `
-Feature-rich 3d models preview application.
+Feature-rich 
+application 
+to preview 
+3d models
 
-Prototyped and implemented by @sanyabeast
-Kyiv, Ukraine, 2023;
+* * *
+
+Author:
+  Prototyped and implemented: 
+    @sanyabeast
+  Icon: 
+    @nataleesha
+  Kyiv, Ukraine, 2023;
+
+* * *
 
 Special thaks to:
-Mr. Doob and THREE.js team
-Electron team
+  Mr. Doob 
+    and THREE.js team
+  Electron team
+  Tweakpane team
         `;
 
         let prev_frame_date = +new Date()
@@ -392,12 +405,12 @@ Electron team
             inspect_pane.element.parentElement.classList.add('pane')
             inspect_pane.element.parentElement.classList.add('inspect')
 
-            let inspect_folder = inspect_pane.addFolder({ title: "Inspect", expanded: true })
-            inspect_folder.addMonitor(params, 'scene_src')
+            let file_folder = inspect_pane.addFolder({ title: "File", expanded: false })
+            file_folder.addMonitor(params, 'scene_src', {label: "Current"})
 
-
-            let inspect_folder_settings = inspect_folder.addFolder({ title: "Settings", expanded: false })
-            inspect_folder_settings.addInput(params, 'show_gizmo', { label: "Gizmo" }).on('change', ({ value }) => {
+            let inspect_folder = inspect_pane.addFolder({ title: "Inspect", expanded: false })
+            
+            inspect_folder.addInput(params, 'show_gizmo', { label: "Gizmo" }).on('change', ({ value }) => {
                 axes_helper.visible = value
                 grid_helper_10.visible = value
                 grid_helper_100.visible = value
