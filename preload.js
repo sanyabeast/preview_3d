@@ -3,11 +3,14 @@ let node_tools = {
     path: path
 }
 
-if (process.argv[process.argv.length - 2] === '[*]') {
-    window.file_to_open = process.argv[process.argv.length - 1]
+process.argv.forEach((arg, index) => {
+    if (arg === '[*]') {
+        window.file_to_open = process.argv[index + 1]
+        console.log(`file to open: ${window.file_to_open}`)
+    }
+})
 
-    console.log(`file to open: ${window.file_to_open}`)
-}
+
 
 console.log(process.argv)
 
