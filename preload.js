@@ -4,7 +4,7 @@ const IS_DEVELOPMENT = process.env.NODE_ENV === 'development'
 
 window.IS_DEVELOPMENT = IS_DEVELOPMENT
 
-let node_tools = {
+let os_tools = {
     path: path
 }
 
@@ -24,5 +24,5 @@ ipcRenderer.on('open_file', function (evt, message) {
 
 console.log(process.argv)
 
-console.log(window, node_tools)
-window.node_tools = node_tools
+console.log(window, os_tools)
+window.os_tools = os_tools

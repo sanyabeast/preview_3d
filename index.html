@@ -21,9 +21,7 @@
 
 <body>
     <div id="info">Preview3dX</div>
-    <!-- Import maps polyfill -->
-    <!-- Remove this when import maps will be widely supported -->
-    <!-- <script async src="lib/es-module-shims.js"></script> -->
+    <script src="./lib/tweakpane.min.js"></script>
     <script async src="./lib/lodash.min.js"></script>
     <script async src="./lib/es-module-shims.js"></script>
     <script type="importmap">
@@ -58,7 +56,7 @@
         import { SSAOPass } from 'three/addons/postprocessing/SSAOPass.js';
         import { RenderPass } from 'three/addons/postprocessing/RenderPass.js';
 
-        let node_tools = window.node_tools
+        let os_tools = window.os_tools
         let controls
         let camera, global_scene, renderer;
         let torch_light
@@ -111,8 +109,8 @@
             },
             gltf: (scene_src) => {
                 /** --- */
-                const base_path = node_tools.path.dirname(scene_src);
-                const model_path = node_tools.path.basename(scene_src);
+                const base_path = os_tools.path.dirname(scene_src);
+                const model_path = os_tools.path.basename(scene_src);
                 console.log(base_path)
 
                 gltf_loader = gltf_loader || new GLTFLoader()
@@ -133,7 +131,7 @@
                 });
             },
             obj: (scene_src) => {
-                let base_path = node_tools.path.dirname(scene_src)
+                let base_path = os_tools.path.dirname(scene_src)
                 obj_loader = obj_loader || new OBJLoader()
                 mtl_loader = mtl_loader || new MTLLoader()
 
@@ -176,6 +174,54 @@
             /* main scene setup */
             camera = new THREE.PerspectiveCamera(camera_params.fov, window.innerWidth / window.innerHeight, 1, 1000000);
             camera.position.set(0, 100, 0);
+
+            setup_global_scene()
+
+            document.body.addEventListener('dragenter', handle_drag_and_drop, false)
+            document.body.addEventListener('dragleave', handle_drag_and_drop, false)
+            document.body.addEventListener('dragover', handle_drag_and_drop, false)
+            document.body.addEventListener('drop', handle_drag_and_drop, false)
+
+            // setup_postfx()
+            setup_controls()
+            setup_loaders()
+            setup_gui()
+
+            /* loading assets */
+            loaders['hdr'](env_params.texture_src)
+            load_scene()
+        }
+
+        function set_active_scene(scene) {
+            if (scene.isObject3D) {
+                if (params.active_scene) {
+                    console.log('removing scene...')
+                    global_scene.remove(params.active_scene)
+                }
+
+                params.active_scene = scene
+                params.scene_aabb = new THREE.Box3();
+                params.scene_aabb.setFromObject(scene);
+                frame_object()
+                console.log('spawning scene...')
+                console.log(scene)
+                global_scene.add(scene);
+            }
+
+            render();
+            setTimeout(render, 500)
+        }
+
+        function handle_drag_and_drop(event) {
+            event.preventDefault()
+            if (event.dataTransfer && event.dataTransfer.files.length > 0) {
+                let file_path = event.dataTransfer.files[0].path
+                params.scene_src = file_path
+                load_scene()
+            }
+        }
+
+        function setup_global_scene() {
 
             const environment = new RoomEnvironment();
             const pmremGenerator = new THREE.PMREMGenerator(renderer);
@@ -225,49 +271,6 @@
 
             env_params.default_background = global_scene.background
             env_params.default_texture = global_scene.environment
-
-            document.body.addEventListener('dragenter', handle_drag_and_drop, false)
-            document.body.addEventListener('dragleave', handle_drag_and_drop, false)
-            document.body.addEventListener('dragover', handle_drag_and_drop, false)
-            document.body.addEventListener('drop', handle_drag_and_drop, false)
-
-            // setup_postfx()
-            setup_controls()
-            setup_loaders()
-            setup_gui()
-
-            /* loading assets */
-            loaders['hdr'](env_params.texture_src)
-            load_scene()
-        }
-
-        function set_active_scene(scene) {
-            if (scene.isObject3D) {
-                if (params.active_scene) {
-                    console.log('removing scene...')
-                    global_scene.remove(params.active_scene)
-                }
-
-                params.active_scene = scene
-                params.scene_aabb = new THREE.Box3();
-                params.scene_aabb.setFromObject(scene);
-                frame_object()
-                console.log('spawning scene...')
-                console.log(scene)
-                global_scene.add(scene);
-            }
-
-            render();
-            setTimeout(render, 500)
-        }
-
-        function handle_drag_and_drop(event) {
-            event.preventDefault()
-            if (event.dataTransfer && event.dataTransfer.files.length > 0) {
-                let file_path = event.dataTransfer.files[0].path
-                params.scene_src = file_path
-                load_scene()
-            }
         }
 
         function setup_postfx() {
@@ -381,7 +384,7 @@
                 params.scene_src = scene_src
             }
 
-            let model_format = node_tools.path.extname(params.scene_src).replace(".", '')
+            let model_format = os_tools.path.extname(params.scene_src).replace(".", '')
             try {
                 document.getElementById("info").innerHTML = params.scene_src
                 loaders[model_format](params.scene_src)
