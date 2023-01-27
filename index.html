@@ -62,7 +62,7 @@
         let controls
         let camera, global_scene, renderer;
         let torch_light
-        let axes_helper, grid_helper
+        let axes_helper, grid_helper_10, grid_helper_100, grid_helper_1000
         let composer
         let env_params = {
             enabled: true,
@@ -201,12 +201,28 @@
             axes_helper.visible = params.show_gizmo
             global_scene.add(axes_helper)
 
-            grid_helper = new THREE.GridHelper(10, 10, 0xffffff, 0xffffff);
-            grid_helper.material.opacity = 0.1;
-            grid_helper.material.depthWrite = false;
-            grid_helper.material.transparent = true;
-            grid_helper.visible = params.show_gizmo
-            global_scene.add(grid_helper);
+            grid_helper_10 = new THREE.GridHelper(10, 10, 0xffffff, 0xffffff);
+            grid_helper_10.material.opacity = 0.1;
+            grid_helper_10.material.depthWrite = false;
+            grid_helper_10.material.transparent = true;
+            grid_helper_10.visible = params.show_gizmo
+            global_scene.add(grid_helper_10);
+
+            grid_helper_100 = new THREE.GridHelper(100, 10, 0xffffff, 0xffffff);
+            grid_helper_100.material.opacity = 0.1;
+            grid_helper_100.material.depthWrite = false;
+            grid_helper_100.material.transparent = true;
+            grid_helper_100.visible = params.show_gizmo
+            global_scene.add(grid_helper_100);
+
+
+            grid_helper_1000 = new THREE.GridHelper(1000, 10, 0xffffff, 0xffffff);
+            grid_helper_1000.material.opacity = 0.1;
+            grid_helper_1000.material.depthWrite = false;
+            grid_helper_1000.material.transparent = true;
+            grid_helper_1000.visible = params.show_gizmo
+            global_scene.add(grid_helper_1000);
+
             env_params.default_background = global_scene.background
             env_params.default_texture = global_scene.environment
 
@@ -344,7 +360,7 @@
                 (params.scene_aabb.min.z + params.scene_aabb.max.z) / 2
             );
             axes_helper.scale.setScalar(max_value / 2)
-            grid_helper.scale.setScalar(max_value / 2)
+            // grid_helper.scale.setScalar(max_value / 2)
             console.log(max_value)
             controls.object.position.set(0, max_value * 2, max_value * 4)
             controls.saveState()

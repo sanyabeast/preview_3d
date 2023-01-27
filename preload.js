@@ -1,5 +1,8 @@
 const path = require('path')
 const ipcRenderer = window.require('electron').ipcRenderer;
+const IS_DEVELOPMENT = process.env.NODE_ENV === 'development'
+
+window.IS_DEVELOPMENT = IS_DEVELOPMENT
 
 let node_tools = {
     path: path

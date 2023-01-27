@@ -2,13 +2,32 @@
 const { app, BrowserWindow, screen } = require('electron')
 const path = require('path')
 
+const IS_DEVELOPMENT = process.env.NODE_ENV === 'development'
+
 let main_window = null
 let got_the_lock = app.requestSingleInstanceLock()
 
-let file_to_open = path.resolve(process.cwd(), process.argv[2]);
+
+let open_parameter = get_open_parameter(process.argv);
+let file_to_open
+
+if (open_parameter) {
+    console.log(`open parameter: ${open_parameter}`)
+    file_to_open = path.resolve(process.cwd(), open_parameter);
+} else {
+    file_to_open = ''
+}
+
 console.log(`file to open: ${file_to_open}`)
 
-const create_window = (initial_opened_file) => {
+function get_open_parameter(list) {
+    let ready
+    for (let i = 0; i < list.length; i++) {
+        console.log(list[i])
+    }
+}
+
+function create_window(initial_opened_file) {
     const primary_display = screen.getPrimaryDisplay()
     const { width, height } = primary_display.workAreaSize
     console.log(`display dimensions: ${width}:${height}`)
@@ -27,7 +46,9 @@ const create_window = (initial_opened_file) => {
         }
     })
     main_window.loadFile(`index.html`)
-    // main_window.webContents.openDevTools()
+    if (IS_DEVELOPMENT) {
+        main_window.webContents.openDevTools()
+    }
 }
 
 if (!got_the_lock) {
