@@ -200,7 +200,8 @@
             `Feature-rich meshes preview
 for Windows, Macos and Linux.
 
-[${window.PACKAGE_INFO.version}]
+Updates:
+    * https://github.com/sanyabeast/preview_3d
 
 Authors:
   * Prototyped and implemented: 
@@ -231,6 +232,7 @@ Kyiv, Ukraine, 2023;
     - Esc
             `;
 
+        let inited = false
         let prev_frame_date = +new Date()
         let target_fps = 60
         let os_tools = window.os_tools
@@ -240,6 +242,7 @@ Kyiv, Ukraine, 2023;
         let axes_helper, grid_helper_10, grid_helper_100, grid_helper_1000
         let composer
         let main_pane, inspect_pane, about_pane
+        let new_version_pane_item
         let file_input = document.body.querySelector('#file_input')
         let render_loop_id
         let render_needs_update = true
@@ -271,9 +274,10 @@ Kyiv, Ukraine, 2023;
             info_data: [
                 { label: '', value: info_text }
             ],
+            application_has_updates: '',
             check_updates: true,
             inspect_mode: '',
-            inspect_matcap_mode: 'AAA'
+            inspect_matcap_mode: 'AAA',
         }
 
         /** loaders */
@@ -371,6 +375,8 @@ Kyiv, Ukraine, 2023;
         render_needs_update = true;
 
         function init() {
+            if (inited) return
+            inited = true
             const width = window.innerWidth;
             const height = window.innerHeight;
             const container = document.createElement('div');
@@ -400,7 +406,7 @@ Kyiv, Ukraine, 2023;
 
             render_loop_id = requestAnimationFrame(render)
 
-            if (params.check_updates === true && Math.random() < 0.1) {
+            if (params.check_updates === true && Math.random() < 0.25) {
                 setTimeout(check_updates, 1000)
             }
         }
@@ -547,6 +553,9 @@ Kyiv, Ukraine, 2023;
             about_pane = new Tweakpane.Pane()
             about_pane.element.parentElement.classList.add('pane')
             about_pane.element.parentElement.classList.add('about')
+
+            new_version_pane_item = about_pane.addMonitor(params, 'application_has_updates', { label: 'new version', hidden: true })
+
             let info_folder = about_pane.addFolder({ title: "Info", expanded: false })
             params.info_data.forEach((item, index) => {
                 info_folder.addMonitor(item, 'value', {
@@ -667,11 +676,6 @@ Kyiv, Ukraine, 2023;
                         load_scene()
                         break;
                     }
-                    case 18: {
-                        event.preventDefault()
-                        load_scene()
-                        break;
-                    }
                     case 27: {
                         event.preventDefault()
                         collapse_gui()
@@ -729,6 +733,7 @@ Kyiv, Ukraine, 2023;
         }
 
         function load_scene(scene_src) {
+            collapse_gui();
             if (scene_src !== undefined) {
                 params.scene_src = os_tools.path.resolve(scene_src)
             }
@@ -784,8 +789,11 @@ Kyiv, Ukraine, 2023;
                 let remote_package = JSON.parse(xhr.responseText)
                 if (window.PACKAGE_INFO.version !== remote_package.version) {
                     console.log(`preview_3d update available: ${remote_package.version}`)
+                    params.application_has_updates = remote_package.version
+                    new_version_pane_item.hidden = false
                 } else {
                     console.log(`preview_3d - latest version`)
+                    new_version_pane_item.hidden = true
                 }
             } catch (err) {
                 console.error(err)
