@@ -34,6 +34,7 @@
     </script>
     <script type="module">
 
+
         import * as THREE from 'three';
 
         import { RoomEnvironment } from 'three/addons/environments/RoomEnvironment.js';
@@ -54,6 +55,17 @@
         import { SSAOPass } from 'three/addons/postprocessing/SSAOPass.js';
         import { UnrealBloomPass } from 'three/addons/postprocessing/UnrealBloomPass.js';
         import { RenderPass } from 'three/addons/postprocessing/RenderPass.js';
+
+        let info_text = `
+Feature-rich 3d models preview application.
+
+Prototyped and implemented by @sanyabeast
+Kyiv, Ukraine, 2023;
+
+Special thaks to:
+Mr. Doob and THREE.js team
+Electron team
+        `;
 
         let prev_frame_date = +new Date()
         let target_fps = 45
@@ -81,7 +93,10 @@
             resolution_scale: 1,
             active_scene: null,
             show_gizmo: true,
-            torch_light: false
+            torch_light: false,
+            info: [
+                { label: 'Preview3dX', value: info_text }
+            ]
         }
 
         /** loaders */
@@ -277,11 +292,15 @@
 
         function setup_gui() {
             main_pane = new Tweakpane.Pane()
+            let main_tabs = main_pane.addTab({
+                pages: [{ title: "Settings" }, { title: "About" }]
+            })
 
-            main_pane.addInput(params, 'postfx_enabled', { label: 'Postprocessing' }).on('change', ({ value }) => {
+            /* main tab */
+            main_tabs.pages[0].addInput(params, 'postfx_enabled', { label: 'Postprocessing' }).on('change', ({ value }) => {
                 render()
             });
-            main_pane.addInput(params, 'env_enabled', { label: 'Environment' }).on('change', ({ value }) => {
+            main_tabs.pages[0].addInput(params, 'env_enabled', { label: 'Environment' }).on('change', ({ value }) => {
                 if (value) {
                     global_scene.background = params.env_texture;
                     global_scene.environment = params.env_texture;
@@ -291,27 +310,36 @@
                 }
                 render()
             });
-            main_pane.addInput(params, 'camera_fov', { label: "Camera FOV", min: 1, max: 120, step: 1 }).on('change', ({ value }) => {
+            main_tabs.pages[0].addInput(params, 'camera_fov', { label: "Camera FOV", min: 1, max: 120, step: 1 }).on('change', ({ value }) => {
                 camera.fov = value
                 camera.updateProjectionMatrix()
                 render()
             });
-            main_pane.addInput(params, 'resolution_scale', { label: "Resolution", min: 0.5, max: 1, step: 0.05 }).on('change', ({ value }) => {
+            main_tabs.pages[0].addInput(params, 'resolution_scale', { label: "Resolution", min: 0.5, max: 1, step: 0.05 }).on('change', ({ value }) => {
                 handle_window_resized()
                 render()
             });
 
-            main_pane.addInput(params, 'show_gizmo', { label: "Gizmo" }).on('change', ({ value }) => {
+            main_tabs.pages[0].addInput(params, 'show_gizmo', { label: "Gizmo" }).on('change', ({ value }) => {
                 axes_helper.visible = value
                 grid_helper_10.visible = value
                 grid_helper_100.visible = value
                 grid_helper_1000.visible = value
                 render()
             });
-            main_pane.addInput(params, 'torch_light', { label: "Torchlight" }).on('change', ({ value }) => {
+            main_tabs.pages[0].addInput(params, 'torch_light', { label: "Torchlight" }).on('change', ({ value }) => {
                 torch_light.visible = value
                 render()
             });
+
+            /** about tab */
+            params.info.forEach((item, index) => {
+                main_tabs.pages[1].addMonitor(item, 'value', {
+                    label: item.label, multiline: true,
+                    lineCount: 32,
+                })
+            })
+
         }
 
         function setup_controls() {
