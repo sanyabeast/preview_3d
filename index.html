@@ -74,9 +74,9 @@
             env_texture: null,
             postfx_enabled: false,
             postfx_bloom_exposure: 1,
-            postfx_bloom_bloomStrength: 0.2,
-            postfx_bloom_bloomThreshold: 0.5,
-            postfx_bloom_bloomRadius: 0.2,
+            postfx_bloom_strength: 0.2,
+            postfx_bloom_treshold: 0.5,
+            postfx_bloom_radius: 0.2,
             camera_fov: 45,
             scene_src: window.file_to_open,
             resolution_scale: 1,
@@ -147,7 +147,6 @@
                         set_active_scene(object)
                     });
                 }
-
             }
         }
 
@@ -219,7 +218,6 @@
         }
 
         function setup_global_scene() {
-
             const environment = new RoomEnvironment();
             const pmremGenerator = new THREE.PMREMGenerator(renderer);
 
@@ -273,9 +271,9 @@
         function setup_postfx() {
             const render_pass = new RenderPass(global_scene, camera);
             const bloom_pass = new UnrealBloomPass(new THREE.Vector2(window.innerWidth, window.innerHeight), 1.5, 0.4, 0.85);
-            bloom_pass.threshold = params.postfx_bloom_bloomThreshold;
-            bloom_pass.strength = params.postfx_bloom_bloomStrength;
-            bloom_pass.radius = params.postfx_bloom_bloomRadius;
+            bloom_pass.threshold = params.postfx_bloom_treshold;
+            bloom_pass.strength = params.postfx_bloom_strength;
+            bloom_pass.radius = params.postfx_bloom_radius;
             const ssao_pass = new SSAOPass(global_scene, camera, window.innerWidth, window.innerHeight);
             ssao_pass.kernelRadius = 8;
             composer = new EffectComposer(renderer);
