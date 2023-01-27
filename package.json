@@ -10,7 +10,7 @@
         "release": "npm version prerelease && npx electron-packager . --overwrite --icon=./assets/icon.ico"
     },
     "main": "main.js",
-    "version": "1.0.1-2",
+    "version": "1.0.1-3",
     "license": "MIT",
     "description": "Preview 3d Scenes",
     "author": "@sanyabeast"
