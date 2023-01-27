@@ -4,7 +4,7 @@
         "electron": "^23.0.0-beta.5"
     },
     "scripts": {
-        "start": "electron . assets/dark_teapot.glb"
+        "start": "electron . assets/teapot.obj"
     },
     "main": "main.js",
     "version": "1.0.0",

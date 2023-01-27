@@ -50,6 +50,7 @@
         import { FBXLoader } from 'three/addons/loaders/FBXLoader.js';
 
         import { OBJLoader } from 'three/addons/loaders/OBJLoader.js';
+        import { MTLLoader } from 'three/addons/loaders/MTLLoader.js';
 
         import { GUI } from 'three/addons/libs/lil-gui.module.min.js';
 
@@ -94,6 +95,7 @@
         let gltf_loader
         let fbx_loader
         let obj_loader
+        let mtl_loader
         let loaders = {
             hdr: (texture_src) => {
                 new RGBELoader().load(texture_src, function (texture) {
@@ -131,9 +133,24 @@
             obj: (scene_src) => {
                 let base_path = node_tools.path.dirname(scene_src)
                 obj_loader = obj_loader || new OBJLoader()
-                obj_loader.load(scene_src, function (object) {
-                    set_active_scene(object)
-                });
+                mtl_loader = mtl_loader || new MTLLoader()
+
+                try {
+                    mtl_loader.load(scene_src.replace('.obj', '.mtl'), function (materials) {
+                        console.log(materials)
+                        materials.preload();
+                        obj_loader.setMaterials(materials)
+                        obj_loader.load(scene_src, function (object) {
+                            set_active_scene(object)
+                        });
+                    })
+                } catch (err) {
+                    console.error(err)
+                    obj_loader.load(scene_src, function (object) {
+                        set_active_scene(object)
+                    });
+                }
+
             }
         }
 
