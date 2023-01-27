@@ -61,6 +61,7 @@
         let node_tools = window.node_tools
         let controls
         let camera, global_scene, renderer;
+        let torch_light
         let axes_helper, grid_helper
         let composer
         let env_params = {
@@ -81,6 +82,7 @@
             resolution_scale: 0.7,
             active_scene: null,
             show_gizmo: true,
+            torch_light: false,
             bloom_params: {
                 exposure: 1,
                 bloomStrength: 0.5,
@@ -190,6 +192,10 @@
             sun.intensity = 1
             global_scene.add(sun)
             global_scene.add(amb)
+            torch_light = new THREE.PointLight()
+            torch_light.intensity = 0.5
+            torch_light.visible = params.torch_light
+            global_scene.add(torch_light)
 
             axes_helper = new THREE.AxesHelper(2);
             axes_helper.visible = params.show_gizmo
@@ -274,7 +280,7 @@
                 }
                 render()
             }, 100));
-            gui.add(camera_params, 'fov', 1, 179).name("Camera FOV").onChange(function (value) {
+            gui.add(camera_params, 'fov', 1, 119).name("Camera FOV").onChange(function (value) {
                 camera.fov = value
                 camera.updateProjectionMatrix()
                 render()
@@ -286,6 +292,11 @@
             gui.add(params, 'show_gizmo').name("Show Gizmo").onChange(function (value) {
                 axes_helper.visible = value
                 grid_helper.visible = value
+                render()
+            });
+
+            gui.add(params, 'torch_light').name("Show Torch Light").onChange(function (value) {
+                torch_light.visible = value
                 render()
             });
             gui.close()
@@ -375,6 +386,9 @@
             render()
         }
         function render() {
+            torch_light.position.copy(camera.position)
+
+
             if (postfx_params.enabled) {
                 composer.render();
             } else {
