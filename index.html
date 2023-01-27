@@ -2,7 +2,7 @@
 <html lang="en">
 
 <head>
-    <title>Preview3dX</title>
+    <title>preview_3d</title>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, user-scalable=no, minimum-scale=1.0, maximum-scale=1.0">
     <link type="text/css" rel="stylesheet" href="lib/three/examples/main.css">
@@ -138,10 +138,18 @@
             top: auto;
             bottom: 8px;
         }
+
+        #file_input {
+            visibility: hidden;
+            z-index: -1;
+            pointer-events: none;
+            position: absolute;
+        }
     </style>
 </head>
 
 <body>
+    <input type="file" id="file_input" accept=".glb, .gltf, .fbx, .obj, .mtl, .hdr">
     <script src="./lib/tweakpane.min.js"></script>
     <script async src="./lib/lodash.min.js"></script>
     <script async src="./lib/es-module-shims.js"></script>
@@ -154,8 +162,6 @@
         }
     </script>
     <script type="module">
-
-
         import * as THREE from 'three';
 
         import { RoomEnvironment } from 'three/addons/environments/RoomEnvironment.js';
@@ -177,11 +183,9 @@
         import { UnrealBloomPass } from 'three/addons/postprocessing/UnrealBloomPass.js';
         import { RenderPass } from 'three/addons/postprocessing/RenderPass.js';
 
-        let info_text = `
+        let about_text = `
 Feature-rich 
-application 
-to preview 
-3d models
+ed models viewer
 
 * * *
 
@@ -201,8 +205,21 @@ Special thaks to:
   Tweakpane team
         `;
 
+        let info_text = `
+Keycodes:
+  Frame scene:
+    F
+    Space
+    Numpad .
+    \
+  Open file:
+    Enter
+  Reload scene:
+    R
+        `;
+
         let prev_frame_date = +new Date()
-        let target_fps = 45
+        let target_fps = 60
         let os_tools = window.os_tools
         let controls
         let camera, global_scene, renderer;
@@ -210,6 +227,13 @@ Special thaks to:
         let axes_helper, grid_helper_10, grid_helper_100, grid_helper_1000
         let composer
         let main_pane, inspect_pane, about_pane
+        let file_input = document.body.querySelector('#file_input')
+        let render_loop_id
+        let render_needs_update = true
+
+        file_input.onchange = e => {
+            load_scene(e.target.files[0].path)
+        }
 
         let params = {
             env_enabled: true,
@@ -228,13 +252,19 @@ Special thaks to:
             active_scene: null,
             show_gizmo: true,
             torch_light: false,
-            info: [
-                { label: 'Preview3dX', value: info_text }
+            about_data: [
+                { label: 'preview_3d', value: info_text }
             ],
-            check_updates: true
+            info_data: [
+                { label: 'preview_3d', value: about_text }
+            ],
+            check_updates: true,
+            inspect_mode: '',
+            inspect_matcap_mode: 'AAA'
         }
 
         /** loaders */
+        let texture_loader = new THREE.TextureLoader()
         let ktx2Loader,
             dracoLoader,
             gltf_loader,
@@ -249,7 +279,7 @@ Special thaks to:
                     texture.mapping = THREE.EquirectangularReflectionMapping;
                     global_scene.background = texture;
                     global_scene.environment = texture;
-                    render();
+                    render_needs_update = true;
 
                 });
             },
@@ -299,8 +329,33 @@ Special thaks to:
             }
         }
 
+        /** inspection materials */
+        let matcaps = {
+            'AAA': '0A0A0A_A9A9A9_525252_747474-512px',
+            'AAB': '0F0F0F_4B4B4B_1C1C1C_2C2C2C-512px',
+            'AAC': '1A2461_3D70DB_2C3C8F_2C6CAC-512px',
+            'AAD': '1B1B1B_515151_7E7E7E_6C6C6C-512px',
+            'AAE': '2D2D2A_74716E_8F8C8C_92958E-512px',
+            'AAF': '2D2D2F_C6C2C5_727176_94949B-512px',
+            'AAG': '2E763A_78A0B7_B3D1CF_14F209-512px',
+            'AAH': '2EAC9E_61EBE3_4DDDD1_43D1C6-512px',
+            'AAJ': '0404E8_0404B5_0404CB_3333FC-512px',
+            'AAK': '15100F_241D1B_292424_2C2C27-512px',
+            'AAL': '191514_6D5145_4E3324_3B564D-512px'
+        }
+
+
+        let override_materials = {
+            wireframe: new THREE.MeshBasicMaterial({ wireframe: true }),
+            matcap: new THREE.MeshMatcapMaterial({
+                matcap: texture_loader.load(`./assets/matcap/${matcaps.AAA}.png`)
+            }),
+            normal: new THREE.MeshNormalMaterial()
+        }
+
+
         init();
-        render();
+        render_needs_update = true;
 
         function init() {
             const width = window.innerWidth;
@@ -330,6 +385,8 @@ Special thaks to:
             loaders['hdr'](params.env_texture_src)
             load_scene()
 
+            render_loop_id = requestAnimationFrame(render)
+
             if (params.check_updates === true) {
                 setTimeout(check_updates, 1000)
             }
@@ -352,8 +409,10 @@ Special thaks to:
                 update_title()
             }
 
-            render();
-            setTimeout(render, 500)
+            render_needs_update = true;
+            setTimeout(() => {
+                render_needs_update = true
+            }, 500)
         }
 
         function handle_drag_and_drop(event) {
@@ -443,7 +502,7 @@ Special thaks to:
 
             /* main tab */
             viewport_settings_folder.addInput(params, 'postfx_enabled', { label: 'Postprocessing' }).on('change', ({ value }) => {
-                render()
+                render_needs_update = true
             });
             viewport_settings_folder.addInput(params, 'env_enabled', { label: 'Environment' }).on('change', ({ value }) => {
                 if (value) {
@@ -453,35 +512,44 @@ Special thaks to:
                     global_scene.background = params.env_default_background;
                     global_scene.environment = params.env_default_texture;
                 }
-                render()
+                render_needs_update = true
             });
             viewport_settings_folder.addInput(params, 'camera_fov', { label: "Camera FOV", min: 1, max: 120, step: 1 }).on('change', ({ value }) => {
                 camera.fov = value
                 camera.updateProjectionMatrix()
-                render()
+                render_needs_update = true
             });
             viewport_settings_folder.addInput(params, 'resolution_scale', { label: "Resolution", min: 0.5, max: 1, step: 0.05 }).on('change', ({ value }) => {
                 handle_window_resized()
-                render()
+                render_needs_update = true
             });
 
 
             viewport_settings_folder.addInput(params, 'torch_light', { label: "Torchlight" }).on('change', ({ value }) => {
                 torch_light.visible = value
-                render()
+                render_needs_update = true
             });
 
             /** about tab */
             about_pane = new Tweakpane.Pane()
             about_pane.element.parentElement.classList.add('pane')
             about_pane.element.parentElement.classList.add('about')
+            let info_folder = about_pane.addFolder({ title: "Info", expanded: false })
+            params.info_data.forEach((item, index) => {
+                info_folder.addMonitor(item, 'value', {
+                    label: item.label, multiline: true,
+                    lineCount: 32,
+                })
+            })
+
             let about_folder = about_pane.addFolder({ title: "About", expanded: false })
-            params.info.forEach((item, index) => {
+            params.about_data.forEach((item, index) => {
                 about_folder.addMonitor(item, 'value', {
                     label: item.label, multiline: true,
                     lineCount: 32,
                 })
             })
+
 
             /* inspect pane */
             inspect_pane = new Tweakpane.Pane()
@@ -490,6 +558,9 @@ Special thaks to:
 
             let file_folder = inspect_pane.addFolder({ title: "File", expanded: false })
             file_folder.addMonitor(params, 'scene_src', { label: "Current" })
+            file_folder.addButton({ title: '', title: "Open" }).on('click', () => {
+                file_input.click()
+            })
 
             let inspect_folder = inspect_pane.addFolder({ title: "Inspect", expanded: false })
 
@@ -498,7 +569,33 @@ Special thaks to:
                 grid_helper_10.visible = value
                 grid_helper_100.visible = value
                 grid_helper_1000.visible = value
-                render()
+                render_needs_update = true
+            });
+
+            inspect_folder.addInput(params, 'inspect_mode', {
+                label: "Mode", options: {
+                    'Final Render': 'final_render',
+                    'Wireframe': 'wireframe',
+                    'Matcap': 'matcap',
+                    'Normal': 'normal'
+                }
+            }).on('change', ({ value }) => {
+                console.log(`new preview mode: ${value}`)
+                global_scene.overrideMaterial = override_materials[value] || null
+                console.log(global_scene.overrideMaterial)
+                render_needs_update = true
+            });
+
+            let matcaps_options = {}
+            _.forEach(matcaps, (name, id) => {
+                matcaps_options[id] = id
+            })
+            inspect_folder.addInput(params, 'inspect_matcap_mode', { label: "Matcap", options: matcaps_options }).on('change', ({ value }) => {
+                override_materials.matcap.matcap = texture_loader.load(`./assets/matcap/${matcaps[value]}.png`);
+                render_needs_update = true
+                setTimeout(() => {
+                    render_needs_update = true
+                }, 500)
             });
         }
 
@@ -511,18 +608,43 @@ Special thaks to:
             window.addEventListener("keydown", (event) => {
                 switch (event.keyCode) {
                     case 70: {
+                        event.preventDefault()
                         frame_object();
                         break;
                     }
                     case 32: {
+                        event.preventDefault()
                         frame_object();
                         break;
+                    }
+                    case 110: {
+                        event.preventDefault()
+                        frame_object();
+                        break;
+                    }
+                    case 220: {
+                        event.preventDefault()
+                        frame_object();
+                        break;
+                    }
+                    case 13: {
+                        file_input.click()
+                        break;
+                    }
+                    case 82: {
+                        load_scene()
+                        break;
+                    }
+                    default: {
+                        console.log(`keycode: ${event.keyCode}`)
                     }
                 }
             })
 
             controls = new OrbitControls(camera, renderer.domElement);
-            controls.addEventListener('change', render); // use if there is no animation loop
+            controls.addEventListener('change', () => {
+                render_needs_update = true
+            }); // use if there is no animation loop
             controls.minDistance = 0;
             controls.maxDistance = Infinity;
             controls.target.set(0, 0, 0);
@@ -586,12 +708,13 @@ Special thaks to:
             if (composer) {
                 composer.setSize(width, height);
             }
-            render()
+            render_needs_update = true
         }
 
-
-
         function render() {
+            render_loop_id = requestAnimationFrame(render)
+
+            if (render_needs_update === false) return
             if (+new Date() - prev_frame_date < 1000 / target_fps) return
             prev_frame_date = +new Date()
             /** --- */
@@ -602,21 +725,21 @@ Special thaks to:
             } else {
                 renderer.render(global_scene, camera);
             }
+
+            render_needs_update = false
         }
 
         function update_title() {
-            document.querySelector('head title').innerHTML = `Preview3dX ${PACKAGE_INFO.version} | ${params.scene_src}`
+            document.querySelector('head title').innerHTML = `preview_3d ${PACKAGE_INFO.version} | ${params.scene_src}`
         }
 
         function check_updates() {
             console.log('checking for updates...')
             let xhr = new XMLHttpRequest()
-            xhr.open('get', 'https://raw.githubusercontent.com/sanyabeast/preview3dx/main/package.json', false)
+            xhr.open('get', 'https://raw.githubusercontent.com/sanyabeast/prevoew_3d/main/package.json', false)
             xhr.send()
             console.log(xhr.responseText)
         }
-
-
 
         window.load_file = function (file_path) {
             load_scene(file_path)
