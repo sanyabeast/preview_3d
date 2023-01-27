@@ -1,14 +1,16 @@
 {
-    "name": "mac3dview",
-    "dependencies": {
-        "electron": "^23.0.0-beta.5"
+    "name": "preview3dx",
+    "devDependencies": {
+        "electron": "^23.0.0-beta.5",
+        "electron-packager": "^17.1.1"
     },
     "scripts": {
-        "start": "electron . assets/teapot.obj"
+        "start": "electron . assets/dark_teapot.glb",
+        "release": "npx electron-packager ."
     },
     "main": "main.js",
     "version": "1.0.0",
     "license": "MIT",
-    "description": "3d viewer for Macos",
+    "description": "Preview 3d Scenes",
     "author": "@sanyabeast"
 }
