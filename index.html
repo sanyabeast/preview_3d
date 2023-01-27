@@ -7,6 +7,11 @@
     <meta name="viewport" content="width=device-width, user-scalable=no, minimum-scale=1.0, maximum-scale=1.0">
     <link type="text/css" rel="stylesheet" href="lib/three/examples/main.css">
     <style>
+        html,
+        window {
+            overflow: hidden;
+        }
+
         canvas[data-engine] {
             width: 100% !important;
             height: 100% !important;
@@ -19,6 +24,7 @@
     <!-- Import maps polyfill -->
     <!-- Remove this when import maps will be widely supported -->
     <!-- <script async src="lib/es-module-shims.js"></script> -->
+    <script async src="./lib/lodash.min.js"></script>
     <script async src="./lib/es-module-shims.js"></script>
     <script type="importmap">
         {
@@ -34,22 +40,27 @@
 
         import { RoomEnvironment } from 'three/addons/environments/RoomEnvironment.js';
         import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
-        import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
 
         import { RGBELoader } from 'three/addons/loaders/RGBELoader.js';
+        import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
         import { KTX2Loader } from 'three/addons/loaders/KTX2Loader.js';
         import { DRACOLoader } from 'three/addons/loaders/DRACOLoader.js';
         import { MeshoptDecoder } from 'three/addons/libs/meshopt_decoder.module.js';
+
+        import { FBXLoader } from 'three/addons/loaders/FBXLoader.js';
+
+        import { OBJLoader } from 'three/addons/loaders/OBJLoader.js';
 
         import { GUI } from 'three/addons/libs/lil-gui.module.min.js';
 
         import { EffectComposer } from 'three/addons/postprocessing/EffectComposer.js';
         import { SSAOPass } from 'three/addons/postprocessing/SSAOPass.js';
         import { RenderPass } from 'three/addons/postprocessing/RenderPass.js';
-        import { UnrealBloomPass } from 'three/addons/postprocessing/UnrealBloomPass.js';
 
         let node_tools = window.node_tools
-        let camera, scene, renderer;
+        let controls
+        let camera, global_scene, renderer;
+        let axes_helper, grid_helper
         let composer
         let env_params = {
             enabled: true,
@@ -65,8 +76,10 @@
             fov: 45
         }
         let params = {
-            model_src: window.file_to_open,
+            scene_src: window.file_to_open,
             resolution_scale: 0.7,
+            active_scene: null,
+            show_gizmo: true,
             bloom_params: {
                 exposure: 1,
                 bloomStrength: 0.5,
@@ -76,30 +89,52 @@
         }
 
         /** loaders */
+        let ktx2Loader
+        let dracoLoader
+        let gltf_loader
+        let fbx_loader
+        let obj_loader
         let loaders = {
-            gltf: (model_src) => {
-                let ktx2Loader = new KTX2Loader()
-                    .setTranscoderPath('lib/three/examples/jsm/libs/basis/')
-                    .detectSupport(renderer);
+            hdr: (texture_src) => {
+                new RGBELoader().load(texture_src, function (texture) {
+                    env_params.texture = texture
+                    texture.mapping = THREE.EquirectangularReflectionMapping;
+                    global_scene.background = texture;
+                    global_scene.environment = texture;
+                    render();
 
-                const dracoLoader = new DRACOLoader();
-                dracoLoader.setDecoderPath('lib/three/examples/jsm/libs/draco/gltf/');
+                });
+            },
+            gltf: (scene_src) => {
                 /** --- */
-                const base_path = node_tools.path.dirname(model_src);
-                const model_path = node_tools.path.basename(model_src);
+                const base_path = node_tools.path.dirname(scene_src);
+                const model_path = node_tools.path.basename(scene_src);
                 console.log(base_path)
 
-                new GLTFLoader()
+                gltf_loader = gltf_loader || new GLTFLoader()
                     .setDRACOLoader(dracoLoader)
                     .setKTX2Loader(ktx2Loader)
                     .setMeshoptDecoder(MeshoptDecoder)
-                    .load(model_src, function (gltf) {
-                        console.log(gltf)
-                        scene.add(gltf.scene);
-                        render();
-                    });
+
+                gltf_loader.load(scene_src, function (gltf) {
+                    set_active_scene(gltf.scene)
+                });
             },
-            glb: (model_src) => loaders.gltf(model_src)
+            glb: (scene_src) => loaders.gltf(scene_src),
+            fbx: (scene_src) => {
+                fbx_loader = fbx_loader || new FBXLoader();
+                fbx_loader.load(scene_src, function (object) {
+                    set_active_scene(object)
+
+                });
+            },
+            obj: (scene_src) => {
+                let base_path = node_tools.path.dirname(scene_src)
+                obj_loader = obj_loader || new OBJLoader()
+                obj_loader.load(scene_src, function (object) {
+                    set_active_scene(object)
+                });
+            }
         }
 
         init();
@@ -120,49 +155,108 @@
             renderer.outputEncoding = THREE.sRGBEncoding;
             container.appendChild(renderer.domElement);
             /* main scene setup */
-            camera = new THREE.PerspectiveCamera(camera_params.fov, window.innerWidth / window.innerHeight, 1, 2000);
+            camera = new THREE.PerspectiveCamera(camera_params.fov, window.innerWidth / window.innerHeight, 1, 1000000);
             camera.position.set(0, 100, 0);
 
             const environment = new RoomEnvironment();
             const pmremGenerator = new THREE.PMREMGenerator(renderer);
 
-            scene = new THREE.Scene();
-            scene.background = new THREE.Color(0xbbbbbb);
-            scene.environment = pmremGenerator.fromScene(environment).texture;
+            global_scene = new THREE.Scene();
+            global_scene.background = new THREE.Color(0xbbbbbb);
+            global_scene.environment = pmremGenerator.fromScene(environment).texture;
             environment.dispose();
 
-            const grid = new THREE.GridHelper(500, 10, 0xffffff, 0xffffff);
-            grid.material.opacity = 0.5;
-            grid.material.depthWrite = false;
-            grid.material.transparent = true;
-            scene.add(grid);
-            env_params.default_background = scene.background
-            env_params.default_texture = scene.environment
+            let sun = new THREE.DirectionalLight()
+            let amb = new THREE.AmbientLight()
+            amb.intensity = 0.2;
+            sun.position.set(1000, 1000, 1000)
+            sun.intensity = 1
+            global_scene.add(sun)
+            global_scene.add(amb)
 
-            /** postfx */
-            const render_pass = new RenderPass(scene, camera);
+            axes_helper = new THREE.AxesHelper(2);
+            axes_helper.visible = params.show_gizmo
+            global_scene.add(axes_helper)
+
+            grid_helper = new THREE.GridHelper(10, 10, 0xffffff, 0xffffff);
+            grid_helper.material.opacity = 0.1;
+            grid_helper.material.depthWrite = false;
+            grid_helper.material.transparent = true;
+            grid_helper.visible = params.show_gizmo
+            global_scene.add(grid_helper);
+            env_params.default_background = global_scene.background
+            env_params.default_texture = global_scene.environment
+
+            document.body.addEventListener('dragenter', handle_drag_and_drop, false)
+            document.body.addEventListener('dragleave', handle_drag_and_drop, false)
+            document.body.addEventListener('dragover', handle_drag_and_drop, false)
+            document.body.addEventListener('drop', handle_drag_and_drop, false)
+
+            // setup_postfx()
+            setup_controls()
+            setup_loaders()
+            setup_gui()
+
+            /* loading assets */
+            loaders['hdr'](env_params.texture_src)
+            load_model()
+        }
+
+        function set_active_scene(scene) {
+            if (scene.isObject3D) {
+                if (params.active_scene) {
+                    console.log('removing scene...')
+                    global_scene.remove(params.active_scene)
+                }
+
+                params.active_scene = scene
+                params.scene_aabb = new THREE.Box3();
+                params.scene_aabb.setFromObject(scene);
+                frame_object()
+                console.log('spawning scene...')
+                console.log(scene)
+                global_scene.add(scene);
+            }
+
+            render();
+            setTimeout(render, 500)
+        }
+
+        function handle_drag_and_drop(event) {
+            event.preventDefault()
+            if (event.dataTransfer && event.dataTransfer.files.length > 0) {
+                let file_path = event.dataTransfer.files[0].path
+                params.scene_src = file_path
+                load_model()
+            }
+        }
+
+        function setup_postfx() {
+            const render_pass = new RenderPass(global_scene, camera);
             const bloom_pass = new UnrealBloomPass(new THREE.Vector2(window.innerWidth, window.innerHeight), 1.5, 0.4, 0.85);
             bloom_pass.threshold = params.bloom_params.bloomThreshold;
             bloom_pass.strength = params.bloom_params.bloomStrength;
             bloom_pass.radius = params.bloom_params.bloomRadius;
-            const ssao_pass = new SSAOPass(scene, camera, width, height);
+            const ssao_pass = new SSAOPass(global_scene, camera, width, height);
             ssao_pass.kernelRadius = 8;
             composer = new EffectComposer(renderer);
             composer.addPass(render_pass);
             composer.addPass(ssao_pass);
             composer.addPass(bloom_pass);
-            /** gui */
+        }
+
+        function setup_gui() {
             const gui = new GUI();
-            gui.add(env_params, 'enabled', 0.0, 1.0).name('Environment').onChange(function (value) {
+            gui.add(env_params, 'enabled', 0.0, 1.0).name('Environment').onChange(_.debounce((value) => {
                 if (value) {
-                    scene.background = env_params.texture;
-                    scene.environment = env_params.texture;
+                    global_scene.background = env_params.texture;
+                    global_scene.environment = env_params.texture;
                 } else {
-                    scene.background = env_params.default_background;
-                    scene.environment = env_params.default_texture;
+                    global_scene.background = env_params.default_background;
+                    global_scene.environment = env_params.default_texture;
                 }
                 render()
-            });
+            }, 100));
             gui.add(camera_params, 'fov', 1, 179).name("Camera FOV").onChange(function (value) {
                 camera.fov = value
                 camera.updateProjectionMatrix()
@@ -172,46 +266,98 @@
                 handle_window_resized()
                 render()
             });
-            gui.close()
-            /* loading assets */
-            new RGBELoader().load(env_params.texture_src, function (texture) {
-                env_params.texture = texture
-                texture.mapping = THREE.EquirectangularReflectionMapping;
-                scene.background = texture;
-                scene.environment = texture;
-                render();
-                let model_format = node_tools.path.extname(params.model_src).replace(".", '')
-                try {
-                    document.getElementById("info").innerHTML = params.model_src
-                    loaders[model_format](params.model_src)
-                } catch (error) {
-                    console.error(error)
-                }
+            gui.add(params, 'show_gizmo').name("Show Gizmo").onChange(function (value) {
+                axes_helper.visible = value
+                grid_helper.visible = value
+                render()
             });
-            /** 3d viewport controls initialisation */
-            const controls = new OrbitControls(camera, renderer.domElement);
+            gui.close()
+        }
+
+        function setup_controls() {
+
+            window.addEventListener("keydown", (event) => {
+                switch (event.keyCode) {
+                    case 70: {
+                        frame_object();
+                        break;
+                    }
+                    case 32: {
+                        frame_object();
+                        break;
+                    }
+                }
+            })
+
+            controls = new OrbitControls(camera, renderer.domElement);
             controls.addEventListener('change', render); // use if there is no animation loop
-            controls.minDistance = 400;
-            controls.maxDistance = 1000;
-            controls.target.set(10, 90, - 16);
+            controls.minDistance = 0;
+            controls.maxDistance = Infinity;
+            controls.target.set(0, 0, 0);
+            controls.object.position.set(0, 256, 512)
             controls.update();
             window.addEventListener('resize', handle_window_resized);
             handle_window_resized()
         }
+
+        function frame_object() {
+            let max_value = Math.max(
+                Math.abs(params.scene_aabb.min.x),
+                Math.abs(params.scene_aabb.min.y),
+                Math.abs(params.scene_aabb.min.z),
+                Math.abs(params.scene_aabb.max.x),
+                Math.abs(params.scene_aabb.max.y),
+                Math.abs(params.scene_aabb.max.z)
+            )
+
+            controls.target.set(
+                (params.scene_aabb.min.x + params.scene_aabb.max.x) / 2,
+                (params.scene_aabb.min.y + params.scene_aabb.max.y) / 2,
+                (params.scene_aabb.min.z + params.scene_aabb.max.z) / 2
+            );
+            axes_helper.scale.setScalar(max_value / 2)
+            grid_helper.scale.setScalar(max_value / 2)
+            console.log(max_value)
+            controls.object.position.set(0, max_value * 2, max_value * 4)
+            controls.saveState()
+            controls.reset()
+        }
+
+        function setup_loaders() {
+            ktx2Loader = new KTX2Loader()
+                .setTranscoderPath('lib/three/examples/jsm/libs/basis/')
+                .detectSupport(renderer);
+
+            dracoLoader = new DRACOLoader();
+            dracoLoader.setDecoderPath('lib/three/examples/jsm/libs/draco/gltf/');
+        }
+
+        function load_model() {
+            let model_format = node_tools.path.extname(params.scene_src).replace(".", '')
+            try {
+                document.getElementById("info").innerHTML = params.scene_src
+                loaders[model_format](params.scene_src)
+            } catch (error) {
+                console.error(error)
+            }
+        }
+
         function handle_window_resized() {
             const width = Math.floor(window.innerWidth * params.resolution_scale);
             const height = Math.floor(window.innerHeight * params.resolution_scale);
             camera.aspect = width / height;
             camera.updateProjectionMatrix();
             renderer.setSize(width, height);
-            composer.setSize(width, height);
+            if (composer) {
+                composer.setSize(width, height);
+            }
             render()
         }
         function render() {
             if (postfx_params.enabled) {
                 composer.render();
             } else {
-                renderer.render(scene, camera);
+                renderer.render(global_scene, camera);
             }
         }
     </script>

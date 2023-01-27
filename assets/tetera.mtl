@@ -1,0 +1,43 @@
+# OBJ Material Export by Luxion KeyShot
+
+newmtl Hard Rough Plastic Black
+Kd 0.0117647 0.0117647 0.0117647
+
+newmtl Body
+Kd 0.00226561 0.421417 0.9025
+
+newmtl Rubber
+Kd 0.01 0.01 0.00999999
+
+newmtl Hard Rough Plastic Black
+Kd 0.0117647 0.0117647 0.0117647
+
+newmtl Glass Basic White
+Kd 1 1 1
+
+newmtl Rubber
+Kd 0.01 0.01 0.00999999
+
+newmtl Glass Basic Red
+Kd 0.902495 0.00225829 0.00226046
+
+newmtl Metal
+Kd 0.792157 0.819608 0.933333
+
+newmtl Metal
+Kd 0.792157 0.819608 0.933333
+
+newmtl Metal
+Kd 0.792157 0.819608 0.933333
+
+newmtl Metal
+Kd 0.792157 0.819608 0.933333
+
+newmtl Metal
+Kd 0.792157 0.819608 0.933333
+
+newmtl Metal
+Kd 0.792157 0.819608 0.933333
+
+newmtl Metal
+Kd 0.792157 0.819608 0.933333
