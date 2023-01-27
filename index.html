@@ -50,8 +50,6 @@
         import { OBJLoader } from 'three/addons/loaders/OBJLoader.js';
         import { MTLLoader } from 'three/addons/loaders/MTLLoader.js';
 
-        import { GUI } from 'three/addons/libs/lil-gui.module.min.js';
-
         import { EffectComposer } from 'three/addons/postprocessing/EffectComposer.js';
         import { SSAOPass } from 'three/addons/postprocessing/SSAOPass.js';
         import { UnrealBloomPass } from 'three/addons/postprocessing/UnrealBloomPass.js';
@@ -65,6 +63,7 @@
         let torch_light
         let axes_helper, grid_helper_10, grid_helper_100, grid_helper_1000
         let composer
+        let main_pane
 
         let params = {
             env_enabled: true,
@@ -83,16 +82,16 @@
             active_scene: null,
             show_gizmo: true,
             torch_light: false
-
         }
 
         /** loaders */
-        let ktx2Loader
-        let dracoLoader
-        let gltf_loader
-        let fbx_loader
-        let obj_loader
-        let mtl_loader
+        let ktx2Loader,
+            dracoLoader,
+            gltf_loader,
+            fbx_loader,
+            obj_loader,
+            mtl_loader;
+
         let loaders = {
             hdr: (texture_src) => {
                 new RGBELoader().load(texture_src, function (texture) {
@@ -163,21 +162,14 @@
             renderer = new THREE.WebGLRenderer({ antialias: true, logarithmicDepthBuffer: true });
             renderer.setPixelRatio(window.devicePixelRatio);
             renderer.setSize(window.innerWidth, window.innerHeight);
-            // renderer.toneMapping = THREE.    ;
             renderer.toneMappingExposure = 1;
             renderer.outputEncoding = THREE.sRGBEncoding;
             container.appendChild(renderer.domElement);
             /* main scene setup */
-            camera = new THREE.PerspectiveCamera(params.camera_fov, window.innerWidth / window.innerHeight, 1, 1000000);
+            camera = new THREE.PerspectiveCamera(params.camera_fov, window.innerWidth / window.innerHeight, 0.1, 1000000);
             camera.position.set(0, 100, 0);
 
             setup_global_scene()
-
-            document.body.addEventListener('dragenter', handle_drag_and_drop, false)
-            document.body.addEventListener('dragleave', handle_drag_and_drop, false)
-            document.body.addEventListener('dragover', handle_drag_and_drop, false)
-            document.body.addEventListener('drop', handle_drag_and_drop, false)
-
             setup_postfx()
             setup_controls()
             setup_loaders()
@@ -284,9 +276,12 @@
         }
 
         function setup_gui() {
-            const gui = new GUI();
-            gui.add(params, 'postfx_enabled', 0.0, 1.0).name('Postfx').onChange(render);
-            gui.add(params, 'env_enabled', 0.0, 1.0).name('Environment').onChange(_.debounce((value) => {
+            main_pane = new Tweakpane.Pane()
+
+            main_pane.addInput(params, 'postfx_enabled', { label: 'Postprocessing' }).on('change', ({ value }) => {
+                render()
+            });
+            main_pane.addInput(params, 'env_enabled', { label: 'Environment' }).on('change', ({ value }) => {
                 if (value) {
                     global_scene.background = params.env_texture;
                     global_scene.environment = params.env_texture;
@@ -295,32 +290,36 @@
                     global_scene.environment = params.env_default_texture;
                 }
                 render()
-            }, 100));
-            gui.add(params, 'camera_fov', 1, 119).name("Camera FOV").onChange(function (value) {
+            });
+            main_pane.addInput(params, 'camera_fov', { label: "Camera FOV", min: 1, max: 120, step: 1 }).on('change', ({ value }) => {
                 camera.fov = value
                 camera.updateProjectionMatrix()
                 render()
             });
-            gui.add(params, 'resolution_scale', 0.2, 1, 0.1).name("Rendering Scale").onChange(function (value) {
+            main_pane.addInput(params, 'resolution_scale', { label: "Resolution", min: 0.5, max: 1, step: 0.05 }).on('change', ({ value }) => {
                 handle_window_resized()
                 render()
             });
-            gui.add(params, 'show_gizmo').name("Show Gizmo").onChange(function (value) {
+
+            main_pane.addInput(params, 'show_gizmo', { label: "Gizmo" }).on('change', ({ value }) => {
                 axes_helper.visible = value
                 grid_helper_10.visible = value
                 grid_helper_100.visible = value
                 grid_helper_1000.visible = value
                 render()
             });
-
-            gui.add(params, 'torch_light').name("Show Torch Light").onChange(function (value) {
+            main_pane.addInput(params, 'torch_light', { label: "Torchlight" }).on('change', ({ value }) => {
                 torch_light.visible = value
                 render()
             });
-            gui.close()
         }
 
         function setup_controls() {
+            document.body.addEventListener('dragenter', handle_drag_and_drop, false)
+            document.body.addEventListener('dragleave', handle_drag_and_drop, false)
+            document.body.addEventListener('dragover', handle_drag_and_drop, false)
+            document.body.addEventListener('drop', handle_drag_and_drop, false)
+
             window.addEventListener("keydown", (event) => {
                 switch (event.keyCode) {
                     case 70: {
