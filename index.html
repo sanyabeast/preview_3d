@@ -1,1 +1,221 @@
-404: Not Found
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <title>Preview3dX</title>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, user-scalable=no, minimum-scale=1.0, maximum-scale=1.0">
+    <link type="text/css" rel="stylesheet" href="lib/three/examples/main.css">
+    <style>
+        canvas[data-engine] {
+            width: 100% !important;
+            height: 100% !important;
+        }
+    </style>
+</head>
+
+<body>
+    <div id="info">Preview3dX</div>
+    <!-- Import maps polyfill -->
+    <!-- Remove this when import maps will be widely supported -->
+    <!-- <script async src="lib/es-module-shims.js"></script> -->
+    <script async src="./lib/es-module-shims.js"></script>
+    <script type="importmap">
+        {
+            "imports": {
+                "three": "./lib/three/build/three.module.js",
+                "three/addons/": "./lib/three/examples/jsm/"
+            }
+        }
+    </script>
+    <script type="module">
+
+        import * as THREE from 'three';
+
+        import { RoomEnvironment } from 'three/addons/environments/RoomEnvironment.js';
+        import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
+        import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
+
+        import { RGBELoader } from 'three/addons/loaders/RGBELoader.js';
+        import { KTX2Loader } from 'three/addons/loaders/KTX2Loader.js';
+        import { DRACOLoader } from 'three/addons/loaders/DRACOLoader.js';
+        import { MeshoptDecoder } from 'three/addons/libs/meshopt_decoder.module.js';
+
+        import { GUI } from 'three/addons/libs/lil-gui.module.min.js';
+
+        import { EffectComposer } from 'three/addons/postprocessing/EffectComposer.js';
+        import { SSAOPass } from 'three/addons/postprocessing/SSAOPass.js';
+        import { RenderPass } from 'three/addons/postprocessing/RenderPass.js';
+        import { UnrealBloomPass } from 'three/addons/postprocessing/UnrealBloomPass.js';
+
+        let node_tools = window.node_tools
+        let camera, scene, renderer;
+        let composer
+        let env_params = {
+            enabled: true,
+            texture_src: 'assets/quarry.hdr',
+            default_background: null,
+            default_texture: null,
+            texture: null
+        }
+        let postfx_params = {
+            enabled: false
+        }
+        let camera_params = {
+            fov: 45
+        }
+        let params = {
+            model_src: window.file_to_open,
+            resolution_scale: 0.7,
+            bloom_params: {
+                exposure: 1,
+                bloomStrength: 0.5,
+                bloomThreshold: 0.5,
+                bloomRadius: 1
+            }
+        }
+
+        /** loaders */
+        let loaders = {
+            gltf: (model_src) => {
+                let ktx2Loader = new KTX2Loader()
+                    .setTranscoderPath('lib/three/examples/jsm/libs/basis/')
+                    .detectSupport(renderer);
+
+                const dracoLoader = new DRACOLoader();
+                dracoLoader.setDecoderPath('lib/three/examples/jsm/libs/draco/gltf/');
+                /** --- */
+                const base_path = node_tools.path.dirname(model_src);
+                const model_path = node_tools.path.basename(model_src);
+                console.log(base_path)
+
+                new GLTFLoader()
+                    .setDRACOLoader(dracoLoader)
+                    .setKTX2Loader(ktx2Loader)
+                    .setMeshoptDecoder(MeshoptDecoder)
+                    .load(model_src, function (gltf) {
+                        console.log(gltf)
+                        scene.add(gltf.scene);
+                        render();
+                    });
+            },
+            glb: (model_src) => loaders.gltf(model_src)
+        }
+
+        init();
+        render();
+
+        function init() {
+            const width = window.innerWidth;
+            const height = window.innerHeight;
+            const container = document.createElement('div');
+            document.body.appendChild(container);
+
+            /** main renderer */
+            renderer = new THREE.WebGLRenderer({ antialias: true, logarithmicDepthBuffer: true });
+            renderer.setPixelRatio(window.devicePixelRatio);
+            renderer.setSize(window.innerWidth, window.innerHeight);
+            // renderer.toneMapping = THREE.    ;
+            renderer.toneMappingExposure = 1;
+            renderer.outputEncoding = THREE.sRGBEncoding;
+            container.appendChild(renderer.domElement);
+            /* main scene setup */
+            camera = new THREE.PerspectiveCamera(camera_params.fov, window.innerWidth / window.innerHeight, 1, 2000);
+            camera.position.set(0, 100, 0);
+
+            const environment = new RoomEnvironment();
+            const pmremGenerator = new THREE.PMREMGenerator(renderer);
+
+            scene = new THREE.Scene();
+            scene.background = new THREE.Color(0xbbbbbb);
+            scene.environment = pmremGenerator.fromScene(environment).texture;
+            environment.dispose();
+
+            const grid = new THREE.GridHelper(500, 10, 0xffffff, 0xffffff);
+            grid.material.opacity = 0.5;
+            grid.material.depthWrite = false;
+            grid.material.transparent = true;
+            scene.add(grid);
+            env_params.default_background = scene.background
+            env_params.default_texture = scene.environment
+
+            /** postfx */
+            const render_pass = new RenderPass(scene, camera);
+            const bloom_pass = new UnrealBloomPass(new THREE.Vector2(window.innerWidth, window.innerHeight), 1.5, 0.4, 0.85);
+            bloom_pass.threshold = params.bloom_params.bloomThreshold;
+            bloom_pass.strength = params.bloom_params.bloomStrength;
+            bloom_pass.radius = params.bloom_params.bloomRadius;
+            const ssao_pass = new SSAOPass(scene, camera, width, height);
+            ssao_pass.kernelRadius = 8;
+            composer = new EffectComposer(renderer);
+            composer.addPass(render_pass);
+            composer.addPass(ssao_pass);
+            composer.addPass(bloom_pass);
+            /** gui */
+            const gui = new GUI();
+            gui.add(env_params, 'enabled', 0.0, 1.0).name('Environment').onChange(function (value) {
+                if (value) {
+                    scene.background = env_params.texture;
+                    scene.environment = env_params.texture;
+                } else {
+                    scene.background = env_params.default_background;
+                    scene.environment = env_params.default_texture;
+                }
+                render()
+            });
+            gui.add(camera_params, 'fov', 1, 179).name("Camera FOV").onChange(function (value) {
+                camera.fov = value
+                camera.updateProjectionMatrix()
+                render()
+            });
+            gui.add(params, 'resolution_scale', 0.2, 1, 0.1).name("Rendering Scale").onChange(function (value) {
+                handle_window_resized()
+                render()
+            });
+            gui.close()
+            /* loading assets */
+            new RGBELoader().load(env_params.texture_src, function (texture) {
+                env_params.texture = texture
+                texture.mapping = THREE.EquirectangularReflectionMapping;
+                scene.background = texture;
+                scene.environment = texture;
+                render();
+                let model_format = node_tools.path.extname(params.model_src).replace(".", '')
+                try {
+                    document.getElementById("info").innerHTML = params.model_src
+                    loaders[model_format](params.model_src)
+                } catch (error) {
+                    console.error(error)
+                }
+            });
+            /** 3d viewport controls initialisation */
+            const controls = new OrbitControls(camera, renderer.domElement);
+            controls.addEventListener('change', render); // use if there is no animation loop
+            controls.minDistance = 400;
+            controls.maxDistance = 1000;
+            controls.target.set(10, 90, - 16);
+            controls.update();
+            window.addEventListener('resize', handle_window_resized);
+            handle_window_resized()
+        }
+        function handle_window_resized() {
+            const width = Math.floor(window.innerWidth * params.resolution_scale);
+            const height = Math.floor(window.innerHeight * params.resolution_scale);
+            camera.aspect = width / height;
+            camera.updateProjectionMatrix();
+            renderer.setSize(width, height);
+            composer.setSize(width, height);
+            render()
+        }
+        function render() {
+            if (postfx_params.enabled) {
+                composer.render();
+            } else {
+                renderer.render(scene, camera);
+            }
+        }
+    </script>
+
+</body>
+
+</html>
