@@ -17,6 +17,51 @@
             height: 100% !important;
         }
     </style>
+    <style>
+        :root {
+            --tp-base-background-color: hsla(0, 0%, 10%, 0.8);
+            --tp-base-shadow-color: hsla(0, 0%, 0%, 0.2);
+            --tp-button-background-color: hsla(0, 0%, 80%, 1);
+            --tp-button-background-color-active: hsla(0, 0%, 100%, 1);
+            --tp-button-background-color-focus: hsla(0, 0%, 95%, 1);
+            --tp-button-background-color-hover: hsla(0, 0%, 85%, 1);
+            --tp-button-foreground-color: hsla(0, 0%, 0%, 0.8);
+            --tp-container-background-color: hsla(0, 0%, 0%, 0.3);
+            --tp-container-background-color-active: hsla(0, 0%, 0%, 0.6);
+            --tp-container-background-color-focus: hsla(0, 0%, 0%, 0.5);
+            --tp-container-background-color-hover: hsla(0, 0%, 0%, 0.4);
+            --tp-container-foreground-color: hsla(0, 0%, 100%, 0.5);
+            --tp-groove-foreground-color: hsla(0, 0%, 0%, 0.2);
+            --tp-input-background-color: hsla(0, 0%, 0%, 0.3);
+            --tp-input-background-color-active: hsla(0, 0%, 0%, 0.6);
+            --tp-input-background-color-focus: hsla(0, 0%, 0%, 0.5);
+            --tp-input-background-color-hover: hsla(0, 0%, 0%, 0.4);
+            --tp-input-foreground-color: hsla(0, 0%, 100%, 0.5);
+            --tp-label-foreground-color: hsla(0, 0%, 100%, 0.5);
+            --tp-monitor-background-color: hsla(0, 0%, 0%, 0.3);
+            --tp-monitor-foreground-color: hsla(0, 0%, 100%, 0.3);
+        }
+    </style>
+    <style>
+        body .pane {
+            opacity: 0;
+            transition: opacity 0.3s ease-in-out;
+        }
+
+        body.hovered .pane {
+            opacity: 1;
+        }
+
+        .pane.inspect {
+            right: auto;
+            left: 8px;
+        }
+
+        .pane.about {
+            top: auto;
+            bottom: 8px;
+        }
+    </style>
 </head>
 
 <body>
@@ -75,7 +120,7 @@ Electron team
         let torch_light
         let axes_helper, grid_helper_10, grid_helper_100, grid_helper_1000
         let composer
-        let main_pane
+        let main_pane, inspect_pane, about_pane
 
         let params = {
             env_enabled: true,
@@ -292,15 +337,19 @@ Electron team
 
         function setup_gui() {
             main_pane = new Tweakpane.Pane()
-            let main_tabs = main_pane.addTab({
-                pages: [{ title: "Settings" }, { title: "About" }]
+            main_pane.element.parentElement.classList.add('pane')
+            main_pane.element.parentElement.classList.add('main')
+
+            let viewport_settings_folder = main_pane.addFolder({
+                title: "Viewport",
+                expanded: false
             })
 
             /* main tab */
-            main_tabs.pages[0].addInput(params, 'postfx_enabled', { label: 'Postprocessing' }).on('change', ({ value }) => {
+            viewport_settings_folder.addInput(params, 'postfx_enabled', { label: 'Postprocessing' }).on('change', ({ value }) => {
                 render()
             });
-            main_tabs.pages[0].addInput(params, 'env_enabled', { label: 'Environment' }).on('change', ({ value }) => {
+            viewport_settings_folder.addInput(params, 'env_enabled', { label: 'Environment' }).on('change', ({ value }) => {
                 if (value) {
                     global_scene.background = params.env_texture;
                     global_scene.environment = params.env_texture;
@@ -310,34 +359,58 @@ Electron team
                 }
                 render()
             });
-            main_tabs.pages[0].addInput(params, 'camera_fov', { label: "Camera FOV", min: 1, max: 120, step: 1 }).on('change', ({ value }) => {
+            viewport_settings_folder.addInput(params, 'camera_fov', { label: "Camera FOV", min: 1, max: 120, step: 1 }).on('change', ({ value }) => {
                 camera.fov = value
                 camera.updateProjectionMatrix()
                 render()
             });
-            main_tabs.pages[0].addInput(params, 'resolution_scale', { label: "Resolution", min: 0.5, max: 1, step: 0.05 }).on('change', ({ value }) => {
+            viewport_settings_folder.addInput(params, 'resolution_scale', { label: "Resolution", min: 0.5, max: 1, step: 0.05 }).on('change', ({ value }) => {
                 handle_window_resized()
                 render()
             });
 
-            main_tabs.pages[0].addInput(params, 'show_gizmo', { label: "Gizmo" }).on('change', ({ value }) => {
+
+            viewport_settings_folder.addInput(params, 'torch_light', { label: "Torchlight" }).on('change', ({ value }) => {
+                torch_light.visible = value
+                render()
+            });
+
+            /** about tab */
+            about_pane = new Tweakpane.Pane()
+            about_pane.element.parentElement.classList.add('pane')
+            about_pane.element.parentElement.classList.add('about')
+            let about_folder = about_pane.addFolder({ title: "About", expanded: false })
+            params.info.forEach((item, index) => {
+                about_folder.addMonitor(item, 'value', {
+                    label: item.label, multiline: true,
+                    lineCount: 32,
+                })
+            })
+
+            /* inspect pane */
+            inspect_pane = new Tweakpane.Pane()
+            inspect_pane.element.parentElement.classList.add('pane')
+            inspect_pane.element.parentElement.classList.add('inspect')
+
+            let inspect_folder = inspect_pane.addFolder({ title: "Inspect", expanded: true })
+            inspect_folder.addMonitor(params, 'scene_src')
+
+
+            let inspect_folder_settings = inspect_folder.addFolder({ title: "Settings", expanded: false })
+            inspect_folder_settings.addInput(params, 'show_gizmo', { label: "Gizmo" }).on('change', ({ value }) => {
                 axes_helper.visible = value
                 grid_helper_10.visible = value
                 grid_helper_100.visible = value
                 grid_helper_1000.visible = value
                 render()
             });
-            main_tabs.pages[0].addInput(params, 'torch_light', { label: "Torchlight" }).on('change', ({ value }) => {
-                torch_light.visible = value
-                render()
-            });
 
-            /** about tab */
-            params.info.forEach((item, index) => {
-                main_tabs.pages[1].addMonitor(item, 'value', {
-                    label: item.label, multiline: true,
-                    lineCount: 32,
-                })
+            /** effects */
+            document.body.addEventListener('mouseover', () => {
+                document.body.classList.add('hovered')
+            })
+            document.body.addEventListener('mouseout', () => {
+                document.body.classList.remove('hovered')
             })
 
         }
