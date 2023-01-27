@@ -17,16 +17,8 @@ let got_the_lock = app.requestSingleInstanceLock()
 
 
 let open_parameter = get_open_parameter(process.argv);
-let file_to_open
 
-if (open_parameter) {
-    console.log(`open parameter: ${open_parameter}`)
-    file_to_open = path.resolve(process.cwd(), open_parameter);
-} else {
-    file_to_open = ''
-}
-
-console.log(`file to open: ${file_to_open}`)
+console.log(`file to open: ${open_parameter}`)
 
 function get_open_parameter(list) {
     let result
@@ -40,6 +32,7 @@ function get_open_parameter(list) {
             console.log(`unsupported file format ${extname}. ignoring open request`)
         }
     }
+    console.log(`searching for open parameter done. result: ${result}`)
     return result
 }
 
@@ -71,24 +64,23 @@ if (!got_the_lock) {
     app.quit()
 } else {
     app.on('second-instance', (event, cli_parameters, working_dir) => {
-        let file_to_open = cli_parameters[cli_parameters.length - 1]
-        console.log(`new window file: ${file_to_open}`)
+        let open_parameter = get_open_parameter(cli_parameters)
+        console.log(`new window file: ${open_parameter}`)
         // Someone tried to run a second instance, we should focus our window.
         if (main_window) {
-            console.log(main_window)
-            main_window.webContents.send('open_file', { 'path': file_to_open });
+            main_window.webContents.send('open_file', { 'path': open_parameter });
             main_window.restore()
             main_window.focus()
         } else {
-            create_window(file_to_open)
+            create_window(open_parameter)
         }
     })
 
     // Create main_window, load the rest of the app, etc...
     app.on('ready', () => {
-        create_window(file_to_open)
+        create_window(open_parameter)
         app.on('activate', () => {
-            if (BrowserWindow.getAllWindows().length === 0) create_window(file_to_open)
+            if (BrowserWindow.getAllWindows().length === 0) create_window(open_parameter)
         })
     })
 }
