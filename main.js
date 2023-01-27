@@ -3,6 +3,14 @@ const { app, BrowserWindow, screen } = require('electron')
 const path = require('path')
 
 const IS_DEVELOPMENT = process.env.NODE_ENV === 'development'
+const supported_file_extensions = [
+    'hdr',
+    'gltf',
+    'glb',
+    'fbx',
+    'obj',
+    'mtl'
+]
 
 let main_window = null
 let got_the_lock = app.requestSingleInstanceLock()
@@ -21,10 +29,18 @@ if (open_parameter) {
 console.log(`file to open: ${file_to_open}`)
 
 function get_open_parameter(list) {
-    let ready
+    let result
     for (let i = 0; i < list.length; i++) {
-        console.log(list[i])
+        let extname = path.extname(list[i])
+        if (supported_file_extensions.indexOf(extname.replace('.', '')) > -1) {
+            console.log(`file format ${extname} is supported. opening...`)
+            result = list[i]
+            break
+        } else {
+            console.log(`unsupported file format ${extname}. ignoring open request`)
+        }
     }
+    return result
 }
 
 function create_window(initial_opened_file) {
