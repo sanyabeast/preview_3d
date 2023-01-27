@@ -6,7 +6,7 @@
         "electron-packager": "^17.1.1"
     },
     "scripts": {
-        "start": "cross-env NODE_ENV=development electron . assets/dark_teapot.glb",
+        "start": "cross-env NODE_ENV=development electron . assets/teapot.glb",
         "release": "npx electron-packager . --overwrite"
     },
     "main": "main.js",
