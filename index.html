@@ -370,7 +370,7 @@ Kyiv, Ukraine, 2023;
         let torch_light
         let axes_helper, grid_helper_10, grid_helper_100, grid_helper_1000
         let composer
-        let main_pane, inspect_pane, about_pane
+        let main_pane, file_pane, help_pane
         let new_version_pane_item
         let file_input = document.body.querySelector('#file_input')
         let render_loop_id
@@ -680,42 +680,7 @@ Kyiv, Ukraine, 2023;
                 render_needs_update = true
             });
 
-            /** about tab */
-            about_pane = new Tweakpane.Pane()
-            about_pane.element.parentElement.classList.add('pane')
-            about_pane.element.parentElement.classList.add('about')
-
-            new_version_pane_item = about_pane.addMonitor(params, 'application_has_updates', { label: 'new version', hidden: true })
-
-            let info_folder = about_pane.addFolder({ title: "Info", expanded: false })
-            params.info_data.forEach((item, index) => {
-                info_folder.addMonitor(item, 'value', {
-                    label: item.label, multiline: true,
-                    lineCount: 32,
-                })
-            })
-
-            let about_folder = about_pane.addFolder({ title: "About", expanded: false })
-            params.about_data.forEach((item, index) => {
-                about_folder.addMonitor(item, 'value', {
-                    label: item.label, multiline: true,
-                    lineCount: 32,
-                })
-            })
-
-
-            /* inspect pane */
-            inspect_pane = new Tweakpane.Pane()
-            inspect_pane.element.parentElement.classList.add('pane')
-            inspect_pane.element.parentElement.classList.add('inspect')
-
-            let file_folder = inspect_pane.addFolder({ title: "File", expanded: false })
-            file_folder.addMonitor(params, 'scene_src', { label: "Current" })
-            file_folder.addButton({ title: '', title: "Open" }).on('click', () => {
-                file_input.click()
-            })
-
-            let inspect_folder = inspect_pane.addFolder({ title: "Inspect", expanded: false })
+            let inspect_folder = main_pane.addFolder({ title: "Inspect", expanded: false })
 
             inspect_folder.addInput(params, 'show_gizmo', { label: "Gizmo" }).on('change', ({ value }) => {
                 axes_helper.visible = value
@@ -750,6 +715,42 @@ Kyiv, Ukraine, 2023;
                     render_needs_update = true
                 }, 500)
             });
+
+            /** about tab */
+            help_pane = new Tweakpane.Pane()
+            help_pane.element.parentElement.classList.add('pane')
+            help_pane.element.parentElement.classList.add('about')
+
+            let help_folder = help_pane.addFolder({ title: "Help", expanded: false })
+
+            new_version_pane_item = help_folder.addMonitor(params, 'application_has_updates', { label: 'new version', hidden: true })
+
+            let info_folder = help_folder.addFolder({ title: "Info", expanded: false })
+            params.info_data.forEach((item, index) => {
+                info_folder.addMonitor(item, 'value', {
+                    label: item.label, multiline: true,
+                    lineCount: 32,
+                })
+            })
+
+            let credits_folder = help_folder.addFolder({ title: "About", expanded: false })
+            params.about_data.forEach((item, index) => {
+                credits_folder.addMonitor(item, 'value', {
+                    label: item.label, multiline: true,
+                    lineCount: 32,
+                })
+            })
+
+            /* file pane */
+            file_pane = new Tweakpane.Pane()
+            file_pane.element.parentElement.classList.add('pane')
+            file_pane.element.parentElement.classList.add('inspect')
+
+            let file_folder = file_pane.addFolder({ title: "File", expanded: false })
+            file_folder.addMonitor(params, 'scene_src', { label: "Current" })
+            file_folder.addButton({ title: '', title: "Open" }).on('click', () => {
+                file_input.click()
+            })
         }
 
         function _collapse_gui_item(item, skip_item) {
@@ -765,8 +766,8 @@ Kyiv, Ukraine, 2023;
 
         function collapse_gui() {
             _collapse_gui_item(main_pane, true)
-            _collapse_gui_item(about_pane, true)
-            _collapse_gui_item(inspect_pane, true)
+            _collapse_gui_item(help_pane, true)
+            _collapse_gui_item(file_pane, true)
         }
 
         function setup_controls() {
@@ -775,7 +776,7 @@ Kyiv, Ukraine, 2023;
             document.body.addEventListener('dragover', handle_drag_and_drop, false)
             document.body.addEventListener('drop', handle_drag_and_drop, false)
             renderer.domElement.addEventListener('mousedown', () => {
-                _collapse_gui_item(about_pane, true)
+                _collapse_gui_item(help_pane, true)
             })
 
             window.addEventListener("keydown", (event) => {
