@@ -6,7 +6,7 @@
         "electron-packager": "^17.1.1"
     },
     "scripts": {
-        "start": "cross-env NODE_ENV=development electron . assets/teapot.glb",
+        "start": "cross-env NODE_ENV=development electron . assets/models/teapot.glb",
         "release": "npm version prerelease",
         "build": "npx electron-packager . --overwrite --icon=./assets/icon.ico"
     },

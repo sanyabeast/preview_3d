@@ -6,6 +6,7 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, user-scalable=no, minimum-scale=1.0, maximum-scale=1.0">
     <link type="text/css" rel="stylesheet" href="lib/three/examples/main.css">
+    <link type="text/css" rel="stylesheet" href="lib/notyf.min.css">
     <style>
         html,
         window {
@@ -159,22 +160,143 @@
             position: absolute;
         }
     </style>
+    <style>
+        #loader {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: #000000;
+            display: flex;
+            flex-direction: row;
+            justify-content: center;
+            align-items: center;
+            pointer-events: 0;
+            visibility: hidden;
+        }
+
+        #loader.active {
+            visibility: visible;
+        }
+
+        .lds-grid {
+            display: inline-block;
+            position: relative;
+            width: 80px;
+            height: 80px;
+        }
+
+        .lds-grid div {
+            position: absolute;
+            width: 16px;
+            height: 16px;
+            border-radius: 50%;
+            background: rgb(255, 174, 174);
+            animation: lds-grid 3.6s linear infinite;
+        }
+
+        .lds-grid div:nth-child(1) {
+            top: 8px;
+            left: 8px;
+            animation-delay: 0s;
+        }
+
+        .lds-grid div:nth-child(2) {
+            top: 8px;
+            left: 32px;
+            animation-delay: -0.4s;
+        }
+
+        .lds-grid div:nth-child(3) {
+            top: 8px;
+            left: 56px;
+            animation-delay: -0.8s;
+        }
+
+        .lds-grid div:nth-child(4) {
+            top: 32px;
+            left: 8px;
+            animation-delay: -0.4s;
+        }
+
+        .lds-grid div:nth-child(5) {
+            top: 32px;
+            left: 32px;
+            animation-delay: -0.8s;
+        }
+
+        .lds-grid div:nth-child(6) {
+            top: 32px;
+            left: 56px;
+            animation-delay: -1.2s;
+        }
+
+        .lds-grid div:nth-child(7) {
+            top: 56px;
+            left: 8px;
+            animation-delay: -0.8s;
+        }
+
+        .lds-grid div:nth-child(8) {
+            top: 56px;
+            left: 32px;
+            animation-delay: -1.2s;
+        }
+
+        .lds-grid div:nth-child(9) {
+            top: 56px;
+            left: 56px;
+            animation-delay: -1.6s;
+        }
+
+        @keyframes lds-grid {
+
+            0%,
+            100% {
+                opacity: 1;
+                filter: hue-rotate(0deg);
+            }
+
+            50% {
+                opacity: 0.5;
+                filter: hue-rotate(360deg);
+            }
+        }
+    </style>
 </head>
 
 <body>
+    <div id="loader">
+        <div class="lds-grid">
+            <div></div>
+            <div></div>
+            <div></div>
+            <div></div>
+            <div></div>
+            <div></div>
+            <div></div>
+            <div></div>
+            <div></div>
+        </div>
+    </div>
     <input type="file" id="file_input" accept=".glb, .gltf, .fbx, .obj, .mtl, .hdr">
     <script src="./lib/tweakpane.min.js"></script>
     <script async src="./lib/lodash.min.js"></script>
+    <!-- <script async src="./lib/notyf.es.min.js"></script> -->
     <script async src="./lib/es-module-shims.js"></script>
+
     <script type="importmap">
         {
             "imports": {
                 "three": "./lib/three/build/three.module.js",
-                "three/addons/": "./lib/three/examples/jsm/"
+                "three/addons/": "./lib/three/examples/jsm/",
+                "notyf": "./lib/notyf.es.min.js"
             }
         }
     </script>
     <script type="module">
+        import { Notyf } from 'notyf';
         import * as THREE from 'three';
 
         import { RoomEnvironment } from 'three/addons/environments/RoomEnvironment.js';
@@ -232,7 +354,14 @@ Kyiv, Ukraine, 2023;
     - Esc
             `;
 
+
         let inited = false
+        let notyf = new Notyf({
+            position: {
+                x: 'left',
+                y: 'bottom'
+            }
+        });
         let prev_frame_date = +new Date()
         let target_fps = 60
         let os_tools = window.os_tools
@@ -253,7 +382,7 @@ Kyiv, Ukraine, 2023;
 
         let params = {
             env_enabled: true,
-            env_texture_src: 'assets/atelier.hdr',
+            env_texture_src: 'assets/hdr/atelier.hdr',
             env_default_background: null,
             env_default_texture: null,
             env_texture: null,
@@ -432,6 +561,8 @@ Kyiv, Ukraine, 2023;
             setTimeout(() => {
                 render_needs_update = true
             }, 500)
+
+            set_loader(false)
         }
 
         function handle_drag_and_drop(event) {
@@ -643,6 +774,9 @@ Kyiv, Ukraine, 2023;
             document.body.addEventListener('dragleave', handle_drag_and_drop, false)
             document.body.addEventListener('dragover', handle_drag_and_drop, false)
             document.body.addEventListener('drop', handle_drag_and_drop, false)
+            renderer.domElement.addEventListener('mousedown', () => {
+                _collapse_gui_item(about_pane, true)
+            })
 
             window.addEventListener("keydown", (event) => {
                 switch (event.keyCode) {
@@ -718,7 +852,7 @@ Kyiv, Ukraine, 2023;
             axes_helper.scale.setScalar(max_value / 2)
             // grid_helper.scale.setScalar(max_value / 2)
             console.log(max_value)
-            controls.object.position.set(0, max_value * 2, max_value * 4)
+            controls.object.position.set(0, max_value * 1.5, -max_value * 3)
             controls.saveState()
             controls.reset()
         }
@@ -733,6 +867,7 @@ Kyiv, Ukraine, 2023;
         }
 
         function load_scene(scene_src) {
+            set_loader(true)
             collapse_gui();
             if (scene_src !== undefined) {
                 params.scene_src = os_tools.path.resolve(scene_src)
@@ -743,6 +878,8 @@ Kyiv, Ukraine, 2023;
                 loaders[model_format](params.scene_src)
             } catch (error) {
                 console.error(error)
+                notify_error(error.message)
+                set_loader(false)
             }
         }
 
@@ -797,6 +934,28 @@ Kyiv, Ukraine, 2023;
                 }
             } catch (err) {
                 console.error(err)
+            }
+        }
+
+        function notify_error(message) {
+            switch (true) {
+                case message === "loaders[model_format] is not a function": {
+                    notyf.error('Unsupported file format');
+                    break;
+                }
+                default: {
+                    notyf.error('message');
+                    break;
+                }
+            }
+        }
+
+        function set_loader(visible, progress) {
+            let loader = document.getElementById("loader")
+            if (visible) {
+                loader.classList.add('active')
+            } else {
+                loader.classList.remove('active')
             }
         }
 
