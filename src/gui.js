@@ -17,10 +17,10 @@ let notyf = new Notyf({
 });
 
 let main_pane, file_pane, help_pane
-let new_version_pane_item
+let update_available_banner
 
 function init_gui(params) {
-    if (state.check_updates === true && Math.random() < 0.25) {
+    if (state.check_updates === true && Math.random() < 1) {
         setTimeout(check_updates, 1000)
     }
 
@@ -88,9 +88,10 @@ function init_gui(params) {
     help_pane.element.parentElement.classList.add('pane')
     help_pane.element.parentElement.classList.add('about')
 
-    let help_folder = help_pane.addFolder({ title: "Help", expanded: false })
+    
 
-    new_version_pane_item = help_folder.addMonitor(state, 'application_has_updates', { label: 'new version', hidden: true })
+    let help_folder = help_pane.addFolder({ title: "Help", expanded: false })
+    update_available_banner = help_folder.addButton({ title: 'Update', hidden: true })
 
     let info_folder = help_folder.addFolder({ title: "Info", expanded: false })
     info_folder.addMonitor(texts, 'info_text', {
@@ -118,7 +119,7 @@ function init_gui(params) {
 
     let file_folder = file_pane.addFolder({ title: "File", expanded: false })
     file_folder.addMonitor(state, 'scene_src', { label: "Current" })
-    file_folder.addButton({ title: '', title: "Open" }).on('click', () => {
+    file_folder.addButton({ title: "Open" }).on('click', () => {
         file_input.click()
     })
 
@@ -154,14 +155,17 @@ function check_updates() {
         if (window.PACKAGE_INFO.version !== remote_package.version) {
             console.log(`preview_3d update available: ${remote_package.version}`)
             state.application_has_updates = remote_package.version
-            new_version_pane_item.hidden = false
+            update_available_banner.hidden = false
         } else {
             console.log(`preview_3d - latest version`)
-            new_version_pane_item.hidden = true
+            update_available_banner.hidden = true
         }
     } catch (err) {
         console.error(err)
     }
+
+    console.log(update_available_banner)
+    update_available_banner.hidden = false
 }
 
 
@@ -213,6 +217,7 @@ function _generate_list_keys(data, mode = 0) {
     }
     return result
 }
+
 
 export {
     init_gui,

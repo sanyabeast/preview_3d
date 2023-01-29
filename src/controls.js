@@ -4,6 +4,7 @@
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 import { camera, renderer, notify_render } from './render.js';
 import { state } from './state.js';
+import { collapse_gui } from './gui.js';
 
 let controls
 let file_input = document.body.querySelector('#file_input')
