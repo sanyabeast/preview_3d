@@ -1,21 +1,27 @@
 
 
+import { Notyf } from 'notyf';
+
 import { texture_loader } from './loaders.js';
 import { texts } from './data.js'
 import { matcaps, override_materials } from './inspect.js'
+import { world, gizmo, camera, renderer, composer, notify_render } from './render.js';
+import { state } from './data.js';
 
+let notyf = new Notyf({
+    position: {
+        x: 'left',
+        y: 'bottom'
+    }
+});
 
 let main_pane, file_pane, help_pane
 let new_version_pane_item
-/** external */
-let state, camera, renderer, composer, notify_render
 
 function init_gui(params) {
-    state = params.state
-    camera = params.camera
-    renderer = params.renderer
-    composer = params.composer
-    notify_render = params.notify_render
+    if (state.check_updates === true && Math.random() < 0.25) {
+        setTimeout(check_updates, 1000)
+    }
 
     main_pane = new Tweakpane.Pane()
     main_pane.element.parentElement.classList.add('pane')
@@ -28,7 +34,7 @@ function init_gui(params) {
 
     /* main tab */
     viewport_settings_folder.addInput(state, 'postfx_enabled', { label: 'Postprocessing' }).on('change', ({ value }) => {
-        notify_render
+        notify_render()
     });
     viewport_settings_folder.addInput(state, 'env_enabled', { label: 'Environment' }).on('change', ({ value }) => {
         if (value) {
@@ -38,32 +44,32 @@ function init_gui(params) {
             world.background = state.env_default_background;
             world.environment = state.env_default_texture;
         }
-        notify_render
+        notify_render()
     });
     viewport_settings_folder.addInput(state, 'camera_fov', { label: "Camera FOV", min: 1, max: 120, step: 1 }).on('change', ({ value }) => {
         camera.fov = value
         camera.updateProjectionMatrix()
-        notify_render
+        notify_render()
     });
     viewport_settings_folder.addInput(state, 'resolution_scale', { label: "Resolution", min: 0.5, max: 1, step: 0.05 }).on('change', ({ value }) => {
         handle_window_resized()
-        notify_render
+        notify_render()
     });
 
 
     viewport_settings_folder.addInput(state, 'torch_light', { label: "Torchlight" }).on('change', ({ value }) => {
         torch_light.visible = value
-        notify_render
+        notify_render()
     });
 
     let inspect_folder = main_pane.addFolder({ title: "Inspect", expanded: false })
 
     inspect_folder.addInput(state, 'show_gizmo', { label: "Gizmo" }).on('change', ({ value }) => {
-        axes_helper.visible = value
-        grid_helper_10.visible = value
-        grid_helper_100.visible = value
-        grid_helper_1000.visible = value
-        notify_render
+        gizmo.axes_helper.visible = value
+        gizmo.grid_helper_10.visible = value
+        gizmo.grid_helper_100.visible = value
+        gizmo.grid_helper_1000.visible = value
+        notify_render()
     });
 
     inspect_folder.addInput(state, 'inspect_mode', {
@@ -76,7 +82,6 @@ function init_gui(params) {
     }).on('change', ({ value }) => {
         console.log(`new preview mode: ${value}`)
         world.overrideMaterial = override_materials[value] || null
-        console.log(world.overrideMaterial)
         notify_render
     });
 
@@ -111,6 +116,13 @@ function init_gui(params) {
     credits_folder.addMonitor(texts, 'about_text', {
         label: 'About', multiline: true,
         lineCount: 32,
+    })
+
+    info_folder.on('click', () => {
+        credits_folder.expanded = false
+    })
+    credits_folder.on('click', () => {
+        info_folder.expanded = false
     })
 
     /* file pane */
@@ -170,7 +182,6 @@ function check_updates() {
 function update_title() {
     document.querySelector('head title').innerHTML = `preview_3d ${PACKAGE_INFO.version} | ${state.scene_src}`
 }
-
 
 function notify_error(message) {
     switch (true) {

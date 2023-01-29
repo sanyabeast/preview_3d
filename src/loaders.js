@@ -11,9 +11,7 @@ import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
 import { KTX2Loader } from 'three/addons/loaders/KTX2Loader.js';
 import { DRACOLoader } from 'three/addons/loaders/DRACOLoader.js';
 
-let renderer
-let set_active_scene
-let set_env_texture
+import { renderer, set_env_texture, set_active_scene } from './render.js';
 
 /** loaders */
 let texture_loader = new THREE.TextureLoader()
@@ -77,9 +75,6 @@ let loaders = {
 }
 
 function init_loaders(params) {
-    renderer = params.renderer
-    set_active_scene = params.set_active_scene
-    set_env_texture = params.set_env_texture
 
     ktx2Loader = new KTX2Loader()
         .setTranscoderPath('lib/three/examples/jsm/libs/basis/')
