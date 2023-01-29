@@ -7,266 +7,14 @@
     <meta name="viewport" content="width=device-width, user-scalable=no, minimum-scale=1.0, maximum-scale=1.0">
     <link type="text/css" rel="stylesheet" href="lib/three/examples/main.css">
     <link type="text/css" rel="stylesheet" href="lib/notyf.min.css">
-    <style>
-        html,
-        window {
-            background-color: black;
-            overflow: hidden;
-        }
-
-        canvas[data-engine] {
-            width: 100% !important;
-            height: 100% !important;
-        }
-    </style>
-    <style>
-        /* cyrillic-ext */
-        @font-face {
-            font-family: 'Roboto Condensed';
-            font-style: normal;
-            font-weight: 400;
-            font-display: swap;
-            src: url(./assets/fonts/ieVl2ZhZI2eCN5jzbjEETS9weq8-19-7DRs5.woff2) format('woff2');
-            unicode-range: U+0460-052F, U+1C80-1C88, U+20B4, U+2DE0-2DFF, U+A640-A69F, U+FE2E-FE2F;
-        }
-
-        /* cyrillic */
-        @font-face {
-            font-family: 'Roboto Condensed';
-            font-style: normal;
-            font-weight: 400;
-            font-display: swap;
-            src: url(./assets/fonts/ieVl2ZhZI2eCN5jzbjEETS9weq8-19a7DRs5.woff2) format('woff2');
-            unicode-range: U+0301, U+0400-045F, U+0490-0491, U+04B0-04B1, U+2116;
-        }
-
-        /* greek-ext */
-        @font-face {
-            font-family: 'Roboto Condensed';
-            font-style: normal;
-            font-weight: 400;
-            font-display: swap;
-            src: url(./assets/fonts/ieVl2ZhZI2eCN5jzbjEETS9weq8-1967DRs5.woff2) format('woff2');
-            unicode-range: U+1F00-1FFF;
-        }
-
-        /* greek */
-        @font-face {
-            font-family: 'Roboto Condensed';
-            font-style: normal;
-            font-weight: 400;
-            font-display: swap;
-            src: url(./assets/fonts/ieVl2ZhZI2eCN5jzbjEETS9weq8-19G7DRs5.woff2) format('woff2');
-            unicode-range: U+0370-03FF;
-        }
-
-        /* vietnamese */
-        @font-face {
-            font-family: 'Roboto Condensed';
-            font-style: normal;
-            font-weight: 400;
-            font-display: swap;
-            src: url(./assets/fonts/ieVl2ZhZI2eCN5jzbjEETS9weq8-1927DRs5.woff2) format('woff2');
-            unicode-range: U+0102-0103, U+0110-0111, U+0128-0129, U+0168-0169, U+01A0-01A1, U+01AF-01B0, U+1EA0-1EF9, U+20AB;
-        }
-
-        /* latin-ext */
-        @font-face {
-            font-family: 'Roboto Condensed';
-            font-style: normal;
-            font-weight: 400;
-            font-display: swap;
-            src: url(./assets/fonts/ieVl2ZhZI2eCN5jzbjEETS9weq8-19y7DRs5.woff2) format('woff2');
-            unicode-range: U+0100-024F, U+0259, U+1E00-1EFF, U+2020, U+20A0-20AB, U+20AD-20CF, U+2113, U+2C60-2C7F, U+A720-A7FF;
-        }
-
-        /* latin */
-        @font-face {
-            font-family: 'Roboto Condensed';
-            font-style: normal;
-            font-weight: 400;
-            font-display: swap;
-            src: url(./assets/fonts/ieVl2ZhZI2eCN5jzbjEETS9weq8-19K7DQ.woff2) format('woff2');
-            unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+2000-206F, U+2074, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
-        }
-    </style>
-    <style>
-        :root {
-            --tp-font-family: 'Roboto Condensed', sans-serif;
-            --tp-base-background-color: hsla(230, 20%, 11%, 1.00);
-            --tp-base-shadow-color: hsla(0, 0%, 0%, 0.2);
-            --tp-button-background-color: hsla(230, 10%, 80%, 1.00);
-            --tp-button-background-color-active: hsla(230, 10%, 95%, 1.00);
-            --tp-button-background-color-focus: hsla(230, 10%, 90%, 1.00);
-            --tp-button-background-color-hover: hsla(230, 10%, 85%, 1.00);
-            --tp-button-foreground-color: hsla(230, 20%, 11%, 1.00);
-            --tp-container-background-color: hsla(230, 25%, 16%, 1.00);
-            --tp-container-background-color-active: hsla(230, 25%, 31%, 1.00);
-            --tp-container-background-color-focus: hsla(230, 25%, 26%, 1.00);
-            --tp-container-background-color-hover: hsla(230, 25%, 21%, 1.00);
-            --tp-container-foreground-color: hsla(230, 10%, 80%, 1.00);
-            --tp-groove-foreground-color: hsla(230, 20%, 8%, 1.00);
-            --tp-input-background-color: hsla(230, 20%, 8%, 1.00);
-            --tp-input-background-color-active: hsla(230, 28%, 23%, 1.00);
-            --tp-input-background-color-focus: hsla(230, 28%, 18%, 1.00);
-            --tp-input-background-color-hover: hsla(230, 20%, 13%, 1.00);
-            --tp-input-foreground-color: hsla(230, 10%, 80%, 1.00);
-            --tp-label-foreground-color: hsla(230, 12%, 48%, 1.00);
-            --tp-monitor-background-color: hsla(230, 20%, 8%, 1.00);
-            --tp-monitor-foreground-color: hsla(230, 12%, 48%, 1.00);
-        }
-    </style>
-    <style>
-        body.production .pane {
-            opacity: 0;
-            transition: opacity 0.3s ease-in-out;
-        }
-
-        body.production:hover .pane {
-            opacity: 0.2;
-        }
-
-        body.production:hover .pane:hover {
-            opacity: 1;
-        }
-
-        body.development .pane {
-            opacity: 0.5;
-            transition: opacity 0.3s ease-in-out;
-        }
-
-        body.development:hover .pane {
-            opacity: 0.5;
-        }
-
-        body.development:hover .pane:hover {
-            opacity: 1;
-        }
-
-        .pane.inspect {
-            right: auto;
-            left: 8px;
-        }
-
-        .pane.about {
-            top: auto;
-            bottom: 8px;
-        }
-
-        #file_input {
-            visibility: hidden;
-            z-index: -1;
-            pointer-events: none;
-            position: absolute;
-        }
-    </style>
-    <style>
-        #loader {
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: #000000;
-            display: flex;
-            flex-direction: row;
-            justify-content: center;
-            align-items: center;
-            pointer-events: 0;
-            visibility: hidden;
-        }
-
-        #loader.active {
-            visibility: visible;
-        }
-
-        .lds-grid {
-            display: inline-block;
-            position: relative;
-            width: 80px;
-            height: 80px;
-        }
-
-        .lds-grid div {
-            position: absolute;
-            width: 16px;
-            height: 16px;
-            border-radius: 50%;
-            background: rgb(255, 174, 174);
-            animation: lds-grid 3.6s linear infinite;
-        }
-
-        .lds-grid div:nth-child(1) {
-            top: 8px;
-            left: 8px;
-            animation-delay: 0s;
-        }
-
-        .lds-grid div:nth-child(2) {
-            top: 8px;
-            left: 32px;
-            animation-delay: -0.4s;
-        }
-
-        .lds-grid div:nth-child(3) {
-            top: 8px;
-            left: 56px;
-            animation-delay: -0.8s;
-        }
-
-        .lds-grid div:nth-child(4) {
-            top: 32px;
-            left: 8px;
-            animation-delay: -0.4s;
-        }
-
-        .lds-grid div:nth-child(5) {
-            top: 32px;
-            left: 32px;
-            animation-delay: -0.8s;
-        }
-
-        .lds-grid div:nth-child(6) {
-            top: 32px;
-            left: 56px;
-            animation-delay: -1.2s;
-        }
-
-        .lds-grid div:nth-child(7) {
-            top: 56px;
-            left: 8px;
-            animation-delay: -0.8s;
-        }
-
-        .lds-grid div:nth-child(8) {
-            top: 56px;
-            left: 32px;
-            animation-delay: -1.2s;
-        }
-
-        .lds-grid div:nth-child(9) {
-            top: 56px;
-            left: 56px;
-            animation-delay: -1.6s;
-        }
-
-        @keyframes lds-grid {
-
-            0%,
-            100% {
-                opacity: 1;
-                filter: hue-rotate(0deg);
-            }
-
-            50% {
-                opacity: 0.5;
-                filter: hue-rotate(360deg);
-            }
-        }
-    </style>
+    <link type="text/css" rel="stylesheet" href="style/main.css">
+    <link type="text/css" rel="stylesheet" href="style/fonts.css">
+    <link type="text/css" rel="stylesheet" href="style/panes.css">
+    <link type="text/css" rel="stylesheet" href="style/loader.css">
 </head>
 
 <body>
+    <!-- loader -->
     <div id="loader">
         <div class="lds-grid">
             <div></div>
@@ -280,12 +28,12 @@
             <div></div>
         </div>
     </div>
+    <!-- hidden file input -->
     <input type="file" id="file_input" accept=".glb, .gltf, .fbx, .obj, .mtl, .hdr">
+    <!-- scripts -->
     <script src="./lib/tweakpane.min.js"></script>
     <script async src="./lib/lodash.min.js"></script>
-    <!-- <script async src="./lib/notyf.es.min.js"></script> -->
     <script async src="./lib/es-module-shims.js"></script>
-
     <script type="importmap">
         {
             "imports": {
@@ -298,26 +46,20 @@
     <script type="module">
         import { Notyf } from 'notyf';
         import * as THREE from 'three';
-
         import { RoomEnvironment } from 'three/addons/environments/RoomEnvironment.js';
         import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
-
         import { RGBELoader } from 'three/addons/loaders/RGBELoader.js';
         import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
         import { KTX2Loader } from 'three/addons/loaders/KTX2Loader.js';
         import { DRACOLoader } from 'three/addons/loaders/DRACOLoader.js';
         import { MeshoptDecoder } from 'three/addons/libs/meshopt_decoder.module.js';
-
         import { FBXLoader } from 'three/addons/loaders/FBXLoader.js';
-
         import { OBJLoader } from 'three/addons/loaders/OBJLoader.js';
         import { MTLLoader } from 'three/addons/loaders/MTLLoader.js';
-
         import { EffectComposer } from 'three/addons/postprocessing/EffectComposer.js';
         import { SSAOPass } from 'three/addons/postprocessing/SSAOPass.js';
         import { UnrealBloomPass } from 'three/addons/postprocessing/UnrealBloomPass.js';
         import { RenderPass } from 'three/addons/postprocessing/RenderPass.js';
-
         let about_text =
             `Feature-rich meshes preview
 for Windows, Macos and Linux.

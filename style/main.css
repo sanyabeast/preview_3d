@@ -1,0 +1,17 @@
+html,
+window {
+    background-color: black;
+    overflow: hidden;
+}
+
+canvas[data-engine] {
+    width: 100% !important;
+    height: 100% !important;
+}
+
+#file_input {
+    visibility: hidden;
+    z-index: -1;
+    pointer-events: none;
+    position: absolute;
+}
