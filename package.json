@@ -2,14 +2,16 @@
     "name": "preview_3d",
     "devDependencies": {
         "cross-env": "^7.0.3",
+        "directory-tree": "^3.5.1",
         "electron": "^23.0.0-beta.5",
         "electron-builder": "^23.6.0",
         "electron-packager": "^17.1.1"
     },
     "scripts": {
-        "start": "cross-env NODE_ENV=development electron . assets/models/teapot.glb",
+        "prebuild": "node prebuild.js",
+        "start": "npm run prebuild && cross-env NODE_ENV=development electron . assets/example/teapot.glb",
         "release": "npm version prerelease",
-        "make": "electron-builder --dir"
+        "make": "npm run prebuild && electron-builder --dir"
     },
     "main": "main.js",
     "version": "1.0.1-6",

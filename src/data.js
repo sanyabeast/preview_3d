@@ -1,3 +1,4 @@
+
 const texts = {
     about_text: `Feature-rich meshes preview
     for Windows, Macos and Linux.
@@ -55,6 +56,8 @@ const state = {
     inspect_mode: '',
     inspect_matcap_mode: 'AAA',
 }
+
+console.log(ASSETS)
 
 export {
     state,

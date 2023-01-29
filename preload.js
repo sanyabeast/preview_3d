@@ -2,9 +2,11 @@ const path = require('path')
 const ipcRenderer = window.require('electron').ipcRenderer;
 const IS_DEVELOPMENT = process.env.NODE_ENV === 'development'
 const package = require('./package.json')
+const ASSETS = require('./assets.json')
 
 window.PACKAGE_INFO = package
 window.IS_DEVELOPMENT = IS_DEVELOPMENT
+window.ASSETS = ASSETS
 
 let os_tools = {
     path: path
