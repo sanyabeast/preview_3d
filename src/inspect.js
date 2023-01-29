@@ -3,30 +3,50 @@
 
 import * as THREE from 'three';
 import { texture_loader } from './loaders.js';
+import { state } from './state.js';
+import { notify_render, world } from './render.js';
+import { random_choice } from './util.js';
 
-/** inspection materials */
-let matcaps = {
-    'AAA': '0A0A0A_A9A9A9_525252_747474-512px',
-    'AAB': '0F0F0F_4B4B4B_1C1C1C_2C2C2C-512px',
-    'AAC': '1A2461_3D70DB_2C3C8F_2C6CAC-512px',
-    'AAD': '1B1B1B_515151_7E7E7E_6C6C6C-512px',
-    'AAE': '2D2D2A_74716E_8F8C8C_92958E-512px',
-    'AAF': '2D2D2F_C6C2C5_727176_94949B-512px',
-    'AAG': '2E763A_78A0B7_B3D1CF_14F209-512px',
-    'AAH': '2EAC9E_61EBE3_4DDDD1_43D1C6-512px',
-    'AAJ': '0404E8_0404B5_0404CB_3333FC-512px',
-    'AAK': '15100F_241D1B_292424_2C2C27-512px',
-    'AAL': '191514_6D5145_4E3324_3B564D-512px'
+import { create_shader as create_albedo_shader } from './shaders/albedo.js';
+
+let inspect_modes = {
+    "None": {
+        material: null
+    },
+    "Albedo": {
+        material: create_albedo_shader()
+    },
+    "Wireframe": {
+        material: new THREE.MeshBasicMaterial({ wireframe: true })
+    },
+    "Matcap": {
+        material: new THREE.MeshMatcapMaterial()
+    },
+    "Normal": {
+        material: new THREE.MeshNormalMaterial()
+    }
 }
-let override_materials = {
-    wireframe: new THREE.MeshBasicMaterial({ wireframe: true }),
-    matcap: new THREE.MeshMatcapMaterial({
-        matcap: texture_loader.load(`./assets/matcap/${matcaps.AAA}.png`)
-    }),
-    normal: new THREE.MeshNormalMaterial()
+
+function init_inspect() {
+    set_matcap(random_choice(Object.keys(ASSETS.matcap)))
+}
+
+function set_matcap(alias) {
+    let file_name = ASSETS.matcap[alias]
+    state.inspect_matcap_mode = alias
+    state.inspect_matcap_file = file_name
+    inspect_modes["Matcap"].material.matcap = texture_loader.load(`./assets/matcap/${file_name}`)
+    notify_render(1000)
+}
+
+function set_inspection_mode(mode) {
+    world.overrideMaterial = inspect_modes[mode]?.material || null
+    notify_render(1000)
 }
 
 export {
-    matcaps,
-    override_materials
+    init_inspect,
+    inspect_modes,
+    set_matcap,
+    set_inspection_mode
 }

@@ -19,7 +19,8 @@ const state = {
     application_has_updates: '',
     check_updates: true,
     inspect_mode: '',
-    inspect_matcap_mode: 'AAA',
+    inspect_matcap_file: '',
+    inspect_matcap_mode: ''
 }
 
 export {

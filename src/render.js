@@ -21,6 +21,7 @@ let axes_helper, grid_helper_10, grid_helper_100, grid_helper_1000
 let torch_light
 let render_needs_update = true
 let render_loop_id
+let render_timeout = +new Date()
 
 function init_render() {
     /** main renderer */
@@ -112,14 +113,15 @@ function set_env_texture(texture) {
     notify_render();
 }
 
-function notify_render() {
+function notify_render(duration = 0) {
+    render_timeout = +new Date() + duration
     render_needs_update = true
 }
 
 function render() {
     render_loop_id = requestAnimationFrame(render)
 
-    if (render_needs_update === false) return
+    if (render_needs_update === false || +new Date() < render_timeout) return
     if (+new Date() - prev_frame_date < 1000 / target_fps) return
     prev_frame_date = +new Date()
     /** --- */

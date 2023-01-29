@@ -4,9 +4,8 @@
 
 import { Notyf } from 'notyf';
 
-import { texture_loader } from './loaders.js';
 import { texts } from './data.js'
-import { matcaps, override_materials } from './inspect.js'
+import { set_inspection_mode, set_matcap, inspect_modes } from './inspect.js'
 import { world, gizmo, camera, renderer, composer, notify_render } from './render.js';
 import { state } from './state.js';
 
@@ -75,28 +74,13 @@ function init_gui(params) {
     });
 
     inspect_folder.addInput(state, 'inspect_mode', {
-        label: "Mode", options: {
-            'Final Render': 'final_render',
-            'Wireframe': 'wireframe',
-            'Matcap': 'matcap',
-            'Normal': 'normal'
-        }
+        label: "Mode", options: _generate_list_keys(inspect_modes)
     }).on('change', ({ value }) => {
-        console.log(`new preview mode: ${value}`)
-        world.overrideMaterial = override_materials[value] || null
-        notify_render()
+        set_inspection_mode(value)
     });
 
-    let matcaps_options = {}
-    _.forEach(matcaps, (name, id) => {
-        matcaps_options[id] = id
-    })
-    inspect_folder.addInput(state, 'inspect_matcap_mode', { label: "Matcap", options: matcaps_options }).on('change', ({ value }) => {
-        override_materials.matcap.matcap = texture_loader.load(`./assets/matcap/${matcaps[value]}.png`);
-        notify_render()
-        setTimeout(() => {
-            notify_render()
-        }, 500)
+    inspect_folder.addInput(state, 'inspect_matcap_mode', { label: "Matcap", options: _generate_list_keys(ASSETS.matcap) }).on('change', ({ value }) => {
+        set_matcap(value)
     });
 
     /** about tab */
@@ -221,6 +205,14 @@ function handle_window_resized() {
     notify_render()
 }
 
+
+function _generate_list_keys(data, mode = 0) {
+    let result = {}
+    for (let k in data) {
+        result[k] = k
+    }
+    return result
+}
 
 export {
     init_gui,

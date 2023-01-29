@@ -5,6 +5,7 @@ import { loaders, init_loaders } from './loaders.js'
 import { init_gui, set_loader, collapse_gui, notify_error } from './gui.js'
 import { init_controls } from './controls.js'
 import { state } from './state.js';
+import { init_inspect } from './inspect.js';
 
 let os_tools = window.os_tools
 let is_running = false
@@ -31,6 +32,7 @@ function launch() {
     is_running = true
     init_controls({ load_scene })
     init_loaders()
+    init_inspect()
     init_gui()
     /* loading assets */
     loaders['hdr'](state.env_texture_src)

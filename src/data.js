@@ -36,7 +36,6 @@ const texts = {
     `,
 }
 
-console.log(ASSETS)
 
 export {
     texts
