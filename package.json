@@ -10,7 +10,7 @@
     "scripts": {
         "prebuild": "node prebuild.js",
         "start": "npm run prebuild && cross-env NODE_ENV=development electron . assets/example/teapot.glb",
-        "release": "npm version patch",
+        "patch": "npm version patch",
         "make": "npm run prebuild && electron-builder --dir"
     },
     "main": "main.js",
@@ -20,5 +20,13 @@
     "author": "@sanyabeast",
     "dependencies": {
         "jsonfile": "^6.1.0"
+    },
+    "build": {
+        "appId": "xyz.sanyabeast.preview_3d",
+        "productName": "preview_3d",
+        "copyright": "2023 @sanyabeast",
+        "win": {
+            "icon": "assets/app.ico"
+        }
     }
 }
