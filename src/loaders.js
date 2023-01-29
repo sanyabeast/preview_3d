@@ -76,7 +76,7 @@ let loaders = {
     }
 }
 
-function setup_loaders(params) {
+function init_loaders(params) {
     renderer = params.renderer
     set_active_scene = params.set_active_scene
     set_env_texture = params.set_env_texture
@@ -91,6 +91,6 @@ function setup_loaders(params) {
 
 export {
     loaders,
-    setup_loaders,
+    init_loaders,
     texture_loader
 }
