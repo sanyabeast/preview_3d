@@ -9,8 +9,7 @@
     "scripts": {
         "start": "cross-env NODE_ENV=development electron . assets/models/teapot.glb",
         "release": "npm version prerelease",
-        "build-windows": "npx electron-packager . --overwrite --icon=./assets/icon.ico --no-asar",
-        "build-darwin": "electron-builder --dir"
+        "make": "electron-builder --dir"
     },
     "main": "main.js",
     "version": "1.0.1-6",
