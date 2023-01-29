@@ -4,6 +4,10 @@ window {
     overflow: hidden;
 }
 
+body {
+    font-family: 'Roboto Condensed', sans-serif;
+}
+
 canvas[data-engine] {
     width: 100% !important;
     height: 100% !important;
@@ -14,4 +18,8 @@ canvas[data-engine] {
     z-index: -1;
     pointer-events: none;
     position: absolute;
+}
+
+.notyf {
+    padding: 8px;
 }

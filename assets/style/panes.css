@@ -58,3 +58,15 @@ body.development:hover .pane:hover {
     top: auto;
     bottom: 8px;
 }
+
+@media screen and (max-width: 600px) {
+    .pane {
+        display: none !important;
+    }
+}
+
+@media screen and (max-height: 600px) {
+    .pane {
+        display: none !important;
+    }
+}

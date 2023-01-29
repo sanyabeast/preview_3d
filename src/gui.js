@@ -84,7 +84,7 @@ function init_gui(params) {
     }).on('change', ({ value }) => {
         console.log(`new preview mode: ${value}`)
         world.overrideMaterial = override_materials[value] || null
-        notify_render
+        notify_render()
     });
 
     let matcaps_options = {}
@@ -93,9 +93,9 @@ function init_gui(params) {
     })
     inspect_folder.addInput(state, 'inspect_matcap_mode', { label: "Matcap", options: matcaps_options }).on('change', ({ value }) => {
         override_materials.matcap.matcap = texture_loader.load(`./assets/matcap/${matcaps[value]}.png`);
-        notify_render
+        notify_render()
         setTimeout(() => {
-            notify_render
+            notify_render()
         }, 500)
     });
 
@@ -198,6 +198,7 @@ function notify_error(message) {
     }
 }
 
+window.notify_error = notify_error
 
 function set_loader(visible, progress) {
     let loader = document.getElementById("loader")
@@ -217,7 +218,7 @@ function handle_window_resized() {
     if (composer) {
         composer.setSize(width, height);
     }
-    notify_render
+    notify_render()
 }
 
 
