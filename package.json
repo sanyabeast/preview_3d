@@ -10,7 +10,7 @@
     "scripts": {
         "prebuild": "node prebuild.js",
         "start": "npm run prebuild && cross-env NODE_ENV=development electron . assets/example/teapot.glb",
-        "release": "npm version prerelease",
+        "release": "npm version patch",
         "make": "npm run prebuild && electron-builder --dir"
     },
     "main": "main.js",
