@@ -5,10 +5,14 @@ const ipcRenderer = window.require('electron').ipcRenderer;
 const IS_DEVELOPMENT = process.env.NODE_ENV === 'development'
 const package = require('./package.json')
 const ASSETS = require('./assets.json')
+const shell = require('electron').shell;
 
 window.PACKAGE_INFO = package
 window.IS_DEVELOPMENT = IS_DEVELOPMENT
 window.ASSETS = ASSETS
+window.open_browser = (url) => {
+    shell.openExternal(url)
+}
 
 let os_tools = {
     path: path
@@ -28,7 +32,4 @@ ipcRenderer.on('open_file', function (evt, message) {
     }
 });
 
-console.log(process.argv)
-
-console.log(window, os_tools)
 window.os_tools = os_tools

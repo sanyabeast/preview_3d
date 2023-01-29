@@ -73,6 +73,8 @@ function init_controls(params) {
     controls.target.set(0, 0, 0);
     controls.object.position.set(0, 256, 512)
     controls.update();
+
+    renderer.domElement.addEventListener("mousedown", collapse_gui)
 }
 
 function frame_object() {

@@ -59,6 +59,11 @@ body.development:hover .pane:hover {
     bottom: 8px;
 }
 
+.pane .tp-lblv_l {
+    white-space: nowrap;
+    text-overflow: ellipsis;
+}
+
 @media screen and (max-width: 600px) {
     .pane {
         display: none !important;
