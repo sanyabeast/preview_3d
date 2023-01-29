@@ -1,4 +1,6 @@
 
+/** Created by @sanyabeast | 28 Jan 2023 | Kyiv, Ukraine */
+
 import * as THREE from 'three';
 import { texture_loader } from './loaders.js';
 

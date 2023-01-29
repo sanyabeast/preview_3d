@@ -1,6 +1,8 @@
 
 
 
+/** Created by @sanyabeast | 28 Jan 2023 | Kyiv, Ukraine */
+
 import * as THREE from 'three';
 import { RoomEnvironment } from 'three/addons/environments/RoomEnvironment.js';
 import { EffectComposer } from 'three/addons/postprocessing/EffectComposer.js';
@@ -8,10 +10,9 @@ import { SSAOPass } from 'three/addons/postprocessing/SSAOPass.js';
 import { UnrealBloomPass } from 'three/addons/postprocessing/UnrealBloomPass.js';
 import { RenderPass } from 'three/addons/postprocessing/RenderPass.js';
 
-import { state } from './data.js'
+import { state } from './state.js'
 import { set_loader, update_title } from './gui.js';
 import { frame_object } from './controls.js';
-
 
 let prev_frame_date = +new Date()
 let target_fps = 60

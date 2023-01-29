@@ -1,4 +1,6 @@
 
+/** Created by @sanyabeast | 28 Jan 2023 | Kyiv, Ukraine */
+
 const { app, BrowserWindow, screen } = require('electron')
 const path = require('path')
 

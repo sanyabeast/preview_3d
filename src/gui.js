@@ -1,12 +1,14 @@
 
 
+/** Created by @sanyabeast | 28 Jan 2023 | Kyiv, Ukraine */
+
 import { Notyf } from 'notyf';
 
 import { texture_loader } from './loaders.js';
 import { texts } from './data.js'
 import { matcaps, override_materials } from './inspect.js'
 import { world, gizmo, camera, renderer, composer, notify_render } from './render.js';
-import { state } from './data.js';
+import { state } from './state.js';
 
 let notyf = new Notyf({
     position: {

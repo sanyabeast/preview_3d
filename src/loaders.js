@@ -1,6 +1,8 @@
 
 
 
+/** Created by @sanyabeast | 28 Jan 2023 | Kyiv, Ukraine */
+
 import * as THREE from 'three';
 import { MeshoptDecoder } from 'three/addons/libs/meshopt_decoder.module.js';
 import { FBXLoader } from 'three/addons/loaders/FBXLoader.js';

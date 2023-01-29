@@ -1,10 +1,9 @@
 
-
-
+/** Created by @sanyabeast | 28 Jan 2023 | Kyiv, Ukraine */
 
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 import { camera, renderer, notify_render } from './render.js';
-import { state } from './data.js';
+import { state } from './state.js';
 
 let controls
 let file_input = document.body.querySelector('#file_input')
@@ -16,7 +15,6 @@ file_input.onchange = e => {
 
 function init_controls(params) {
     load_scene = params.load_scene
-
     document.body.addEventListener('dragenter', handle_drag_and_drop, false)
     document.body.addEventListener('dragleave', handle_drag_and_drop, false)
     document.body.addEventListener('dragover', handle_drag_and_drop, false)

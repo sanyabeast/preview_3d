@@ -1,3 +1,5 @@
+/** Created by @sanyabeast | 28 Jan 2023 | Kyiv, Ukraine */
+
 const path = require('path')
 const ipcRenderer = window.require('electron').ipcRenderer;
 const IS_DEVELOPMENT = process.env.NODE_ENV === 'development'
