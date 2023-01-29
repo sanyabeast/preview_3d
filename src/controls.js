@@ -8,6 +8,7 @@ import { collapse_gui } from './gui.js';
 
 let controls
 let file_input = document.body.querySelector('#file_input')
+file_input.setAttribute("accept", PACKAGE_INFO.extensions.join(', '))
 let load_scene
 
 file_input.onchange = e => {
@@ -94,7 +95,7 @@ function frame_object() {
     );
     // grid_helper.scale.setScalar(max_value / 2)
     console.log(max_value)
-    controls.object.position.set(0, max_value * 1.5, -max_value * 3)
+    controls.object.position.set(0, max_value * 1.5, max_value * 3)
     controls.saveState()
     controls.reset()
 }

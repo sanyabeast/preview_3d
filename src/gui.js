@@ -8,6 +8,7 @@ import { release_page_url, update_check_url, texts } from './data.js'
 import { set_inspection_mode, set_matcap, inspect_modes } from './inspect.js'
 import { world, gizmo, camera, renderer, composer, notify_render } from './render.js';
 import { state } from './state.js';
+import { load_sample } from './app.js'
 
 let notyf = new Notyf({
     position: {
@@ -116,6 +117,7 @@ function init_gui(params) {
 
     /* file pane */
     file_pane = new Tweakpane.Pane()
+    file_pane.registerPlugin(TweakpaneEssentialsPlugin);
     file_pane.element.parentElement.classList.add('pane')
     file_pane.element.parentElement.classList.add('inspect')
 
@@ -124,6 +126,20 @@ function init_gui(params) {
     file_folder.addButton({ title: "📀 Open" }).on('click', () => {
         file_input.click()
     })
+
+    let samples_folder = file_folder.addFolder({ title: "📝 Load sample", expanded: false })
+
+    samples_folder.addBlade({
+        view: 'buttongrid',
+        size: [1, Object.keys(ASSETS.samples).length],
+        cells: (x, y) => ({
+            title: _.map(Object.keys(ASSETS.samples), item => [item])[y][x],
+        }),
+        label: 'Samples',
+    }).on('click', (ev) => {
+        load_sample(ev.cell.title)
+        console.log(ev);
+    });
 
     window.addEventListener('resize', handle_window_resized);
     handle_window_resized()
@@ -153,7 +169,7 @@ function check_updates() {
         xhr.open('get', update_check_url, false)
         xhr.send()
         let remote_package = JSON.parse(xhr.responseText)
-       
+
         if (window.PACKAGE_INFO.version !== remote_package.version) {
             state.application_has_updates = remote_package.version
             update_available_banner.title = `Update: ${remote_package.version}`

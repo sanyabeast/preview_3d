@@ -12,8 +12,12 @@
         "2E763A_78A0B7_B3D1CF_14F209-512px": "2E763A_78A0B7_B3D1CF_14F209-512px.png",
         "2EAC9E_61EBE3_4DDDD1_43D1C6-512px": "2EAC9E_61EBE3_4DDDD1_43D1C6-512px.png"
     },
-    "examples": {
-        "teapot": "teapot.glb"
+    "samples": {
+        "Coffemat.glb": "Coffemat.glb",
+        "Iridescent Dish With Olives.glb": "Iridescent Dish With Olives.glb",
+        "Nurbs.fbx": "Nurbs.fbx",
+        "Sheen Chair.glb": "Sheen Chair.glb",
+        "Teapot.glb": "Teapot.glb"
     },
     "hdr": {
         "atelier": "atelier.hdr",

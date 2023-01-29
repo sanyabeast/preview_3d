@@ -27,6 +27,10 @@ function load_scene(scene_src) {
     }
 }
 
+function load_sample(sample_name) {
+    load_scene(`./assets/samples/${ASSETS.samples[sample_name]}`)
+}
+
 function launch() {
     if (is_running) return
     is_running = true
@@ -47,6 +51,7 @@ window.load_file = function (file_path) {
 
 export {
     load_scene,
+    load_sample,
     launch,
     state
 }

@@ -9,7 +9,7 @@
     },
     "scripts": {
         "prebuild": "node prebuild.js",
-        "start": "npm run prebuild && cross-env NODE_ENV=development electron . assets/example/teapot.glb",
+        "start": "npm run prebuild && cross-env NODE_ENV=development electron . assets/samples/teapot.glb",
         "patch": "npm version patch",
         "make": "npm run prebuild && electron-builder --dir"
     },
@@ -21,6 +21,14 @@
     "dependencies": {
         "jsonfile": "^6.1.0"
     },
+    "extensions": [
+        ".fbx",
+        ".glb",
+        ".gltf",
+        ".fbx",
+        ".obj",
+        ".hdr"
+    ],
     "build": {
         "appId": "xyz.sanyabeast.preview_3d",
         "productName": "preview_3d",
