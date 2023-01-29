@@ -2,7 +2,6 @@
 const { app, BrowserWindow, screen } = require('electron')
 const path = require('path')
 
-
 const IS_DEVELOPMENT = process.env.NODE_ENV === 'development'
 const supported_file_extensions = [
     'hdr',

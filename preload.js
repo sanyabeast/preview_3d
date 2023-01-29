@@ -1,9 +1,7 @@
 const path = require('path')
 const ipcRenderer = window.require('electron').ipcRenderer;
 const IS_DEVELOPMENT = process.env.NODE_ENV === 'development'
-const jsonfile = require('jsonfile')
-console.log(process.cwd())
-const package = jsonfile.readFileSync(IS_DEVELOPMENT ? 'package.json' : 'resources/app/package.json')
+const package = require('./package.json')
 
 window.PACKAGE_INFO = package
 window.IS_DEVELOPMENT = IS_DEVELOPMENT
