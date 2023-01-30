@@ -13,9 +13,9 @@ import { RenderPass } from 'three/addons/postprocessing/RenderPass.js';
 import { state } from './state.js'
 import { set_loader, update_title } from './gui.js';
 import { frame_object } from './controls.js';
+import { loaders } from './loaders.js';
 
 let prev_frame_date = +new Date()
-let target_fps = 60
 let camera, world, renderer, composer
 let axes_helper, grid_helper_10, grid_helper_100, grid_helper_1000
 let torch_light
@@ -97,7 +97,7 @@ function init_postfx() {
     bloom_pass.strength = state.postfx_bloom_strength;
     bloom_pass.radius = state.postfx_bloom_radius;
     const ssao_pass = new SSAOPass(world, camera, window.innerWidth, window.innerHeight);
-    ssao_pass.kernelRadius = 8;
+    ssao_pass.kernelRadius = 1;
     composer = new EffectComposer(renderer);
     composer.addPass(render_pass);
     composer.addPass(bloom_pass);
@@ -105,12 +105,17 @@ function init_postfx() {
 
 }
 
-function set_env_texture(texture) {
+function set_environment_texture(texture) {
     state.env_texture = texture
     texture.mapping = THREE.EquirectangularReflectionMapping;
     world.background = texture;
     world.environment = texture;
     notify_render();
+}
+
+function set_environment(alias) {
+    console.log(`${LOCAL_BASE_PATH}/assets/hdr/${ASSETS.hdr[alias]}`)
+    loaders['hdr'](`${LOCAL_BASE_PATH}/assets/hdr/${ASSETS.hdr[alias]}`)
 }
 
 function notify_render(duration = 0) {
@@ -121,18 +126,17 @@ function notify_render(duration = 0) {
 function render() {
     render_loop_id = requestAnimationFrame(render)
 
-    if (render_needs_update === false || +new Date() < render_timeout) return
-    if (+new Date() - prev_frame_date < 1000 / target_fps) return
-    prev_frame_date = +new Date()
-    /** --- */
-    torch_light.position.copy(camera.position)
+    if (render_needs_update === true || +new Date() < render_timeout) {
+        prev_frame_date = +new Date()
+        /** --- */
+        torch_light.position.copy(camera.position)
 
-    if (state.postfx_enabled) {
-        composer.render();
-    } else {
-        renderer.render(world, camera);
+        if (state.postfx_enabled) {
+            composer.render();
+        } else {
+            renderer.render(world, camera);
+        }
     }
-
     render_needs_update = false
 }
 
@@ -161,11 +165,7 @@ function set_active_scene(scene) {
         frame_object()
     }
 
-    notify_render();
-    setTimeout(() => {
-        notify_render()
-    }, 500)
-
+    notify_render(1000);
     set_loader(false)
 }
 
@@ -187,9 +187,10 @@ export {
     composer,
     torch_light,
     gizmo,
-    set_env_texture,
+    set_environment_texture,
     start_render,
     stop_render,
     notify_render,
-    set_active_scene
+    set_active_scene,
+    set_environment
 }

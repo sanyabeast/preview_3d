@@ -13,7 +13,7 @@ import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
 import { KTX2Loader } from 'three/addons/loaders/KTX2Loader.js';
 import { DRACOLoader } from 'three/addons/loaders/DRACOLoader.js';
 
-import { renderer, set_env_texture, set_active_scene } from './render.js';
+import { renderer, set_environment_texture, set_active_scene } from './render.js';
 
 /** loaders */
 let texture_loader = new THREE.TextureLoader()
@@ -27,7 +27,7 @@ let ktx2Loader,
 let loaders = {
     hdr: (texture_src) => {
         new RGBELoader().load(texture_src, function (texture) {
-            set_env_texture(texture)
+            set_environment_texture(texture)
         });
     },
     gltf: (scene_src) => {

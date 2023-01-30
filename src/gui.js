@@ -6,9 +6,9 @@ import { Notyf } from 'notyf';
 
 import { release_page_url, update_check_url, texts } from './data.js'
 import { set_inspection_mode, set_matcap, inspect_modes } from './inspect.js'
-import { world, gizmo, camera, renderer, composer, notify_render } from './render.js';
+import { world, gizmo, camera, renderer, composer, notify_render, set_environment } from './render.js';
 import { state } from './state.js';
-import { load_sample } from './app.js'
+import { load_sample, load_scene } from './app.js'
 
 let notyf = new Notyf({
     position: {
@@ -26,6 +26,7 @@ function init_gui(params) {
     }
 
     main_pane = new Tweakpane.Pane()
+    main_pane.registerPlugin(TweakpaneEssentialsPlugin);
     main_pane.element.parentElement.classList.add('pane')
     main_pane.element.parentElement.classList.add('main')
 
@@ -47,6 +48,24 @@ function init_gui(params) {
             world.environment = state.env_default_texture;
         }
         notify_render()
+    });
+
+    let environment_map_select_folder = viewport_settings_folder.addFolder({
+        title: "👁️‍🗨️ Select Environment",
+        expanded: false
+    })
+
+    console.log(_.chunk(Object.keys(ASSETS.hdr), 3))
+    environment_map_select_folder.addBlade({
+        view: 'buttongrid',
+        size: [1, Object.keys(ASSETS.hdr).length],
+        cells: (x, y) => ({
+            title: _.map(Object.keys(ASSETS.hdr), item => [item])[y][x],
+        }),
+        label: 'Samples',
+    }).on('click', (ev) => {
+        set_environment(ev.cell.title)
+        console.log(ev);
     });
     viewport_settings_folder.addInput(state, 'camera_fov', { label: "👁 Camera FOV", min: 1, max: 120, step: 1 }).on('change', ({ value }) => {
         camera.fov = value

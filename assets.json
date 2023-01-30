@@ -25,6 +25,7 @@
     },
     "samples": {
         "Coffemat.glb": "Coffemat.glb",
+        "Coke Fridge.glb": "Coke Fridge.glb",
         "Iridescent Dish With Olives.glb": "Iridescent Dish With Olives.glb",
         "Nurbs.fbx": "Nurbs.fbx",
         "Sheen Chair.glb": "Sheen Chair.glb",
@@ -32,6 +33,12 @@
     },
     "hdr": {
         "atelier": "atelier.hdr",
-        "quarry": "quarry.hdr"
+        "autumn": "autumn.hdr",
+        "clouds": "clouds.hdr",
+        "flick": "flick.hdr",
+        "panorama": "panorama.hdr",
+        "patio": "patio.hdr",
+        "quarry": "quarry.hdr",
+        "tomoco": "tomoco.hdr"
     }
 }
