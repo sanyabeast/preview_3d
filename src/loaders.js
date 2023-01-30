@@ -26,53 +26,67 @@ let ktx2Loader,
 
 let loaders = {
     hdr: (texture_src) => {
-        new RGBELoader().load(texture_src, function (texture) {
-            set_environment_texture(texture)
-        });
+        return new Promise((resolve, reject) => {
+            new RGBELoader().load(texture_src, function (texture) {
+                set_environment_texture(texture)
+                resolve()
+            });
+        })
     },
     gltf: (scene_src) => {
-        /** --- */
-        const base_path = os_tools.path.dirname(scene_src);
-        const model_path = os_tools.path.basename(scene_src);
-        console.log(base_path)
+        return new Promise((resolve, reject) => {
+            /** --- */
+            const base_path = os_tools.path.dirname(scene_src);
+            const model_path = os_tools.path.basename(scene_src);
+            console.log(base_path)
 
-        gltf_loader = gltf_loader || new GLTFLoader()
-            .setDRACOLoader(dracoLoader)
-            .setKTX2Loader(ktx2Loader)
-            .setMeshoptDecoder(MeshoptDecoder)
+            gltf_loader = gltf_loader || new GLTFLoader()
+                .setDRACOLoader(dracoLoader)
+                .setKTX2Loader(ktx2Loader)
+                .setMeshoptDecoder(MeshoptDecoder)
 
-        gltf_loader.load(scene_src, function (gltf) {
-            set_active_scene(gltf.scene)
-        });
+            gltf_loader.load(scene_src, function (gltf) {
+                set_active_scene(gltf.scene)
+                resolve()
+            });
+
+
+        })
     },
     glb: (scene_src) => loaders.gltf(scene_src),
     fbx: (scene_src) => {
-        fbx_loader = fbx_loader || new FBXLoader();
-        fbx_loader.load(scene_src, function (object) {
-            set_active_scene(object)
-
-        });
+        return new Promise((resolve, reject) => {
+            fbx_loader = fbx_loader || new FBXLoader();
+            fbx_loader.load(scene_src, function (object) {
+                set_active_scene(object)
+                resolve()
+            });
+        })
     },
     obj: (scene_src) => {
-        let base_path = os_tools.path.dirname(scene_src)
-        obj_loader = obj_loader || new OBJLoader()
-        mtl_loader = mtl_loader || new MTLLoader()
+        return new Promise((resolve, reject) => {
+            let base_path = os_tools.path.dirname(scene_src)
+            obj_loader = obj_loader || new OBJLoader()
+            mtl_loader = mtl_loader || new MTLLoader()
 
-        try {
-            mtl_loader.load(scene_src.replace('.obj', '.mtl'), function (materials) {
-                console.log(materials)
-                materials.preload();
-                obj_loader.setMaterials(materials)
+            try {
+                mtl_loader.load(scene_src.replace('.obj', '.mtl'), function (materials) {
+                    console.log(materials)
+                    materials.preload();
+                    obj_loader.setMaterials(materials)
+                    obj_loader.load(scene_src, function (object) {
+                        set_active_scene(object)
+                        resolve()
+                    });
+                })
+            } catch (err) {
+                console.error(err)
                 obj_loader.load(scene_src, function (object) {
                     set_active_scene(object)
+                    resolve()
                 });
-            })
-        } catch (err) {
-            console.error(err)
-            obj_loader.load(scene_src, function (object) {
-                set_active_scene(object)
-            });
-        }
+            }
+        })
     }
 }
 

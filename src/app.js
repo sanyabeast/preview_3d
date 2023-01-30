@@ -10,7 +10,7 @@ import { init_inspect } from './inspect.js';
 let os_tools = window.os_tools
 let is_running = false
 
-function load_scene(scene_src) {
+async function load_scene(scene_src) {
     set_loader(true)
     if (scene_src !== undefined) {
         state.scene_src = os_tools.path.resolve(scene_src)
@@ -18,7 +18,7 @@ function load_scene(scene_src) {
 
     let model_format = os_tools.path.extname(state.scene_src).replace(".", '')
     try {
-        loaders[model_format](state.scene_src)
+        await loaders[model_format](state.scene_src)
     } catch (error) {
         console.error(error)
         notify_error(error.message)
@@ -30,7 +30,7 @@ function load_sample(sample_name) {
     load_scene(`${LOCAL_BASE_PATH}/assets/samples/${ASSETS.samples[sample_name]}`)
 }
 
-function launch() {
+async function launch() {
     if (is_running) return
     is_running = true
     init_controls({ load_scene })
@@ -39,13 +39,13 @@ function launch() {
     init_gui()
     /* loading assets */
     loaders['hdr'](state.env_texture_src)
-    load_scene()
+    await load_scene()
     start_render()
     notify_render()
 }
 
-window.load_file = function (file_path) {
-    load_scene(file_path)
+window.load_file = async function (file_path) {
+    await load_scene(file_path)
 }
 
 export {

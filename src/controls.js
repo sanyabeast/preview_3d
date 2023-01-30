@@ -17,12 +17,12 @@ file_input.onchange = e => {
 
 function init_controls(params) {
     load_scene = params.load_scene
-    document.body.addEventListener('dragenter', handle_drag_and_drop, false)
-    document.body.addEventListener('dragleave', handle_drag_and_drop, false)
-    document.body.addEventListener('dragover', handle_drag_and_drop, false)
-    document.body.addEventListener('drop', handle_drag_and_drop, false)
+    window.addEventListener('dragenter', handle_drag_and_drop, false)
+    window.addEventListener('dragleave', handle_drag_and_drop, false)
+    window.addEventListener('dragover', handle_drag_and_drop, false)
+    window.addEventListener('drop', handle_drag_and_drop, false)
 
-    window.addEventListener("keydown", (event) => {
+    window.addEventListener("keydown", async (event) => {
         switch (event.keyCode) {
             case 70: {
                 event.preventDefault()
@@ -51,23 +51,22 @@ function init_controls(params) {
             }
             case 82: {
                 event.preventDefault()
-                load_scene()
+                await load_scene()
                 break;
             }
             case 27: {
                 event.preventDefault()
+                collapse_gui()
                 break;
             }
             default: {
                 console.log(`keycode: ${event.keyCode}`)
             }
         }
-    })
+    }, false)
 
     controls = new OrbitControls(camera, renderer.domElement);
-    controls.addEventListener('change', () => {
-        notify_render()
-    }); // use if there is no animation loop
+    watch_controls(notify_render)
     controls.minDistance = 0;
     controls.maxDistance = Infinity;
     controls.target.set(0, 0, 0);
@@ -99,16 +98,22 @@ function frame_object() {
     controls.reset()
 }
 
-function handle_drag_and_drop(event) {
+async function handle_drag_and_drop(event) {
     event.preventDefault()
     if (event.dataTransfer && event.dataTransfer.files.length > 0) {
         let file_path = event.dataTransfer.files[0].path
-        load_scene(file_path)
+        await load_scene(file_path)
     }
+}
+
+function watch_controls(handle_change) {
+    controls.addEventListener('change', handle_change); // use if there is no animation loop
+
 }
 
 
 export {
     init_controls,
-    frame_object
+    frame_object,
+    watch_controls
 }

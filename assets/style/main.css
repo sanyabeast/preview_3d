@@ -4,6 +4,11 @@ window {
     overflow: hidden;
 }
 
+* {
+    box-sizing: border-box;
+    user-select: none;
+}
+
 body {
     font-family: 'Roboto Condensed', sans-serif, 'Noto Color Emoji';
 }

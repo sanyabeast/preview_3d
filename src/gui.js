@@ -5,10 +5,10 @@
 import { Notyf } from 'notyf';
 
 import { release_page_url, update_check_url, texts } from './data.js'
-import { set_inspection_mode, set_matcap, inspect_modes } from './inspect.js'
-import { world, gizmo, camera, renderer, composer, notify_render, set_environment } from './render.js';
+import { set_inspection_mode, set_matcap, inspect_modes, torch_light, gizmo } from './inspect.js'
+import { world, camera, renderer, composer, notify_render, set_environment } from './render.js';
 import { state } from './state.js';
-import { load_sample, load_scene } from './app.js'
+import { load_sample } from './app.js'
 
 let notyf = new Notyf({
     position: {

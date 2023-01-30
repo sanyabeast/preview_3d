@@ -4,11 +4,14 @@
 import * as THREE from 'three';
 import { texture_loader } from './loaders.js';
 import { state } from './state.js';
-import { notify_render, world } from './render.js';
+import { notify_render, world, camera } from './render.js';
 import { random_choice } from './util.js';
+import { watch_controls } from './controls.js';
 
 let matcap_materials = {}
 let inspect_materials = {}
+let torch_light
+let axes_helper, grid_helper_10, grid_helper_100, grid_helper_1000
 
 let inspect_modes = {
     "None": {
@@ -99,7 +102,43 @@ let inspect_modes = {
 }
 
 function init_inspect() {
+    torch_light = new THREE.PointLight()
+    torch_light.intensity = 0.5
+    torch_light.visible = state.torch_light
+    world.add(torch_light)
+
+
+    axes_helper = new THREE.AxesHelper(2);
+    axes_helper.visible = state.show_gizmo
+    world.add(axes_helper)
+
+    grid_helper_10 = new THREE.GridHelper(10, 10, 0xffffff, 0xffffff);
+    grid_helper_10.material.opacity = 0.1;
+    grid_helper_10.material.depthWrite = false;
+    grid_helper_10.material.transparent = true;
+    grid_helper_10.visible = state.show_gizmo
+    world.add(grid_helper_10);
+
+    grid_helper_100 = new THREE.GridHelper(100, 10, 0xffffff, 0xffffff);
+    grid_helper_100.material.opacity = 0.1;
+    grid_helper_100.material.depthWrite = false;
+    grid_helper_100.material.transparent = true;
+    grid_helper_100.visible = state.show_gizmo
+    world.add(grid_helper_100);
+
+
+    grid_helper_1000 = new THREE.GridHelper(1000, 10, 0xffffff, 0xffffff);
+    grid_helper_1000.material.opacity = 0.1;
+    grid_helper_1000.material.depthWrite = false;
+    grid_helper_1000.material.transparent = true;
+    grid_helper_1000.visible = state.show_gizmo
+    world.add(grid_helper_1000);
+
     set_matcap(random_choice(Object.keys(ASSETS.matcap)))
+
+    watch_controls(() => {
+        torch_light.position.copy(camera.position)
+    })
 }
 
 function set_matcap(alias) {
@@ -119,9 +158,19 @@ function set_inspection_mode(mode) {
     notify_render(1000)
 }
 
+const gizmo = {
+    axes_helper,
+    grid_helper_10,
+    grid_helper_100,
+    grid_helper_1000
+}
+
+
 export {
     init_inspect,
     inspect_modes,
     set_matcap,
-    set_inspection_mode
+    set_inspection_mode,
+    gizmo,
+    torch_light
 }

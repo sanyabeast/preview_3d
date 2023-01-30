@@ -15,10 +15,8 @@ import { set_loader, update_title } from './gui.js';
 import { frame_object } from './controls.js';
 import { loaders } from './loaders.js';
 
-let prev_frame_date = +new Date()
 let camera, world, renderer, composer
-let axes_helper, grid_helper_10, grid_helper_100, grid_helper_1000
-let torch_light
+
 let render_needs_update = true
 let render_loop_id
 let render_timeout = +new Date()
@@ -55,36 +53,9 @@ function init_world() {
     sun.intensity = 1
     world.add(sun)
     world.add(amb)
-    torch_light = new THREE.PointLight()
-    torch_light.intensity = 0.5
-    torch_light.visible = state.torch_light
-    world.add(torch_light)
-
-    axes_helper = new THREE.AxesHelper(2);
-    axes_helper.visible = state.show_gizmo
-    world.add(axes_helper)
-
-    grid_helper_10 = new THREE.GridHelper(10, 10, 0xffffff, 0xffffff);
-    grid_helper_10.material.opacity = 0.1;
-    grid_helper_10.material.depthWrite = false;
-    grid_helper_10.material.transparent = true;
-    grid_helper_10.visible = state.show_gizmo
-    world.add(grid_helper_10);
-
-    grid_helper_100 = new THREE.GridHelper(100, 10, 0xffffff, 0xffffff);
-    grid_helper_100.material.opacity = 0.1;
-    grid_helper_100.material.depthWrite = false;
-    grid_helper_100.material.transparent = true;
-    grid_helper_100.visible = state.show_gizmo
-    world.add(grid_helper_100);
 
 
-    grid_helper_1000 = new THREE.GridHelper(1000, 10, 0xffffff, 0xffffff);
-    grid_helper_1000.material.opacity = 0.1;
-    grid_helper_1000.material.depthWrite = false;
-    grid_helper_1000.material.transparent = true;
-    grid_helper_1000.visible = state.show_gizmo
-    world.add(grid_helper_1000);
+
 
     state.env_default_background = world.background
     state.env_default_texture = world.environment
@@ -127,10 +98,7 @@ function render() {
     render_loop_id = requestAnimationFrame(render)
 
     if (render_needs_update === true || +new Date() < render_timeout) {
-        prev_frame_date = +new Date()
-        /** --- */
-        torch_light.position.copy(camera.position)
-
+        
         if (state.postfx_enabled) {
             composer.render();
         } else {
@@ -173,20 +141,12 @@ init_render()
 init_world()
 init_postfx()
 
-const gizmo = {
-    axes_helper,
-    grid_helper_10,
-    grid_helper_100,
-    grid_helper_1000
-}
 
 export {
     camera,
     world,
     renderer,
     composer,
-    torch_light,
-    gizmo,
     set_environment_texture,
     start_render,
     stop_render,

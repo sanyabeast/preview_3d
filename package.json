@@ -36,6 +36,9 @@
         "asar": false,
         "win": {
             "icon": "assets/app.ico"
+        },
+        "mac": {
+            "icon": "assets/app.icns"
         }
     }
 }
