@@ -12,7 +12,6 @@ let is_running = false
 
 function load_scene(scene_src) {
     set_loader(true)
-    collapse_gui();
     if (scene_src !== undefined) {
         state.scene_src = os_tools.path.resolve(scene_src)
     }

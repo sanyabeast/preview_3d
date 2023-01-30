@@ -56,7 +56,6 @@ function init_controls(params) {
             }
             case 27: {
                 event.preventDefault()
-                collapse_gui()
                 break;
             }
             default: {

@@ -39,7 +39,7 @@ function init_gui(params) {
     viewport_settings_folder.addInput(state, 'postfx_enabled', { label: '✨ Postfx' }).on('change', ({ value }) => {
         notify_render()
     });
-    viewport_settings_folder.addInput(state, 'env_enabled', { label: '🌦 Environment' }).on('change', ({ value }) => {
+    viewport_settings_folder.addInput(state, 'env_enabled', { label: '🏜 Environment' }).on('change', ({ value }) => {
         if (value) {
             world.background = state.env_texture;
             world.environment = state.env_texture;
@@ -51,7 +51,7 @@ function init_gui(params) {
     });
 
     let environment_map_select_folder = viewport_settings_folder.addFolder({
-        title: "👁️‍🗨️ Select Environment",
+        title: "🗺 Environment texture",
         expanded: false
     })
 
@@ -146,7 +146,7 @@ function init_gui(params) {
         file_input.click()
     })
 
-    let samples_folder = file_folder.addFolder({ title: "📝 Load sample", expanded: false })
+    let samples_folder = file_folder.addFolder({ title: "🏷 Load sample", expanded: false })
 
     samples_folder.addBlade({
         view: 'buttongrid',
