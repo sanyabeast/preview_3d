@@ -28,7 +28,7 @@ function load_scene(scene_src) {
 }
 
 function load_sample(sample_name) {
-    load_scene(`./assets/samples/${ASSETS.samples[sample_name]}`)
+    load_scene(`${LOCAL_BASE_PATH}/assets/samples/${ASSETS.samples[sample_name]}`)
 }
 
 function launch() {

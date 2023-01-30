@@ -33,6 +33,7 @@
         "appId": "xyz.sanyabeast.preview_3d",
         "productName": "preview_3d",
         "copyright": "2023 @sanyabeast",
+        "asar": false,
         "win": {
             "icon": "assets/app.ico"
         }
