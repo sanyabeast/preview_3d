@@ -19,15 +19,16 @@ let notyf = new Notyf({
 
 let main_pane, file_pane, help_pane
 let update_available_banner
+let panes = {}
 
 function init_gui(params) {
     if (state.check_updates === true && Math.random() < 1) {
         setTimeout(check_updates, 15000)
     }
 
-    create_file_pane()
-    create_main_pane()
-    create_help_pane()
+    panes.main = create_file_pane()
+    panes.file = create_main_pane()
+    panes.help = create_help_pane()
 
     window.addEventListener('resize', handle_window_resized);
     handle_window_resized()
@@ -93,7 +94,7 @@ function create_main_pane() {
         notify_render()
     });
 
-    let inspect_folder = main_pane.addFolder({ title: "🔍 Inspect", expanded: false })
+    let inspect_folder = panes.inspect = main_pane.addFolder({ title: "🔍 Inspect", expanded: false })
 
     inspect_folder.addInput(state, 'show_gizmo', { label: "📐 Gizmo" }).on('change', ({ value }) => {
         gizmo.axes_helper.visible = value
@@ -110,6 +111,8 @@ function create_main_pane() {
     inspect_folder.addInput(state, 'inspect_matcap_mode', { label: "🔮 Matcap", options: _generate_list_keys(ASSETS.matcap) }).on('change', ({ value }) => {
         set_matcap(value)
     });
+
+    return main_pane
 
 }
 
@@ -139,6 +142,7 @@ function create_file_pane() {
         load_sample(ev.cell.title)
         console.log(ev);
     });
+    return file_pane
 
 }
 
@@ -178,6 +182,7 @@ function create_help_pane() {
     credits_folder.on('click', () => {
         info_folder.expanded = false
     })
+    return help_folder
 
 }
 
@@ -197,7 +202,6 @@ function collapse_gui() {
     _collapse_gui_item(help_pane, true)
     _collapse_gui_item(file_pane, true)
 }
-
 
 function check_updates() {
     try {
@@ -255,7 +259,6 @@ function handle_window_resized() {
     notify_render()
 }
 
-
 function _generate_list_keys(data, mode = 0) {
     let result = {}
     for (let k in data) {
@@ -271,5 +274,6 @@ export {
     check_updates,
     update_title,
     notify_error,
-    set_loader
+    set_loader,
+    panes
 }

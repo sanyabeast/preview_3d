@@ -1,6 +1,6 @@
 /** Created by @sanyabeast | 28 Jan 2023 | Kyiv, Ukraine */
 
-import { notify_render, start_render } from './render.js';
+import { notify_render, start_render, init_render } from './render.js';
 import { loaders, init_loaders } from './loaders.js'
 import { init_gui, set_loader, collapse_gui, notify_error } from './gui.js'
 import { init_controls } from './controls.js'
@@ -37,6 +37,7 @@ async function launch() {
     init_loaders()
     init_inspect()
     init_gui()
+    init_render()
     /* loading assets */
     loaders['hdr'](state.env_texture_src)
     await load_scene()
