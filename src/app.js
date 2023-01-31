@@ -6,17 +6,18 @@ import { init_gui, set_loader, collapse_gui, notify_error } from './gui.js'
 import { init_controls } from './controls.js'
 import { state } from './state.js';
 import { init_inspect } from './inspect.js';
+import { write_url } from './util.js';
 
 let OS_TOOLS = window.OS_TOOLS
 let is_running = false
 
 async function load_scene(scene_src) {
+    scene_src = _.isString(scene_src) ? scene_src : state.scene_src
+
     if (_.isString(scene_src) && scene_src.length > 0) {
         set_loader(true)
-        if (scene_src !== undefined) {
-            state.scene_src = OS_TOOLS.path.resolve(scene_src)
-        }
-
+        state.scene_src = scene_src;
+        write_url('scene_src', scene_src)
         let model_format = OS_TOOLS.path.extname(state.scene_src).replace(".", '')
         try {
             await loaders[model_format](state.scene_src)
@@ -26,7 +27,7 @@ async function load_scene(scene_src) {
             set_loader(false)
         }
     } else {
-        console.log('load_scene: attempt to load invalid src')
+        console.log(`load_scene: attempt to load invalid src: ${scene_src}`)
     }
 
 }

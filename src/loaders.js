@@ -36,8 +36,8 @@ let loaders = {
     gltf: (scene_src) => {
         return new Promise((resolve, reject) => {
             /** --- */
-            const base_path = os_tools.path.dirname(scene_src);
-            const model_path = os_tools.path.basename(scene_src);
+            const base_path = OS_TOOLS.path.dirname(scene_src);
+            const model_path = OS_TOOLS.path.basename(scene_src);
             console.log(base_path)
 
             gltf_loader = gltf_loader || new GLTFLoader()
@@ -65,7 +65,7 @@ let loaders = {
     },
     obj: (scene_src) => {
         return new Promise((resolve, reject) => {
-            let base_path = os_tools.path.dirname(scene_src)
+            let base_path = OS_TOOLS.path.dirname(scene_src)
             obj_loader = obj_loader || new OBJLoader()
             mtl_loader = mtl_loader || new MTLLoader()
 

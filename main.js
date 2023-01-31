@@ -42,6 +42,7 @@ function create_window(initial_opened_file) {
     const primary_display = screen.getPrimaryDisplay()
     const { width, height } = primary_display.workAreaSize
     console.log(`display dimensions: ${width}:${height}`)
+    process.env.open_parameter = initial_opened_file
     main_window = new BrowserWindow({
         // width: Math.floor(Math.min(width, height)),
         // height: Math.floor(Math.min(width, height) / 3 * 2),
@@ -51,11 +52,7 @@ function create_window(initial_opened_file) {
             preload: path.join(__dirname, 'preload.js'),
             devTools: true,
             contextIsolation: false,
-            nodeIntegration: true,
-            additionalArguments: [
-                '[*]',
-                initial_opened_file
-            ]
+            nodeIntegration: true
         }
     })
     main_window.setMenuBarVisibility(false)

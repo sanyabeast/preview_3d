@@ -8,7 +8,7 @@
     },
     "scripts": {
         "prebuild": "node prebuild.js",
-        "start": "npm run prebuild && cross-env NODE_ENV=development electron .",
+        "start": "npm run prebuild && cross-env NODE_ENV=development electron . assets/samples/Coffeemat.glb",
         "patch": "npm version patch",
         "make": "npm run prebuild && electron-builder --dir",
         "release": "npm run prebuild && electron-builder"
@@ -19,8 +19,8 @@
     "description": "Preview 3d Scenes",
     "author": "@sanyabeast",
     "dependencies": {
-        "jsonfile": "^6.1.0",
-        "directory-tree": "^3.5.1"
+        "directory-tree": "^3.5.1",
+        "jsonfile": "^6.1.0"
     },
     "extensions": [
         ".fbx",
@@ -38,8 +38,7 @@
         "win": {
             "icon": "assets/app.ico"
         },
-        "nsis": {
-        },
+        "nsis": {},
         "mac": {
             "icon": "assets/app.icns"
         },

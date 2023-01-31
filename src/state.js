@@ -1,17 +1,22 @@
 
+
+import { read_url } from "./util.js"
+
+let startup_scene_src = read_url('scene_src') !== null ? read_url('scene_src') : startup_scene_src
+
 const state = {
     env_enabled: true,
     env_texture_src: 'assets/hdr/atelier.hdr',
     env_default_background: null,
     env_default_texture: null,
     env_texture: null,
-    postfx_enabled: false,
+    postfx_enabled: true,
     postfx_bloom_exposure: 1,
     postfx_bloom_strength: 0.2,
     postfx_bloom_treshold: 0.5,
     postfx_bloom_radius: 0.2,
     camera_fov: 45,
-    scene_src: window.file_to_open || '',
+    scene_src: startup_scene_src || '',
     resolution_scale: 1,
     active_scene: null,
     show_gizmo: true,

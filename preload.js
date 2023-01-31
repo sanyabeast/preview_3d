@@ -6,11 +6,11 @@ const jsonfile = require('jsonfile')
 const path = require('path')
 const ipcRenderer = window.require('electron').ipcRenderer;
 const IS_DEVELOPMENT = process.env.NODE_ENV === 'development'
-const package = require('./package.json')
+const PACKAGE_INFO = require('./package.json')
 const ASSETS = require('./assets.json')
 const shell = require('electron').shell;
 
-window.PACKAGE_INFO = package
+window.PACKAGE_INFO = PACKAGE_INFO
 window.IS_DEVELOPMENT = IS_DEVELOPMENT
 window.ASSETS = ASSETS
 window.open_browser = (url) => {
@@ -23,13 +23,6 @@ let OS_TOOLS = {
     directory_tree: directory_tree,
     jsonfile
 }
-
-process.argv.forEach((arg, index) => {
-    if (arg === '[*]') {
-        window.file_to_open = process.argv[index + 1]
-        console.log(`file to open: ${window.file_to_open}`)
-    }
-})
 
 ipcRenderer.on('open_file', function (evt, message) {
     console.log(`nwe file open request: ${message.path}`)
