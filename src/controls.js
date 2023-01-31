@@ -22,7 +22,9 @@ function init_controls(params) {
     window.addEventListener('dragover', handle_drag_and_drop, false)
     window.addEventListener('drop', handle_drag_and_drop, false)
 
+
     window.addEventListener("keydown", async (event) => {
+        console.log(`keycode: ${event.keyCode}`)
         switch (event.keyCode) {
             case 70: {
                 event.preventDefault()
@@ -51,7 +53,11 @@ function init_controls(params) {
             }
             case 82: {
                 event.preventDefault()
-                await load_scene()
+                if (event.ctrlKey) {
+                    window.navigation.reload()
+                } else {
+                    await load_scene()
+                }
                 break;
             }
             case 27: {

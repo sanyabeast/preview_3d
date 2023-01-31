@@ -97,9 +97,7 @@ function create_main_pane() {
 
     inspect_folder.addInput(state, 'show_gizmo', { label: "📐 Gizmo" }).on('change', ({ value }) => {
         gizmo.axes_helper.visible = value
-        gizmo.grid_helper_10.visible = value
-        gizmo.grid_helper_100.visible = value
-        gizmo.grid_helper_1000.visible = value
+        gizmo.grid_helper.visible = value
         notify_render()
     });
 

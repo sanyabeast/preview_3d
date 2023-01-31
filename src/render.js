@@ -71,8 +71,9 @@ function init_postfx() {
     ssao_pass.kernelRadius = 1;
     composer = new EffectComposer(renderer);
     composer.addPass(render_pass);
+    composer.addPass(ssao_pass);
     composer.addPass(bloom_pass);
-    //composer.addPass(ssao_pass);
+    
 
 }
 

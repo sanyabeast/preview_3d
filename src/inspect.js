@@ -11,7 +11,8 @@ import { watch_controls } from './controls.js';
 let matcap_materials = {}
 let inspect_materials = {}
 let torch_light
-let axes_helper, grid_helper_10, grid_helper_100, grid_helper_1000
+let axes_helper, grid_helper
+let gizmo = {}
 
 let inspect_modes = {
     "None": {
@@ -111,27 +112,15 @@ function init_inspect() {
     axes_helper.visible = state.show_gizmo
     world.add(axes_helper)
 
-    grid_helper_10 = new THREE.GridHelper(10, 10, 0xffffff, 0xffffff);
-    grid_helper_10.material.opacity = 0.1;
-    grid_helper_10.material.depthWrite = false;
-    grid_helper_10.material.transparent = true;
-    grid_helper_10.visible = state.show_gizmo
-    world.add(grid_helper_10);
+    grid_helper = new THREE.GridHelper(100, 10, 0xffffff, 0xffffff);
+    grid_helper.material.opacity = 0.1;
+    grid_helper.material.depthWrite = false;
+    grid_helper.material.transparent = true;
+    grid_helper.visible = state.show_gizmo
+    world.add(grid_helper);
 
-    grid_helper_100 = new THREE.GridHelper(100, 10, 0xffffff, 0xffffff);
-    grid_helper_100.material.opacity = 0.1;
-    grid_helper_100.material.depthWrite = false;
-    grid_helper_100.material.transparent = true;
-    grid_helper_100.visible = state.show_gizmo
-    world.add(grid_helper_100);
-
-
-    grid_helper_1000 = new THREE.GridHelper(1000, 10, 0xffffff, 0xffffff);
-    grid_helper_1000.material.opacity = 0.1;
-    grid_helper_1000.material.depthWrite = false;
-    grid_helper_1000.material.transparent = true;
-    grid_helper_1000.visible = state.show_gizmo
-    world.add(grid_helper_1000);
+    gizmo.axes_helper = axes_helper
+    gizmo.grid_helper = grid_helper
 
     set_matcap(random_choice(Object.keys(ASSETS.matcap)))
 
@@ -155,13 +144,6 @@ function set_inspection_mode(mode) {
     state.inspect_mode = mode
     world.overrideMaterial = inspect_modes[mode]?.get_material() || null
     notify_render(1000)
-}
-
-const gizmo = {
-    axes_helper,
-    grid_helper_10,
-    grid_helper_100,
-    grid_helper_1000
 }
 
 
