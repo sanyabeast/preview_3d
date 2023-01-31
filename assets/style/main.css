@@ -28,3 +28,7 @@ canvas[data-engine] {
 .notyf {
     padding: 8px;
 }
+
+.ff-monospace {
+    font-family: monospace;
+}

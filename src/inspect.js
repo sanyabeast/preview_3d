@@ -107,7 +107,6 @@ function init_inspect() {
     torch_light.visible = state.torch_light
     world.add(torch_light)
 
-
     axes_helper = new THREE.AxesHelper(2);
     axes_helper.visible = state.show_gizmo
     world.add(axes_helper)

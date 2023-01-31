@@ -4,7 +4,7 @@
 
 import { Notyf } from 'notyf';
 
-import { release_page_url, update_check_url, texts } from './data.js'
+import { release_page_url, update_check_url } from './data.js'
 import { set_inspection_mode, set_matcap, inspect_modes, torch_light, gizmo } from './inspect.js'
 import { world, camera, renderer, composer, notify_render, set_environment } from './render.js';
 import { state } from './state.js';
@@ -22,8 +22,18 @@ let update_available_banner
 
 function init_gui(params) {
     if (state.check_updates === true && Math.random() < 1) {
-        setTimeout(check_updates, 1000)
+        setTimeout(check_updates, 15000)
     }
+
+    create_file_pane()
+    create_main_pane()
+    create_help_pane()
+
+    window.addEventListener('resize', handle_window_resized);
+    handle_window_resized()
+}
+
+function create_main_pane() {
 
     main_pane = new Tweakpane.Pane()
     main_pane.registerPlugin(TweakpaneEssentialsPlugin);
@@ -103,37 +113,9 @@ function init_gui(params) {
         set_matcap(value)
     });
 
-    /** about tab */
-    help_pane = new Tweakpane.Pane()
-    help_pane.element.parentElement.classList.add('pane')
-    help_pane.element.parentElement.classList.add('about')
+}
 
-
-
-    let help_folder = help_pane.addFolder({ title: "☂️ Help", expanded: false })
-    update_available_banner = help_folder.addButton({ title: 'Update', hidden: true }).on('click', () => {
-        window.open_browser(release_page_url)
-    })
-
-    let info_folder = help_folder.addFolder({ title: "📃 Info", expanded: false })
-    info_folder.addMonitor(texts, 'info_text', {
-        label: '📃', multiline: true,
-        lineCount: 32,
-    })
-
-    let credits_folder = help_folder.addFolder({ title: "🕴 About", expanded: false })
-    credits_folder.addMonitor(texts, 'about_text', {
-        label: '🕴', multiline: true,
-        lineCount: 32,
-    })
-
-    info_folder.on('click', () => {
-        credits_folder.expanded = false
-    })
-    credits_folder.on('click', () => {
-        info_folder.expanded = false
-    })
-
+function create_file_pane() {
     /* file pane */
     file_pane = new Tweakpane.Pane()
     file_pane.registerPlugin(TweakpaneEssentialsPlugin);
@@ -160,8 +142,45 @@ function init_gui(params) {
         console.log(ev);
     });
 
-    window.addEventListener('resize', handle_window_resized);
-    handle_window_resized()
+}
+
+function create_help_pane() {
+    /** about tab */
+    help_pane = new Tweakpane.Pane()
+    help_pane.registerPlugin(TweakpaneInfodumpPlugin)
+    help_pane.element.parentElement.classList.add('pane')
+    help_pane.element.parentElement.classList.add('about')
+
+    let help_folder = help_pane.addFolder({ title: "☂️ Help", expanded: false })
+    update_available_banner = help_folder.addButton({ title: 'Update', hidden: true }).on('click', () => {
+        window.open_browser(release_page_url)
+    })
+
+    let info_folder = help_folder.addFolder({ title: "📃 Info", expanded: false })
+
+    info_folder.addBlade({
+        view: "infodump",
+        content: ASSETS.texts.info,
+        border: false,
+        markdown: true,
+    }).element.classList.add('ff-monospace');
+
+    let credits_folder = help_folder.addFolder({ title: "🕴 About", expanded: false })
+
+    let credits_blade = credits_folder.addBlade({
+        view: "infodump",
+        content: ASSETS.texts.about,
+        border: false,
+        markdown: true,
+    }).element.classList.add('ff-monospace');
+
+    info_folder.on('click', () => {
+        credits_folder.expanded = false
+    })
+    credits_folder.on('click', () => {
+        info_folder.expanded = false
+    })
+
 }
 
 function _collapse_gui_item(item, skip_item) {
