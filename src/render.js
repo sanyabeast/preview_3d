@@ -55,8 +55,6 @@ function init_world() {
     world.add(amb)
 
 
-
-
     state.env_default_background = world.background
     state.env_default_texture = world.environment
 }
@@ -71,10 +69,10 @@ function init_postfx() {
     ssao_pass.kernelRadius = 16;
     composer = new EffectComposer(renderer);
     composer.addPass(render_pass);
-    //composer.addPass(ssao_pass);
+    composer.addPass(ssao_pass);
 
-    //ssao_pass.output = SSAOPass.OUTPUT.SSAO
-    composer.addPass(bloom_pass);
+    // ssao_pass.output = SSAOPass.OUTPUT.SSAO
+    //composer.addPass(bloom_pass);
     
 
 }
