@@ -4,6 +4,7 @@
 const release_page_url = 'https://github.com/sanyabeast/preview_3d/releases'
 const update_check_url = 'https://raw.githubusercontent.com/sanyabeast/preview_3d/main/package.json'
 
+
 export {
     release_page_url,
     update_check_url

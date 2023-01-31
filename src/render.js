@@ -15,18 +15,21 @@ import { set_loader, update_title } from './gui.js';
 import { frame_object } from './controls.js';
 import { loaders } from './loaders.js';
 
+const USE_LOGDEPTHBUF = false
+
 let camera, world, renderer, composer
 
 let render_needs_update = true
 let render_loop_id
 let render_timeout = +new Date()
 
+
 function init_render() {
     /** main renderer */
     const container = document.createElement('div');
     document.body.appendChild(container);
     document.body.classList.add(window.IS_DEVELOPMENT ? 'development' : 'production')
-    renderer = new THREE.WebGLRenderer({ antialias: true, logarithmicDepthBuffer: true });
+    renderer = new THREE.WebGLRenderer({ antialias: true, logarithmicDepthBuffer: USE_LOGDEPTHBUF, depth: true });
     renderer.setPixelRatio(window.devicePixelRatio);
     renderer.setSize(window.innerWidth, window.innerHeight);
     renderer.toneMappingExposure = 1;
@@ -71,9 +74,9 @@ function init_postfx() {
     composer.addPass(render_pass);
     composer.addPass(ssao_pass);
 
-    // ssao_pass.output = SSAOPass.OUTPUT.SSAO
+    ssao_pass.output = SSAOPass.OUTPUT.Depth
     //composer.addPass(bloom_pass);
-    
+
 
 }
 
@@ -99,7 +102,7 @@ function render() {
     render_loop_id = requestAnimationFrame(render)
 
     if (render_needs_update === true || +new Date() < render_timeout) {
-        
+
         if (state.postfx_enabled) {
             composer.render();
         } else {
