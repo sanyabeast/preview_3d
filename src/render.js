@@ -68,10 +68,12 @@ function init_postfx() {
     bloom_pass.strength = state.postfx_bloom_strength;
     bloom_pass.radius = state.postfx_bloom_radius;
     const ssao_pass = new SSAOPass(world, camera, window.innerWidth, window.innerHeight);
-    ssao_pass.kernelRadius = 1;
+    ssao_pass.kernelRadius = 16;
     composer = new EffectComposer(renderer);
     composer.addPass(render_pass);
-    composer.addPass(ssao_pass);
+    //composer.addPass(ssao_pass);
+
+    //ssao_pass.output = SSAOPass.OUTPUT.SSAO
     composer.addPass(bloom_pass);
     
 
