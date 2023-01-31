@@ -9,6 +9,7 @@ import { set_inspection_mode, set_matcap, inspect_modes, torch_light, gizmo } fr
 import { world, camera, renderer, composer, notify_render, set_environment } from './render.js';
 import { state } from './state.js';
 import { load_sample } from './app.js'
+import { build_gui } from './util.js';
 
 let notyf = new Notyf({
     position: {
@@ -36,84 +37,141 @@ function init_gui(params) {
 
 function create_main_pane() {
 
-    main_pane = new Tweakpane.Pane()
-    main_pane.registerPlugin(TweakpaneEssentialsPlugin);
-    main_pane.element.parentElement.classList.add('pane')
-    main_pane.element.parentElement.classList.add('main')
-
-    let viewport_settings_folder = main_pane.addFolder({
-        title: "👁️‍🗨️ Viewport",
-        expanded: false
-    })
-
-    /* main tab */
-    viewport_settings_folder.addInput(state, 'postfx_enabled', { label: '✨ Postfx' }).on('change', ({ value }) => {
-        notify_render()
-    });
-    viewport_settings_folder.addInput(state, 'env_enabled', { label: '🏜 Environment' }).on('change', ({ value }) => {
-        if (value) {
-            world.background = state.env_texture;
-            world.environment = state.env_texture;
-        } else {
-            world.background = state.env_default_background;
-            world.environment = state.env_default_texture;
+    main_pane = build_gui(
+        {
+            type: 'pane',
+            class_list: ['main'],
+            children: {
+                'viewport_settings_folder': {
+                    type: 'folder',
+                    title: "👁️‍🗨️ Viewport",
+                    expanded: false,
+                    children: {
+                        'postfx_enabled': {
+                            type: 'input',
+                            bind: [state, 'postfx_enabled'],
+                            label: '✨ Postfx',
+                            on_change: 'on_postfx_changed'
+                        },
+                        'env_enabled': {
+                            type: 'input',
+                            bind: [state, 'env_enabled'],
+                            label: '🏜 Environment',
+                            on_change: 'on_env_enabled_changed'
+                        },
+                        'environment_map_select_folder': {
+                            type: 'folder',
+                            title: "🗺 Environment texture",
+                            expanded: false,
+                            children: {
+                                'env_map_select_blade': {
+                                    type: 'blade',
+                                    view: 'buttongrid',
+                                    size: [1, Object.keys(ASSETS.hdr).length],
+                                    cells: (x, y) => ({
+                                        title: _.map(Object.keys(ASSETS.hdr), item => [item])[y][x],
+                                    }),
+                                    label: 'Samples',
+                                    on_change: 'handle_env_map_select_change'
+                                }
+                            }
+                        },
+                        'camera_fov': {
+                            type: 'input',
+                            bind: [state, 'camera_fov'],
+                            label: "👁 Camera FOV",
+                            min: 1,
+                            max: 120,
+                            step: 1,
+                            on_change: 'on_camera_fov_changed'
+                        },
+                        'resolution_scale': {
+                            type: 'input',
+                            bind: [state, 'resolution_scale'],
+                            min: 0.5, max: 1, step: 0.05,
+                            label: "🧇 Resolution",
+                            on_change: 'on_resolution_scale_changed'
+                        },
+                        'torchlight': {
+                            type: 'input',
+                            bind: [state, 'torch_light'],
+                            label: "💡 Torchlight",
+                            on_change: 'on_torchlight_changed'
+                        },
+                    }
+                },
+                'inspect_folder': {
+                    type: 'folder',
+                    title: "🔍 Inspect",
+                    expanded: false,
+                    children: {
+                        'show_gizmo': {
+                            type: 'input',
+                            bind: [state, 'show_gizmo'],
+                            label: "📐 Gizmo",
+                            on_change: 'on_show_gizmo_changed'
+                        },
+                        'inspect_mode': {
+                            type: 'input',
+                            bind: [state, 'inspect_mode'],
+                            label: "🎲 Mode",
+                            options: _generate_list_keys(inspect_modes),
+                            on_change: 'on_inspect_mode_changed'
+                        },
+                        'inspect_matcap_mode': {
+                            type: 'input',
+                            bind: [state, 'inspect_matcap_mode'],
+                            label: "🔮 Matcap",
+                            options: _generate_list_keys(ASSETS.matcap),
+                            on_change: 'on_inspect_matcap_mode_changed'
+                        },
+                    }
+                }
+            }
+        },
+        {
+            on_postfx_changed: ({ value }) => notify_render(),
+            on_env_enabled_changed: ({ value }) => {
+                if (value) {
+                    world.background = state.env_texture;
+                    world.environment = state.env_texture;
+                } else {
+                    world.background = state.env_default_background;
+                    world.environment = state.env_default_texture;
+                }
+                notify_render()
+            },
+            handle_env_map_select_change({ cell }) {
+                set_environment(cell.title)
+            },
+            on_camera_fov_changed: ({ value }) => {
+                camera.fov = value
+                camera.updateProjectionMatrix()
+                notify_render()
+            },
+            on_resolution_scale_changed: ({ value }) => {
+                handle_window_resized()
+                notify_render()
+            },
+            on_torchlight_changed: ({ value }) => {
+                torch_light.visible = value
+                notify_render()
+            },
+            on_show_gizmo_changed: ({ value }) => {
+                gizmo.axes_helper.visible = value
+                gizmo.grid_helper.visible = value
+                notify_render()
+            },
+            on_inspect_mode_changed: ({ value }) => {
+                console.log(value)
+                set_inspection_mode(value)
+            },
+            on_inspect_matcap_mode_changed: ({ value }) => {
+                set_matcap(value)
+            },
         }
-        notify_render()
-    });
-
-    let environment_map_select_folder = viewport_settings_folder.addFolder({
-        title: "🗺 Environment texture",
-        expanded: false
-    })
-
-    console.log(_.chunk(Object.keys(ASSETS.hdr), 3))
-    environment_map_select_folder.addBlade({
-        view: 'buttongrid',
-        size: [1, Object.keys(ASSETS.hdr).length],
-        cells: (x, y) => ({
-            title: _.map(Object.keys(ASSETS.hdr), item => [item])[y][x],
-        }),
-        label: 'Samples',
-    }).on('click', (ev) => {
-        set_environment(ev.cell.title)
-        console.log(ev);
-    });
-    viewport_settings_folder.addInput(state, 'camera_fov', { label: "👁 Camera FOV", min: 1, max: 120, step: 1 }).on('change', ({ value }) => {
-        camera.fov = value
-        camera.updateProjectionMatrix()
-        notify_render()
-    });
-    viewport_settings_folder.addInput(state, 'resolution_scale', { label: "🧇 Resolution", min: 0.5, max: 1, step: 0.05 }).on('change', ({ value }) => {
-        handle_window_resized()
-        notify_render()
-    });
-
-
-    viewport_settings_folder.addInput(state, 'torch_light', { label: "💡 Torchlight" }).on('change', ({ value }) => {
-        torch_light.visible = value
-        notify_render()
-    });
-
-    let inspect_folder = panes.inspect = main_pane.addFolder({ title: "🔍 Inspect", expanded: false })
-
-    inspect_folder.addInput(state, 'show_gizmo', { label: "📐 Gizmo" }).on('change', ({ value }) => {
-        gizmo.axes_helper.visible = value
-        gizmo.grid_helper.visible = value
-        notify_render()
-    });
-
-    inspect_folder.addInput(state, 'inspect_mode', {
-        label: "🎲 Mode", options: _generate_list_keys(inspect_modes)
-    }).on('change', ({ value }) => {
-        set_inspection_mode(value)
-    });
-
-    inspect_folder.addInput(state, 'inspect_matcap_mode', { label: "🔮 Matcap", options: _generate_list_keys(ASSETS.matcap) }).on('change', ({ value }) => {
-        set_matcap(value)
-    });
-
+    )
     return main_pane
-
 }
 
 function create_file_pane() {
