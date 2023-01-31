@@ -1,5 +1,8 @@
 /** Created by @sanyabeast | 28 Jan 2023 | Kyiv, Ukraine */
 
+const directory_tree = require('directory-tree')
+const jsonfile = require('jsonfile')
+
 const path = require('path')
 const ipcRenderer = window.require('electron').ipcRenderer;
 const IS_DEVELOPMENT = process.env.NODE_ENV === 'development'
@@ -15,8 +18,10 @@ window.open_browser = (url) => {
 }
 window.LOCAL_BASE_PATH = IS_DEVELOPMENT ? '.' : './resources/app'
 
-let os_tools = {
-    path: path
+let OS_TOOLS = {
+    path: path,
+    directory_tree: directory_tree,
+    jsonfile
 }
 
 process.argv.forEach((arg, index) => {
@@ -33,4 +38,4 @@ ipcRenderer.on('open_file', function (evt, message) {
     }
 });
 
-window.os_tools = os_tools
+window.OS_TOOLS = OS_TOOLS

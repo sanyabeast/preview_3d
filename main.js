@@ -43,8 +43,10 @@ function create_window(initial_opened_file) {
     const { width, height } = primary_display.workAreaSize
     console.log(`display dimensions: ${width}:${height}`)
     main_window = new BrowserWindow({
-        width: Math.floor(Math.min(width, height)),
-        height: Math.floor(Math.min(width, height) / 3 * 2),
+        // width: Math.floor(Math.min(width, height)),
+        // height: Math.floor(Math.min(width, height) / 3 * 2),
+        width,
+        height,
         webPreferences: {
             preload: path.join(__dirname, 'preload.js'),
             devTools: true,

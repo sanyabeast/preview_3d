@@ -2,14 +2,13 @@
     "name": "preview_3d",
     "devDependencies": {
         "cross-env": "^7.0.3",
-        "directory-tree": "^3.5.1",
         "electron": "^23.0.0-beta.5",
         "electron-builder": "^23.6.0",
         "electron-packager": "^17.1.1"
     },
     "scripts": {
         "prebuild": "node prebuild.js",
-        "start": "npm run prebuild && cross-env NODE_ENV=development electron . assets/samples/teapot.glb",
+        "start": "npm run prebuild && cross-env NODE_ENV=development electron .",
         "patch": "npm version patch",
         "make": "npm run prebuild && electron-builder --dir"
     },
@@ -19,7 +18,8 @@
     "description": "Preview 3d Scenes",
     "author": "@sanyabeast",
     "dependencies": {
-        "jsonfile": "^6.1.0"
+        "jsonfile": "^6.1.0",
+        "directory-tree": "^3.5.1"
     },
     "extensions": [
         ".fbx",
@@ -38,6 +38,9 @@
             "icon": "assets/app.ico"
         },
         "mac": {
+            "icon": "assets/app.icns"
+        },
+        "dmg": {
             "icon": "assets/app.icns"
         }
     }

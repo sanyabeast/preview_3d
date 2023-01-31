@@ -95,20 +95,14 @@ function init_postfx() {
     sao_pass.params.output = SAOPass.OUTPUT.SAO
 
 
-    window.sao_pass = sao_pass
-    composer.addPass(sao_pass);
+    //window.sao_pass = sao_pass
+    //composer.addPass(sao_pass);
 
-    //composer.addPass(bloom_pass);
+    composer.addPass(bloom_pass);
 }
 
 function init_render() {
-    panes.inspect.addInput({ output: "Default" }, 'output', {
-        label: "SSAO Output", options: { 'Default': 'Default', 'SSAO': 'SSAO', 'Depth': 'Depth', 'Normal': 'Normal', 'Blur': 'Blur' },
-    }).on('change', ({ value }) => {
-        console.log(SSAOPass.OUTPUT[value])
-        ssao_pass.output = SSAOPass.OUTPUT[value]
-        notify_render()
-    });
+   
     //compos
 }
 

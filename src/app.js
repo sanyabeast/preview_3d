@@ -7,23 +7,28 @@ import { init_controls } from './controls.js'
 import { state } from './state.js';
 import { init_inspect } from './inspect.js';
 
-let os_tools = window.os_tools
+let OS_TOOLS = window.OS_TOOLS
 let is_running = false
 
 async function load_scene(scene_src) {
-    set_loader(true)
-    if (scene_src !== undefined) {
-        state.scene_src = os_tools.path.resolve(scene_src)
+    if (_.isString(scene_src) && scene_src.length > 0) {
+        set_loader(true)
+        if (scene_src !== undefined) {
+            state.scene_src = OS_TOOLS.path.resolve(scene_src)
+        }
+
+        let model_format = OS_TOOLS.path.extname(state.scene_src).replace(".", '')
+        try {
+            await loaders[model_format](state.scene_src)
+        } catch (error) {
+            console.error(error)
+            notify_error(error.message)
+            set_loader(false)
+        }
+    } else {
+        console.log('load_scene: attempt to load invalid src')
     }
 
-    let model_format = os_tools.path.extname(state.scene_src).replace(".", '')
-    try {
-        await loaders[model_format](state.scene_src)
-    } catch (error) {
-        console.error(error)
-        notify_error(error.message)
-        set_loader(false)
-    }
 }
 
 function load_sample(sample_name) {
