@@ -92,7 +92,7 @@ function init_postfx() {
 
     sao_pass.params.saoBlurRadius = 0
     sao_pass.params.saoKernelRadius = 10
-    sao_pass.params.output = SAOPass.OUTPUT.SAO
+    // sao_pass.params.output = SAOPass.OUTPUT.SAO
 
 
     //window.sao_pass = sao_pass

@@ -10,7 +10,8 @@
         "prebuild": "node prebuild.js",
         "start": "npm run prebuild && cross-env NODE_ENV=development electron .",
         "patch": "npm version patch",
-        "make": "npm run prebuild && electron-builder --dir"
+        "make": "npm run prebuild && electron-builder --dir",
+        "release": "npm run prebuild && electron-builder"
     },
     "main": "main.js",
     "version": "0.9.2",
@@ -36,6 +37,8 @@
         "asar": false,
         "win": {
             "icon": "assets/app.ico"
+        },
+        "nsis": {
         },
         "mac": {
             "icon": "assets/app.icns"
