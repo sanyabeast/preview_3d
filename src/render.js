@@ -12,8 +12,6 @@ import { UnrealBloomPass } from 'three/addons/postprocessing/UnrealBloomPass.js'
 import { RenderPass } from 'three/addons/postprocessing/RenderPass.js';
 
 import { state } from './state.js'
-import { set_loader, update_title } from './gui.js';
-import { frame_object } from './controls.js';
 import { loaders } from './loaders.js';
 
 
@@ -42,6 +40,9 @@ function preinit_render() {
     renderer.setSize(window.innerWidth, window.innerHeight);
     renderer.toneMappingExposure = 1;
     renderer.outputEncoding = THREE.sRGBEncoding;
+    renderer.shadowMap.enabled = true;
+
+
     container.appendChild(renderer.domElement);
     /* main scene setup */
     camera = new THREE.PerspectiveCamera(state.camera_fov, window.innerWidth / window.innerHeight, 0.1, 1000000);
@@ -49,8 +50,6 @@ function preinit_render() {
 
     window.renderer = renderer
     window.camera = camera
-
-
 
     init_world()
     init_postfx()
@@ -70,6 +69,7 @@ function init_world() {
     amb.intensity = 0.2;
     sun.position.set(1000, 1000, 1000)
     sun.intensity = 1
+    sun.castShadow = true
     world.add(sun)
     world.add(amb)
 
@@ -158,27 +158,6 @@ function stop_render() {
     cancelAnimationFrame(render_loop_id)
 }
 
-function set_active_scene(scene) {
-    if (scene.isObject3D) {
-        if (state.active_scene) {
-            console.log('removing scene...')
-            world.remove(state.active_scene)
-        }
-
-        state.active_scene = scene
-        state.scene_aabb = new THREE.Box3();
-        state.scene_aabb.setFromObject(scene);
-        console.log('spawning scene...')
-        console.log(scene)
-        world.add(scene);
-        update_title()
-        frame_object()
-    }
-
-    notify_render(1000);
-    set_loader(false)
-}
-
 function set_fps_limit(value) {
     state.render_fps_limit = Math.floor(value)
 }
@@ -195,7 +174,6 @@ export {
     start_render,
     stop_render,
     notify_render,
-    set_active_scene,
     set_environment,
     init_render,
     set_fps_limit

@@ -1,11 +1,11 @@
 /** Created by @sanyabeast | 28 Jan 2023 | Kyiv, Ukraine */
-
+import * as THREE from 'three';
 import { AnimationMixer } from 'three'
 
 import { notify_render, start_render, init_render, loop_tasks } from './render.js';
 import { loaders, init_loaders } from './loaders.js'
-import { init_gui, set_loader, notifications, panes } from './gui.js'
-import { init_controls } from './controls.js'
+import { init_gui, set_loader, notifications, panes, update_title } from './gui.js'
+import { init_controls, frame_object } from './controls.js'
 import { state } from './state.js';
 import { init_inspect } from './inspect.js';
 import { write_url, loge, logd, extend_gui } from './util.js';
@@ -53,6 +53,7 @@ async function load_scene(scene_src) {
         }
 
         if (is_ok) {
+            set_active_scene(scene_state.scene)
             setup_scene()
         }
 
@@ -61,6 +62,29 @@ async function load_scene(scene_src) {
     }
 
 }
+
+
+function set_active_scene(scene) {
+    if (scene.isObject3D) {
+        if (state.active_scene) {
+            console.log('removing scene...')
+            world.remove(state.active_scene)
+        }
+
+        state.active_scene = scene
+        state.scene_aabb = new THREE.Box3();
+        state.scene_aabb.setFromObject(scene);
+        console.log('spawning scene...')
+        console.log(scene)
+        world.add(scene);
+        update_title()
+        frame_object()
+    }
+
+    notify_render(1000);
+    set_loader(false)
+}
+
 
 function setup_scene() {
     console.log(scene_state)
@@ -190,5 +214,6 @@ export {
     load_scene,
     load_sample,
     launch,
-    state
+    state,
+    set_active_scene
 }

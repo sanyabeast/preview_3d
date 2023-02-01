@@ -13,7 +13,7 @@ import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
 import { KTX2Loader } from 'three/addons/loaders/KTX2Loader.js';
 import { DRACOLoader } from 'three/addons/loaders/DRACOLoader.js';
 
-import { renderer, set_environment_texture, set_active_scene } from './render.js';
+import { renderer, set_environment_texture } from './render.js';
 
 /** loaders */
 let texture_loader = new THREE.TextureLoader()
@@ -29,7 +29,7 @@ let loaders = {
         return new Promise((resolve, reject) => {
             new RGBELoader().load(texture_src, function (texture) {
                 set_environment_texture(texture)
-                resolve()
+                resolve({ texture })
             });
         })
     },
@@ -47,8 +47,8 @@ let loaders = {
 
             gltf_loader.load(scene_src, function (gltf) {
                 console.log(gltf)
-                set_active_scene(gltf.scene)
                 resolve({
+                    scene: gltf.scene,
                     animations: gltf.animations
                 })
             });
@@ -59,8 +59,9 @@ let loaders = {
         return new Promise((resolve, reject) => {
             fbx_loader = fbx_loader || new FBXLoader();
             fbx_loader.load(scene_src, function (object) {
-                set_active_scene(object)
-                resolve()
+                resolve({
+                    scene: object
+                })
             });
         })
     },
@@ -76,15 +77,17 @@ let loaders = {
                     materials.preload();
                     obj_loader.setMaterials(materials)
                     obj_loader.load(scene_src, function (object) {
-                        set_active_scene(object)
-                        resolve()
+                        resolve({
+                            scene: object
+                        })
                     });
                 })
             } catch (err) {
                 console.error(err)
                 obj_loader.load(scene_src, function (object) {
-                    set_active_scene(object)
-                    resolve()
+                    resolve({
+                        scene: object
+                    })
                 });
             }
         })

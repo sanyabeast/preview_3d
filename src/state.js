@@ -27,7 +27,7 @@ const state = {
     inspect_mode: '',
     inspect_matcap_file: '',
     inspect_matcap_mode: '',
-    render_fps_limit: process.platform === 'darwin' ? 30 : Infinity
+    render_fps_limit: process.platform === 'darwin' ? Infinity : Infinity
 }
 
 export {
