@@ -73,7 +73,14 @@ if (!got_the_lock) {
 
     // Create main_window, load the rest of the app, etc...
     app.on('ready', () => {
-        create_window(open_parameter)
+        if (process.platform === 'darwin') {
+            app.on('open-file', (event) => {
+                console.log(event)
+            })
+        } else {
+            create_window(open_parameter)
+        }
+
         app.on('activate', () => {
             if (BrowserWindow.getAllWindows().length === 0) create_window(open_parameter)
         })
