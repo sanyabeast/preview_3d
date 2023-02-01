@@ -20,11 +20,12 @@ import { loaders } from './loaders.js';
 const USE_LOGDEPTHBUF = true
 
 let camera, world, renderer, composer
-let clock = new THREE.Clock();
 let render_needs_update = true
 let render_loop_id
 let render_timeout = +new Date()
 let loop_tasks = {}
+let now = +new Date()
+let prev_render_time = 0
 
 let bloom_pass, ssao_pass, render_pass
 
@@ -131,19 +132,22 @@ function notify_render(duration = 0) {
 
 function render() {
     render_loop_id = requestAnimationFrame(render)
-    const time_delta = clock.getDelta();
-    const delta = time_delta / (1000 / 60)
-
-    _.forEach(loop_tasks, task => task(delta, time_delta))
-
-    if (render_needs_update === true || +new Date() < render_timeout) {
-        if (state.postfx_enabled) {
-            composer.render();
-        } else {
-            renderer.render(world, camera);
+    now = +new Date()
+    const time_delta = (now - prev_render_time) / 1000
+    const delta = time_delta / (1 / 60)
+    const frame_delta = time_delta / (1 / state.render_fps_limit)
+    if (frame_delta > 1) {
+        _.forEach(loop_tasks, task => task(delta, time_delta))
+        if (render_needs_update === true || now < render_timeout) {
+            if (state.postfx_enabled) {
+                composer.render();
+            } else {
+                renderer.render(world, camera);
+            }
         }
+        prev_render_time = now
+        render_needs_update = false
     }
-    render_needs_update = false
 }
 
 function start_render() {
@@ -175,6 +179,10 @@ function set_active_scene(scene) {
     set_loader(false)
 }
 
+function set_fps_limit(value) {
+    state.render_fps_limit = Math.floor(value)
+}
+
 preinit_render()
 
 export {
@@ -190,5 +198,5 @@ export {
     set_active_scene,
     set_environment,
     init_render,
-    clock
+    set_fps_limit
 }

@@ -6,7 +6,7 @@ import { Notyf } from 'notyf';
 
 import { release_page_url, update_check_url } from './data.js'
 import { set_inspection_mode, set_matcap, inspect_modes, torch_light, gizmo } from './inspect.js'
-import { world, camera, renderer, composer, notify_render, set_environment } from './render.js';
+import { world, camera, renderer, composer, notify_render, set_environment, set_fps_limit } from './render.js';
 import { state } from './state.js';
 import { load_sample } from './app.js'
 import { build_gui, loge } from './util.js';
@@ -68,22 +68,48 @@ function create_main_pane() {
                     type: 'folder',
                     title: "👁️‍🗨️ Viewport",
                     children: {
-                        'postfx_enabled': {
-                            type: 'input',
-                            bind: [state, 'postfx_enabled'],
-                            label: '✨ Postfx',
-                            on_change: 'on_postfx_changed'
-                        },
-                        'env_enabled': {
-                            type: 'input',
-                            bind: [state, 'env_enabled'],
-                            label: '🏜 Environment',
-                            on_change: 'on_env_enabled_changed'
-                        },
-                        'environment_map_select_folder': {
+                        'performance': {
                             type: 'folder',
-                            title: "🗺 Environment texture",
+                            title: 'Performace',
                             children: {
+                                'postfx_enabled': {
+                                    type: 'input',
+                                    bind: [state, 'postfx_enabled'],
+                                    label: '✨ Postfx',
+                                    on_change: 'on_postfx_changed'
+                                },
+                                'resolution_scale': {
+                                    type: 'input',
+                                    bind: [state, 'resolution_scale'],
+                                    min: 0.5, max: 1, step: 0.05,
+                                    label: "🧇 Resolution",
+                                    on_change: 'on_resolution_scale_changed'
+                                },
+                                'fps_limit': {
+                                    type: 'blade',
+                                    view: 'buttongrid',
+                                    size: [2, 2],
+                                    cells: (x, y) => ({
+                                        title: [
+                                            [15, 30],
+                                            [60, Infinity]
+                                        ][y][x],
+                                    }),
+                                    label: 'FPS Limit',
+                                    on_click: ({ cell }) => set_fps_limit(cell.title)
+                                },
+                            }
+                        },
+                        'environment': {
+                            type: 'folder',
+                            title: 'Environment settings',
+                            children: {
+                                'env_enabled': {
+                                    type: 'input',
+                                    bind: [state, 'env_enabled'],
+                                    label: '🏜 Environment',
+                                    on_change: 'on_env_enabled_changed'
+                                },
                                 'env_map_select_blade': {
                                     type: 'blade',
                                     view: 'buttongrid',
@@ -91,7 +117,7 @@ function create_main_pane() {
                                     cells: (x, y) => ({
                                         title: _.map(Object.keys(ASSETS.hdr), item => [item])[y][x],
                                     }),
-                                    label: 'Samples',
+                                    label: 'Map',
                                     on_click: ({ cell }) => {
                                         console.log(cell)
                                         set_environment(cell.title)
@@ -107,13 +133,6 @@ function create_main_pane() {
                             max: 120,
                             step: 1,
                             on_change: 'on_camera_fov_changed'
-                        },
-                        'resolution_scale': {
-                            type: 'input',
-                            bind: [state, 'resolution_scale'],
-                            min: 0.5, max: 1, step: 0.05,
-                            label: "🧇 Resolution",
-                            on_change: 'on_resolution_scale_changed'
                         },
                         'torchlight': {
                             type: 'input',
