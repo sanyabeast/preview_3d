@@ -12,8 +12,8 @@
         "start-sample-alt": "npm run prebuild && cross-env NODE_ENV=development electron . assets/samples/Teapot.glb",
         "start": "npm run prebuild && cross-env NODE_ENV=development electron .",
         "patch": "npm version patch",
-        "make": "npm run prebuild && electron-builder --dir",
-        "release": "npm run prebuild && electron-builder"
+        "make": "npm run prebuild && electron-builder --dir --config build.config.json",
+        "release": "npm run prebuild && electron-builder --config build.config.json"
     },
     "main": "main.js",
     "version": "0.9.2",
@@ -24,29 +24,5 @@
         "directory-tree": "^3.5.1",
         "jsonfile": "^6.1.0",
         "lodash": "^4.17.21"
-    },
-    "extensions": [
-        ".fbx",
-        ".glb",
-        ".gltf",
-        ".fbx",
-        ".obj",
-        ".hdr"
-    ],
-    "build": {
-        "appId": "xyz.sanyabeast.preview_3d",
-        "productName": "preview_3d",
-        "copyright": "2023 @sanyabeast",
-        "asar": false,
-        "win": {
-            "icon": "assets/app.ico"
-        },
-        "nsis": {},
-        "mac": {
-            "icon": "assets/app.icns"
-        },
-        "dmg": {
-            "icon": "assets/app.icns"
-        }
     }
 }

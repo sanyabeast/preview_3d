@@ -8,25 +8,33 @@ const ipcRenderer = window.require('electron').ipcRenderer;
 const IS_DEVELOPMENT = process.env.NODE_ENV === 'development'
 const PACKAGE_INFO = require('./package.json')
 const ASSETS = require('./assets.json')
+const EXTENSIONS = require('./extensions.js')
 const shell = require('electron').shell;
 
-window.PACKAGE_INFO = PACKAGE_INFO
-window.IS_DEVELOPMENT = IS_DEVELOPMENT
-window.ASSETS = ASSETS
 window.open_browser = (url) => {
     shell.openExternal(url)
 }
-let OS_TOOLS = {
-    path: path,
-    directory_tree: directory_tree,
-    jsonfile
-}
 
-ipcRenderer.on('open_file', function (evt, message) {
-    console.log(`nwe file open request: ${message.path}`)
-    if ('load_file' in window) {
-        window.load_file(message.path)
+if (!window.location.href.startsWith('file://')) {
+    open_browser(window.location.href);
+    window.open(`${__dirname}/index.html`)
+} else {
+    let OS_TOOLS = {
+        path: path,
+        directory_tree: directory_tree,
+        jsonfile
     }
-});
 
-window.OS_TOOLS = OS_TOOLS
+    window.PACKAGE_INFO = PACKAGE_INFO
+    window.IS_DEVELOPMENT = IS_DEVELOPMENT
+    window.ASSETS = ASSETS
+    window.EXTENSIONS = EXTENSIONS
+    window.OS_TOOLS = OS_TOOLS
+
+    ipcRenderer.on('open_file', function (evt, message) {
+        console.log(`nwe file open request: ${message.path}`)
+        if ('load_file' in window) {
+            window.load_file(message.path)
+        }
+    });
+}

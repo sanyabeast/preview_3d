@@ -3,8 +3,9 @@
 const directory_tree = require('directory-tree')
 const path = require('path')
 const jsonfile = require('jsonfile')
-const package = require('./package.json')
 const fs = require('fs')
+
+const EXTENSIONS = require('./extensions.js')
 
 const assets_data = {
     matcap: parse_asset(directory_tree('./assets/matcap'), {}),
@@ -22,7 +23,7 @@ function parse_asset(data, { keep_extname, only_supported_extensions }) {
             let extname = path.extname(child.name)
 
             if (only_supported_extensions === true) {
-                if (package.extensions.indexOf(extname) < 0) {
+                if (EXTENSIONS.indexOf(extname) < 0) {
                     return
                 }
             }

@@ -1,0 +1,32 @@
+{
+    "appId": "xyz.sanyabeast.preview_3d",
+    "productName": "preview_3d",
+    "copyright": "2023 @sanyabeast",
+    "asar": true,
+    "asarUnpack": true,
+    "fileAssociations": [
+        {
+            "ext": [
+                "fbx",
+                "glb",
+                "gltf",
+                "fbx",
+                "obj",
+                "hdr"
+            ],
+            "name": "3D graphics file formats.",
+            "description": "3D graphics are 3D models that allow building models in real-time or non-real-time 3D rendering.",
+            "role": "Viewer"
+        }
+    ],
+    "win": {
+        "icon": "assets/app.ico"
+    },
+    "nsis": {},
+    "mac": {
+        "icon": "assets/app.icns"
+    },
+    "dmg": {
+        "icon": "assets/app.icns"
+    }
+}

@@ -8,11 +8,25 @@ import { collapse_gui } from './gui.js';
 
 let controls
 let file_input = document.body.querySelector('#file_input')
-file_input.setAttribute("accept", PACKAGE_INFO.extensions.join(', '))
+file_input.setAttribute("accept", EXTENSIONS.join(', '))
 let load_scene
 
 file_input.onchange = e => {
     load_scene(e.target.files[0].path)
+}
+
+document.body.addEventListener('mousedown', (ev)=>{
+    let target = ev.target
+    console.dir(target)
+    if (target.tagName === 'A'){
+        open_browser(target.src)
+        console.log(target)
+        ev.preventDefault()
+    }
+}, false)
+
+window.open = (url)=>{
+    console.log(url)
 }
 
 function init_controls(params) {
@@ -21,7 +35,6 @@ function init_controls(params) {
     window.addEventListener('dragleave', handle_drag_and_drop, false)
     window.addEventListener('dragover', handle_drag_and_drop, false)
     window.addEventListener('drop', handle_drag_and_drop, false)
-
 
     window.addEventListener("keydown", async (event) => {
         console.log(`keycode: ${event.keyCode}`)
@@ -63,6 +76,11 @@ function init_controls(params) {
             case 27: {
                 event.preventDefault()
                 collapse_gui()
+                break;
+            }
+            case 79: {
+                event.preventDefault()
+                file_input.click()
                 break;
             }
             default: {
