@@ -13,6 +13,7 @@ import { RenderPass } from 'three/addons/postprocessing/RenderPass.js';
 
 import { state } from './state.js'
 import { loaders } from './loaders.js';
+import { lerp } from './util.js';
 
 
 const USE_LOGDEPTHBUF = true
@@ -24,6 +25,12 @@ let render_timeout = +new Date()
 let loop_tasks = {}
 let now = +new Date()
 let prev_render_time = 0
+let sun, amb
+let sun_state = {
+    distance: 100,
+    height: 1,
+    azimuth: 0.5
+}
 
 let bloom_pass, ssao_pass, render_pass
 
@@ -64,17 +71,19 @@ function init_world() {
     world.environment = pmremGenerator.fromScene(environment).texture;
     environment.dispose();
 
-    let sun = new THREE.DirectionalLight()
-    let amb = new THREE.AmbientLight()
+    sun = new THREE.DirectionalLight()
+    amb = new THREE.AmbientLight()
     amb.intensity = 0.2;
     sun.position.set(1000, 1000, 1000)
     sun.intensity = 1
     sun.castShadow = true
+
+    set_sun_azimuth(0.5)
+    set_sun_height(1)
+
     world.add(sun)
     world.add(amb)
-
     window.world = world
-
     state.env_default_background = world.background
     state.env_default_texture = world.environment
 }
@@ -129,7 +138,6 @@ function notify_render(duration = 0) {
     render_needs_update = true
 }
 
-
 function render() {
     render_loop_id = requestAnimationFrame(render)
     now = +new Date()
@@ -162,6 +170,26 @@ function set_fps_limit(value) {
     state.render_fps_limit = Math.floor(value)
 }
 
+function set_sun_azimuth(value) {
+    sun_state.azimuth = value
+    sun.position.x = Math.sin(value * Math.PI * 2) * sun_state.distance
+    sun.position.z = Math.cos(value * Math.PI * 2) * sun_state.distance
+    notify_render()
+}
+
+function set_sun_height(value) {
+    sun_state.height = value
+    sun.position.y = lerp(0, sun_state.distance, value)
+    sun.intensity = value
+    set_sun_hardness(value)
+    notify_render()
+}
+
+function set_sun_hardness(value) {
+    amb.intensity = lerp(sun.intensity / 2, 0, 1 - value)
+    notify_render()
+}
+
 preinit_render()
 
 export {
@@ -176,5 +204,8 @@ export {
     notify_render,
     set_environment,
     init_render,
-    set_fps_limit
+    set_fps_limit,
+    set_sun_azimuth,
+    set_sun_height,
+    set_sun_hardness
 }

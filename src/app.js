@@ -60,7 +60,6 @@ async function load_scene(scene_src) {
     } else {
         console.log(`load_scene: attempt to load invalid src: ${scene_src}`)
     }
-
 }
 
 
@@ -87,24 +86,15 @@ function set_active_scene(scene) {
 
 
 function setup_scene() {
-    console.log(scene_state)
-    animation_folder_gui.item.hidden = scene_state.animations.length === 0
-
-
+    /** animations */
+    animation_folder_gui.item.hidden = scene_state.animations.length === 0;
     animation_folder_gui.actions.children.forEach((child, index) => {
-        if (index < scene_state.animations.length) {
-            child.hidden = false
-        } else {
-            child.hidden = true
-        }
+        child.hidden = index >= scene_state.animations.length
     })
-
     if (scene_state.animations.length > 0) {
         animation_mixer = new AnimationMixer(state.active_scene);
-
         scene_state.animations.forEach((animation_clip, index) => {
-
-            let action = scene_state.actions[index] = animation_mixer.clipAction(animation_clip)
+            scene_state.actions[index] = animation_mixer.clipAction(animation_clip)
             if (!animation_folder_gui.actions.children[index]) {
                 let slider_data = { weight: 1 }
                 let slider = animation_folder_gui.actions.addInput(slider_data, 'weight', {
@@ -117,9 +107,7 @@ function setup_scene() {
                     scene_state.actions[index].setEffectiveTimeScale(1);
                     scene_state.actions[index].setEffectiveWeight(value);
                 })
-                slider.slider_data = slider_data
-
-                console.log(slider)
+                slider.slider_data = slider_data;
             } else {
                 let slider = animation_folder_gui.actions.children[index]
                 slider.label = animation_clip.name
@@ -127,7 +115,6 @@ function setup_scene() {
                 slider.refresh()
             }
         })
-
         loop_tasks.update_animation_mixer = (d, td) => {
             if (animation_state.disable_animations !== true) {
                 animation_mixer.update(td)
@@ -137,19 +124,24 @@ function setup_scene() {
     } else {
         loop_tasks.update_animation_mixer = () => { }
     }
-
     scene_state.actions.forEach((action) => {
         action.enabled = true;
         action.play()
+    })
+    /** shadows */
+    scene_state.scene.traverse((node)=>{
+        if (node.isMesh){
+            node.receiveShadow = true
+            node.castShadow = true
+            console.log(node)
+        }
     })
 }
 
 function load_sample(sample_name) {
     load_scene(`${__dirname}/assets/samples/${ASSETS.samples[sample_name]}`)
 }
-
 function init_animation_player() {
-    /** animation plauer */
     animation_folder_gui = extend_gui(panes.main.item, {
         type: 'folder',
         title: '🤹‍♀️ Animations',
@@ -179,8 +171,6 @@ function init_animation_player() {
             }
         }
     })
-
-    // panes.main.animations = animation_folder_gui.item
 }
 
 function kill_animations() {

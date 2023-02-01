@@ -6,7 +6,18 @@ import { Notyf } from 'notyf';
 
 import { release_page_url, update_check_url } from './data.js'
 import { set_inspection_mode, set_matcap, inspect_modes, torch_light, gizmo } from './inspect.js'
-import { world, camera, renderer, composer, notify_render, set_environment, set_fps_limit } from './render.js';
+import {
+    world,
+    camera,
+    renderer,
+    composer,
+    notify_render,
+    set_environment,
+    set_fps_limit,
+    set_sun_azimuth,
+    set_sun_height,
+    set_sun_hardness
+} from './render.js';
 import { state } from './state.js';
 import { load_sample } from './app.js'
 import { build_gui, loge } from './util.js';
@@ -78,6 +89,11 @@ function create_main_pane() {
                                     label: '✨ Postfx',
                                     on_change: 'on_postfx_changed'
                                 },
+                                'shadows_enabled': {
+                                    type: 'input',
+                                    bind: [renderer.shadowMap, 'enabled'],
+                                    label: 'Shadows'
+                                },
                                 'resolution_scale': {
                                     type: 'input',
                                     bind: [state, 'resolution_scale'],
@@ -122,6 +138,24 @@ function create_main_pane() {
                                         console.log(cell)
                                         set_environment(cell.title)
                                     }
+                                },
+                                'sun_azimuth': {
+                                    type: 'input',
+                                    bind: [{ value: 0.5 }, 'value'],
+                                    label: "Sun azimuth",
+                                    min: 0,
+                                    max: 1,
+                                    step: 0.05,
+                                    on_change: ({ value }) => set_sun_azimuth(value)
+                                },
+                                'sun_height': {
+                                    type: 'input',
+                                    bind: [{ value: 1 }, 'value'],
+                                    label: "Sun height",
+                                    min: 0,
+                                    max: 1,
+                                    step: 0.05,
+                                    on_change: ({ value }) => set_sun_height(value)
                                 }
                             }
                         },

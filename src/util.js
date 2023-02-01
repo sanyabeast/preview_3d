@@ -109,6 +109,9 @@ function loge(topic, ...args) {
 function logd(topic, ...args) {
     console.log(`%c[preview_3d] %c[i] %c[${topic}]: `, 'color: #4caf50', 'color: #8bc34a;', 'color: #cddc39', ...args)
 }
+function lerp(a, b, alpha) {
+    return a + (b - a) * alpha
+}
 
 export {
     random_choice,
@@ -117,5 +120,6 @@ export {
     build_gui,
     extend_gui,
     loge,
-    logd
+    logd,
+    lerp
 }
