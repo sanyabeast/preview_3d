@@ -8,12 +8,13 @@ const path = require('path')
 const IS_DEVELOPMENT = process.env.NODE_ENV === 'development'
 const QUIT_ON_LAST_WINDOW_CLOSED = true;
 
+let app_ready = false
 let main_window = null
 let got_the_lock = app.requestSingleInstanceLock()
 let file_parameter = get_file_parameter(process.argv);
 
 function get_file_parameter(list) {
-    let result
+    let result = null
     for (let i = 0; i < list.length; i++) {
         let extname = path.extname(list[i])
         if (PACKAGE_INFO.extensions.indexOf(extname) > -1) {
@@ -65,6 +66,7 @@ if (!got_the_lock) {
     })
 
     app.on('ready', () => {
+        app_ready = true
         open_file()
         app.on('activate', () => {
             if (BrowserWindow.getAllWindows().length === 0) create_window()
@@ -84,9 +86,11 @@ const open_file = () => {
 }
 
 app.on('open-file', (event, file_path) => {
-    file_parameter = file_path || file_parameter
-    open_file()
     console.log(`open file event: ${file_path}`)
+    file_parameter = file_path || file_parameter
+    if (app_ready) {
+        open_file()
+    }
 })
 
 
