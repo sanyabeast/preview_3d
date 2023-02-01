@@ -10,9 +10,9 @@ const QUIT_ON_LAST_WINDOW_CLOSED = true;
 
 let main_window = null
 let got_the_lock = app.requestSingleInstanceLock()
-let open_parameter = get_open_parameter(process.argv);
+let file_path_parameter = get_file_path_parameter(process.argv);
 
-function get_open_parameter(list) {
+function get_file_path_parameter(list) {
     let result
     for (let i = 0; i < list.length; i++) {
         let extname = path.extname(list[i])
@@ -32,8 +32,8 @@ function create_window(initial_opened_file) {
     const primary_display = screen.getPrimaryDisplay()
     const { width, height } = primary_display.workAreaSize
 
-    if (_.isString(open_parameter)) {
-        process.env.open_parameter = initial_opened_file
+    if (_.isString(file_path_parameter)) {
+        process.env.file_path_parameter = initial_opened_file
     }
 
     main_window = new BrowserWindow({
@@ -59,33 +59,35 @@ if (!got_the_lock) {
     app.quit()
 } else {
     app.on('second-instance', (event, cli_parameters, working_dir) => {
-        let open_parameter = get_open_parameter(cli_parameters)
-        console.log(`new window file: ${open_parameter}`)
-        // Someone tried to run a second instance, we should focus our window.
-        if (main_window) {
-            main_window.webContents.send('open_file', { 'path': open_parameter });
-            main_window.restore()
-            main_window.focus()
-        } else {
-            create_window(open_parameter)
-        }
+        let file_path_parameter = get_file_path_parameter(cli_parameters)
+        file_path_parameter(file_path_parameter)
     })
 
     // Create main_window, load the rest of the app, etc...
     app.on('ready', () => {
-        if (process.platform === 'darwin') {
-            app.on('open-file', (event) => {
-                console.log(event)
-            })
-        } else {
-            create_window(open_parameter)
-        }
-
+        open_file()
+        
         app.on('activate', () => {
-            if (BrowserWindow.getAllWindows().length === 0) create_window(open_parameter)
+            if (BrowserWindow.getAllWindows().length === 0) create_window()
         })
     })
 }
+
+const open_file = ()=>{
+    if (main_window) {
+        main_window.webContents.send('open_file', { 'path': file_path_parameter });
+        main_window.restore()
+        main_window.focus()
+    } else {
+        create_window(file_path)
+    }
+}
+
+app.on('open-file', (event, file_path) => {
+    file_path_parameter = file_path
+    open_file()
+    console.log(file_path)
+})
 
 
 app.on('window-all-closed', () => {
