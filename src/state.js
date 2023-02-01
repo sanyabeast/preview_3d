@@ -2,8 +2,8 @@
 
 import { read_url } from "./util.js"
 
-console.log(`[state] open parameter: `, process.env.open_parameter)
-let startup_scene_src = read_url('scene_src') !== null ? read_url('scene_src') : process.env.open_parameter
+console.log(`[state] open parameter: `, process.env.file_parameter)
+let startup_scene_src = read_url('scene_src') !== null ? read_url('scene_src') : process.env.file_parameter
 
 const state = {
     env_enabled: true,

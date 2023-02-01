@@ -10,9 +10,9 @@ const QUIT_ON_LAST_WINDOW_CLOSED = true;
 
 let main_window = null
 let got_the_lock = app.requestSingleInstanceLock()
-let file_path_parameter = get_file_path_parameter(process.argv);
+let file_parameter = get_file_parameter(process.argv);
 
-function get_file_path_parameter(list) {
+function get_file_parameter(list) {
     let result
     for (let i = 0; i < list.length; i++) {
         let extname = path.extname(list[i])
@@ -28,12 +28,12 @@ function get_file_path_parameter(list) {
     return result
 }
 
-function create_window(initial_opened_file) {
+function create_window() {
     const primary_display = screen.getPrimaryDisplay()
     const { width, height } = primary_display.workAreaSize
 
-    if (_.isString(file_path_parameter)) {
-        process.env.file_path_parameter = initial_opened_file
+    if (_.isString(file_parameter)) {
+        process.env.file_parameter = file_parameter
     }
 
     main_window = new BrowserWindow({
@@ -59,34 +59,34 @@ if (!got_the_lock) {
     app.quit()
 } else {
     app.on('second-instance', (event, cli_parameters, working_dir) => {
-        let file_path_parameter = get_file_path_parameter(cli_parameters)
-        file_path_parameter(file_path_parameter)
+        console.log(`second instance...`)
+        file_parameter = get_file_parameter(cli_parameters) || file_parameter
+        open_file()
     })
 
-    // Create main_window, load the rest of the app, etc...
     app.on('ready', () => {
         open_file()
-        
         app.on('activate', () => {
             if (BrowserWindow.getAllWindows().length === 0) create_window()
         })
     })
 }
 
-const open_file = ()=>{
+const open_file = () => {
     if (main_window) {
-        main_window.webContents.send('open_file', { 'path': file_path_parameter });
+        console.log(`single instance mode. sending open request to existing window... ${file_parameter}`)
+        main_window.webContents.send('open_file', { 'path': file_parameter });
         main_window.restore()
         main_window.focus()
     } else {
-        create_window(file_path)
+        create_window()
     }
 }
 
 app.on('open-file', (event, file_path) => {
-    file_path_parameter = file_path
+    file_parameter = file_path || file_parameter
     open_file()
-    console.log(file_path)
+    console.log(`open file event: ${file_path}`)
 })
 
 
