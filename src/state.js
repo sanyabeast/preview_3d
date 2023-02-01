@@ -2,7 +2,7 @@
 
 import { read_url } from "./util.js"
 
-let startup_scene_src = read_url('scene_src') !== null ? read_url('scene_src') : startup_scene_src
+let startup_scene_src = read_url('scene_src') !== null ? read_url('scene_src') : process.env.open_parameter
 
 const state = {
     env_enabled: true,

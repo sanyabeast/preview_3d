@@ -7,6 +7,7 @@ import { state } from './state.js';
 import { notify_render, world, camera } from './render.js';
 import { random_choice } from './util.js';
 import { watch_controls } from './controls.js';
+import { refresh_gui } from './gui.js';
 
 let matcap_materials = {}
 let inspect_materials = {}
@@ -142,6 +143,10 @@ function set_matcap(alias) {
 
 function set_inspection_mode(mode) {
     state.inspect_mode = mode
+    if (mode !== "None") {
+        state.postfx_enabled = false
+        refresh_gui()
+    }
     world.overrideMaterial = inspect_modes[mode]?.get_material() || null
     notify_render(1000)
 }

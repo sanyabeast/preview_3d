@@ -31,12 +31,11 @@ function init_gui(params) {
     panes.file = create_main_pane()
     panes.help = create_help_pane()
 
+
     window.addEventListener('resize', handle_window_resized);
     handle_window_resized()
 }
-
 function create_main_pane() {
-
     main_pane = build_gui(
         {
             type: 'pane',
@@ -72,7 +71,10 @@ function create_main_pane() {
                                         title: _.map(Object.keys(ASSETS.hdr), item => [item])[y][x],
                                     }),
                                     label: 'Samples',
-                                    on_change: 'handle_env_map_select_change'
+                                    on_click: ({ cell }) => {
+                                        console.log(cell)
+                                        set_environment(cell.title)
+                                    }
                                 }
                             }
                         },
@@ -141,9 +143,6 @@ function create_main_pane() {
                 }
                 notify_render()
             },
-            handle_env_map_select_change({ cell }) {
-                set_environment(cell.title)
-            },
             on_camera_fov_changed: ({ value }) => {
                 camera.fov = value
                 camera.updateProjectionMatrix()
@@ -173,94 +172,123 @@ function create_main_pane() {
     )
     return main_pane
 }
-
 function create_file_pane() {
-    /* file pane */
-    file_pane = new Tweakpane.Pane()
-    file_pane.registerPlugin(TweakpaneEssentialsPlugin);
-    file_pane.element.parentElement.classList.add('pane')
-    file_pane.element.parentElement.classList.add('inspect')
-
-    let file_folder = file_pane.addFolder({ title: "📝 File", expanded: false })
-    file_folder.addMonitor(state, 'scene_src', { label: "📎 Current" })
-    file_folder.addButton({ title: "📀 Open" }).on('click', () => {
-        file_input.click()
+    file_pane = build_gui({
+        type: 'pane',
+        class_list: ['inspect'],
+        children: {
+            file_folder: {
+                type: 'folder',
+                title: "📝 File",
+                expanded: false,
+                children: {
+                    open_button: {
+                        type: 'input',
+                        bind: [state, 'scene_src'],
+                        label: "📎 Current",
+                        on_change: () => {
+                            file_input.click()
+                        }
+                    },
+                    samples_folder: {
+                        type: 'folder',
+                        title: "🏷 Load sample",
+                        expanded: false,
+                        children: {
+                            samples_selector: {
+                                type: 'blade',
+                                view: 'buttongrid',
+                                size: [1, Object.keys(ASSETS.samples).length],
+                                cells: (x, y) => ({
+                                    title: _.map(Object.keys(ASSETS.samples), item => [item])[y][x],
+                                }),
+                                label: 'Samples',
+                                on_click: ({ cell }) => {
+                                    load_sample(cell.title)
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
     })
-
-    let samples_folder = file_folder.addFolder({ title: "🏷 Load sample", expanded: false })
-
-    samples_folder.addBlade({
-        view: 'buttongrid',
-        size: [1, Object.keys(ASSETS.samples).length],
-        cells: (x, y) => ({
-            title: _.map(Object.keys(ASSETS.samples), item => [item])[y][x],
-        }),
-        label: 'Samples',
-    }).on('click', (ev) => {
-        load_sample(ev.cell.title)
-        console.log(ev);
-    });
     return file_pane
 
 }
-
 function create_help_pane() {
-    /** about tab */
-    help_pane = new Tweakpane.Pane()
-    help_pane.registerPlugin(TweakpaneInfodumpPlugin)
-    help_pane.element.parentElement.classList.add('pane')
-    help_pane.element.parentElement.classList.add('about')
-
-    let help_folder = help_pane.addFolder({ title: "☂️ Help", expanded: false })
-    update_available_banner = help_folder.addButton({ title: 'Update', hidden: true }).on('click', () => {
-        window.open_browser(release_page_url)
+    help_pane = build_gui({
+        type: 'pane',
+        class_list: ['about'],
+        children: {
+            'help_folder': {
+                type: 'folder',
+                title: "☂️ Help",
+                expanded: false,
+                children: {
+                    'update_available_banner': {
+                        type: 'button',
+                        title: 'Update',
+                        hidden: true,
+                        on_click: () => {
+                            window.open_browser(release_page_url)
+                        }
+                    },
+                    'info_folder': {
+                        type: 'folder',
+                        title: "📃 Info",
+                        expanded: false,
+                        on_click: () => help_pane.credits_folder.expanded = false,
+                        children: {
+                            info_text: {
+                                type: 'blade',
+                                view: 'infodump',
+                                class_list: ['ff-monospace'],
+                                content: ASSETS.texts.info,
+                                border: false,
+                                markdown: true,
+                            }
+                        }
+                    },
+                    'credits_folder': {
+                        type: 'folder',
+                        title: "🕴 About",
+                        expanded: false,
+                        on_click: () => help_pane.info_folder.expanded = false,
+                        children: {
+                            info_text: {
+                                type: 'blade',
+                                view: 'infodump',
+                                class_list: ['ff-monospace'],
+                                content: ASSETS.texts.about,
+                                border: false,
+                                markdown: true,
+                            }
+                        }
+                    },
+                }
+            }
+        }
     })
-
-    let info_folder = help_folder.addFolder({ title: "📃 Info", expanded: false })
-
-    info_folder.addBlade({
-        view: "infodump",
-        content: ASSETS.texts.info,
-        border: false,
-        markdown: true,
-    }).element.classList.add('ff-monospace');
-
-    let credits_folder = help_folder.addFolder({ title: "🕴 About", expanded: false })
-
-    let credits_blade = credits_folder.addBlade({
-        view: "infodump",
-        content: ASSETS.texts.about,
-        border: false,
-        markdown: true,
-    }).element.classList.add('ff-monospace');
-
-    info_folder.on('click', () => {
-        credits_folder.expanded = false
-    })
-    credits_folder.on('click', () => {
-        info_folder.expanded = false
-    })
-    return help_folder
-
+    return help_pane
 }
-
-function _collapse_gui_item(item, skip_item) {
-    if (skip_item != true && 'expanded' in item) {
-        item.expanded = false
-    }
-    if ('children' in item) {
-        item.children.forEach((child) => {
-            _collapse_gui_item(child)
-        })
-    }
+function _collapse_gui_item(item_data, skip_item) {
+    _.forEach(item_data, (item, alias) => {
+        if (_.isBoolean(item.expanded)) {
+            if (skip_item === true && alias === 'item') {
+                //pass
+            } else {
+                item.expanded = false
+            }
+        }
+    })
 }
-
 function collapse_gui() {
+    console.log(main_pane, help_pane, file_pane)
     _collapse_gui_item(main_pane, true)
     _collapse_gui_item(help_pane, true)
     _collapse_gui_item(file_pane, true)
 }
-
 function check_updates() {
     try {
         let xhr = new XMLHttpRequest()
@@ -282,7 +310,6 @@ function check_updates() {
 function update_title() {
     document.querySelector('head title').innerHTML = `preview_3d ${PACKAGE_INFO.version} | ${state.scene_src}`
 }
-
 function notify_error(message) {
     switch (true) {
         case message === "loaders[model_format] is not a function": {
@@ -295,7 +322,6 @@ function notify_error(message) {
         }
     }
 }
-
 function set_loader(visible, progress) {
     let loader = document.getElementById("loader")
     if (visible) {
@@ -304,7 +330,6 @@ function set_loader(visible, progress) {
         loader.classList.remove('active')
     }
 }
-
 function handle_window_resized() {
     const width = Math.floor(window.innerWidth * state.resolution_scale);
     const height = Math.floor(window.innerHeight * state.resolution_scale);
@@ -316,7 +341,6 @@ function handle_window_resized() {
     }
     notify_render()
 }
-
 function _generate_list_keys(data, mode = 0) {
     let result = {}
     for (let k in data) {
@@ -324,7 +348,11 @@ function _generate_list_keys(data, mode = 0) {
     }
     return result
 }
-
+function refresh_gui() {
+    main_pane.item.refresh();
+    help_pane.item.refresh();
+    file_pane.item.refresh();
+}
 
 export {
     init_gui,
@@ -333,5 +361,6 @@ export {
     update_title,
     notify_error,
     set_loader,
-    panes
+    panes,
+    refresh_gui
 }

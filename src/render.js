@@ -14,7 +14,7 @@ import { RenderPass } from 'three/addons/postprocessing/RenderPass.js';
 
 
 import { state } from './state.js'
-import { set_loader, update_title, panes } from './gui.js';
+import { set_loader, update_title, panes, refresh_gui } from './gui.js';
 import { frame_object } from './controls.js';
 import { loaders } from './loaders.js';
 
