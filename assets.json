@@ -24,11 +24,13 @@
         "Vacuum (V4CUUM)": "Vacuum (V4CUUM).png"
     },
     "samples": {
-        "Coffeemat.glb": "Coffeemat.glb",
+        "ClearcoatTest.glb": "ClearcoatTest.glb",
         "Coke Fridge.glb": "Coke Fridge.glb",
+        "DamagedHelmet.gltf": "DamagedHelmet.gltf",
         "Iridescent Dish With Olives.glb": "Iridescent Dish With Olives.glb",
         "Nurbs.fbx": "Nurbs.fbx",
-        "Sheen Chair.glb": "Sheen Chair.glb",
+        "Parrot.glb": "Parrot.glb",
+        "Soldier.glb": "Soldier.glb",
         "Teapot.glb": "Teapot.glb"
     },
     "hdr": {

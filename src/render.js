@@ -33,7 +33,10 @@ function preinit_render() {
     const container = document.createElement('div');
     document.body.appendChild(container);
     document.body.classList.add(window.IS_DEVELOPMENT ? 'development' : 'production')
-    renderer = new THREE.WebGLRenderer({ antialias: true, logarithmicDepthBuffer: USE_LOGDEPTHBUF });
+    renderer = new THREE.WebGLRenderer({
+        antialias: process.platform === 'darwin' ? false : true,
+        logarithmicDepthBuffer: USE_LOGDEPTHBUF
+    });
     renderer.setPixelRatio(window.devicePixelRatio);
     renderer.setSize(window.innerWidth, window.innerHeight);
     renderer.toneMappingExposure = 1;

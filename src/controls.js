@@ -47,7 +47,7 @@ function init_controls(params) {
             }
             case 82: {
                 event.preventDefault()
-                if (event.ctrlKey) {
+                if (event.ctrlKey || event.metaKey) {
                     window.navigation.reload()
                 } else {
                     await load_scene()

@@ -65,6 +65,8 @@ async function load_scene(scene_src) {
 function setup_scene() {
     console.log(scene_state)
     animation_folder_gui.item.hidden = scene_state.animations.length === 0
+
+
     animation_folder_gui.actions.children.forEach((child, index) => {
         if (index < scene_state.animations.length) {
             child.hidden = false
@@ -76,13 +78,13 @@ function setup_scene() {
     if (scene_state.animations.length > 0) {
         animation_mixer = new AnimationMixer(state.active_scene);
 
-        scene_state.animations.forEach((anim_data, index) => {
-            console.log(anim_data)
-            let action = scene_state.actions[index] = animation_mixer.clipAction(anim_data)
-            anim_data.custom_weight = 1
+        scene_state.animations.forEach((animation_clip, index) => {
+
+            let action = scene_state.actions[index] = animation_mixer.clipAction(animation_clip)
             if (!animation_folder_gui.actions.children[index]) {
-                animation_folder_gui.actions.addInput(anim_data, 'custom_weight', {
-                    label: anim_data.name,
+                let slider_data = { weight: 1 }
+                let slider = animation_folder_gui.actions.addInput(slider_data, 'weight', {
+                    label: animation_clip.name,
                     min: 0,
                     max: 1,
                     step: 0.1
@@ -91,8 +93,14 @@ function setup_scene() {
                     scene_state.actions[index].setEffectiveTimeScale(1);
                     scene_state.actions[index].setEffectiveWeight(value);
                 })
+                slider.slider_data = slider_data
+
+                console.log(slider)
             } else {
-                animation_folder_gui.actions.children[index].label = anim_data.name
+                let slider = animation_folder_gui.actions.children[index]
+                slider.label = animation_clip.name
+                slider.slider_data.weight = 1
+                slider.refresh()
             }
         })
 

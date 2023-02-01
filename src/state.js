@@ -18,7 +18,7 @@ const state = {
     postfx_bloom_radius: 0.2,
     camera_fov: 45,
     scene_src: startup_scene_src || '',
-    resolution_scale: 1,
+    resolution_scale: process.platform === 'darwin' ? 0.65 : 1,
     active_scene: null,
     show_gizmo: true,
     torch_light: false,
