@@ -1,32 +1,22 @@
 
 /** Created by @sanyabeast | 28 Jan 2023 | Kyiv, Ukraine */
 
+const _ = require('lodash')
+const PACKAGE_INFO = require('./package.json')
 const { app, BrowserWindow, screen } = require('electron')
 const path = require('path')
-
 const IS_DEVELOPMENT = process.env.NODE_ENV === 'development'
-const supported_file_extensions = [
-    'hdr',
-    'gltf',
-    'glb',
-    'fbx',
-    'obj',
-    'mtl'
-]
+const QUIT_ON_LAST_WINDOW_CLOSED = true;
 
 let main_window = null
 let got_the_lock = app.requestSingleInstanceLock()
-
-
 let open_parameter = get_open_parameter(process.argv);
-
-console.log(`file to open: ${open_parameter}`)
 
 function get_open_parameter(list) {
     let result
     for (let i = 0; i < list.length; i++) {
         let extname = path.extname(list[i])
-        if (supported_file_extensions.indexOf(extname.replace('.', '')) > -1) {
+        if (PACKAGE_INFO.extensions.indexOf(extname) > -1) {
             console.log(`file format ${extname} is supported. opening...`)
             result = list[i]
             break
@@ -41,13 +31,16 @@ function get_open_parameter(list) {
 function create_window(initial_opened_file) {
     const primary_display = screen.getPrimaryDisplay()
     const { width, height } = primary_display.workAreaSize
-    console.log(`display dimensions: ${width}:${height}`)
-    process.env.open_parameter = initial_opened_file
+
+    if (_.isString(open_parameter)) {
+        process.env.open_parameter = initial_opened_file
+    }
+
     main_window = new BrowserWindow({
-        // width: Math.floor(Math.min(width, height)),
-        // height: Math.floor(Math.min(width, height) / 3 * 2),
-        width,
-        height,
+        width: Math.floor(Math.min(width, height)),
+        height: Math.floor(Math.min(width, height) / 3 * 2),
+        // width,
+        // height,
         webPreferences: {
             preload: path.join(__dirname, 'preload.js'),
             devTools: true,
@@ -89,5 +82,5 @@ if (!got_the_lock) {
 
 
 app.on('window-all-closed', () => {
-    if (process.platform !== 'darwin') app.quit()
+    if (process.platform !== 'darwin' || QUIT_ON_LAST_WINDOW_CLOSED) app.quit()
 })

@@ -11,7 +11,7 @@ import { state } from './state.js';
 import { load_sample } from './app.js'
 import { build_gui } from './util.js';
 
-let notyf = new Notyf({
+const notifications = new Notyf({
     position: {
         x: 'left',
         y: 'bottom'
@@ -310,18 +310,6 @@ function check_updates() {
 function update_title() {
     document.querySelector('head title').innerHTML = `preview_3d ${PACKAGE_INFO.version} | ${state.scene_src}`
 }
-function notify_error(message) {
-    switch (true) {
-        case message === "loaders[model_format] is not a function": {
-            notyf.error('Unsupported file format');
-            break;
-        }
-        default: {
-            notyf.error('message');
-            break;
-        }
-    }
-}
 function set_loader(visible, progress) {
     let loader = document.getElementById("loader")
     if (visible) {
@@ -359,8 +347,8 @@ export {
     collapse_gui,
     check_updates,
     update_title,
-    notify_error,
     set_loader,
     panes,
-    refresh_gui
+    refresh_gui,
+    notifications
 }

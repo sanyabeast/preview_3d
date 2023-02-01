@@ -9,6 +9,7 @@
     "scripts": {
         "prebuild": "node prebuild.js",
         "start-sample": "npm run prebuild && cross-env NODE_ENV=development electron . assets/samples/Coffeemat.glb",
+        "start-sample-alt": "npm run prebuild && cross-env NODE_ENV=development electron . assets/samples/Teapot.glb",
         "start": "npm run prebuild && cross-env NODE_ENV=development electron .",
         "patch": "npm version patch",
         "make": "npm run prebuild && electron-builder --dir",
@@ -21,7 +22,8 @@
     "author": "@sanyabeast",
     "dependencies": {
         "directory-tree": "^3.5.1",
-        "jsonfile": "^6.1.0"
+        "jsonfile": "^6.1.0",
+        "lodash": "^4.17.21"
     },
     "extensions": [
         ".fbx",

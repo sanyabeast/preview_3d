@@ -2,6 +2,7 @@
 
 import { read_url } from "./util.js"
 
+console.log(`[state] open parameter: `, process.env.open_parameter)
 let startup_scene_src = read_url('scene_src') !== null ? read_url('scene_src') : process.env.open_parameter
 
 const state = {
