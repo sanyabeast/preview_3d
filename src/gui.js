@@ -67,7 +67,6 @@ function create_main_pane() {
                 'viewport_settings_folder': {
                     type: 'folder',
                     title: "👁️‍🗨️ Viewport",
-                    expanded: false,
                     children: {
                         'postfx_enabled': {
                             type: 'input',
@@ -84,7 +83,6 @@ function create_main_pane() {
                         'environment_map_select_folder': {
                             type: 'folder',
                             title: "🗺 Environment texture",
-                            expanded: false,
                             children: {
                                 'env_map_select_blade': {
                                     type: 'blade',
@@ -128,7 +126,6 @@ function create_main_pane() {
                 'inspect_folder': {
                     type: 'folder',
                     title: "🔍 Inspect",
-                    expanded: false,
                     children: {
                         'show_gizmo': {
                             type: 'input',
@@ -203,7 +200,6 @@ function create_file_pane() {
             file_folder: {
                 type: 'folder',
                 title: "📝 File",
-                expanded: false,
                 children: {
                     open_button: {
                         type: 'button',
@@ -215,7 +211,6 @@ function create_file_pane() {
                     samples_folder: {
                         type: 'folder',
                         title: "🏷 Load sample",
-                        expanded: false,
                         children: {
                             samples_selector: {
                                 type: 'blade',
@@ -244,7 +239,6 @@ function create_help_pane() {
             'help_folder': {
                 type: 'folder',
                 title: "☂️ Help",
-                expanded: false,
                 children: {
                     'update_available_banner': {
                         type: 'button',
@@ -257,7 +251,6 @@ function create_help_pane() {
                     'info_folder': {
                         type: 'folder',
                         title: "📃 Info",
-                        expanded: false,
                         on_click: () => help_pane.credits_folder.expanded = false,
                         children: {
                             info_text: {
@@ -273,7 +266,6 @@ function create_help_pane() {
                     'credits_folder': {
                         type: 'folder',
                         title: "🕴 About",
-                        expanded: false,
                         on_click: () => help_pane.info_folder.expanded = false,
                         children: {
                             info_text: {

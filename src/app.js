@@ -1,6 +1,8 @@
 /** Created by @sanyabeast | 28 Jan 2023 | Kyiv, Ukraine */
 
-import { notify_render, start_render, init_render } from './render.js';
+import { AnimationMixer } from 'three'
+
+import { notify_render, start_render, init_render, loop_tasks } from './render.js';
 import { loaders, init_loaders } from './loaders.js'
 import { init_gui, set_loader, notifications, panes } from './gui.js'
 import { init_controls } from './controls.js'
@@ -10,10 +12,22 @@ import { write_url, loge, logd, extend_gui } from './util.js';
 
 let OS_TOOLS = window.OS_TOOLS
 let is_running = false
-let scene_data
+
+let scene_state = {
+    animations: [],
+    actions: [],
+    current_position: 0,
+}
+
+let animation_state = {
+    disable_animations: false,
+    global_timescale: 1
+}
 let animation_folder_gui
+let animation_mixer
 
 async function load_scene(scene_src) {
+    kill_animations()
     console.log(`[load_scene] prepare to load: `, scene_src, state.scene_src)
     scene_src = _.isString(scene_src) ? scene_src : state.scene_src
     if (_.isString(scene_src) && scene_src.length > 0) {
@@ -24,7 +38,7 @@ async function load_scene(scene_src) {
         let is_ok = false
         try {
             if (model_format in loaders) {
-                scene_data = await loaders[model_format](state.scene_src)
+                _.assign(scene_state, await loaders[model_format](state.scene_src))
                 is_ok = true
             } else {
                 throw new Error(`Unrecognized file format: ${model_format}`)
@@ -49,38 +63,53 @@ async function load_scene(scene_src) {
 }
 
 function setup_scene() {
-    scene_data = scene_data || {
-        animations: []
+    console.log(scene_state)
+    animation_folder_gui.item.hidden = scene_state.animations.length === 0
+    animation_folder_gui.actions.children.forEach((child, index) => {
+        if (index < scene_state.animations.length) {
+            child.hidden = false
+        } else {
+            child.hidden = true
+        }
+    })
+
+    if (scene_state.animations.length > 0) {
+        animation_mixer = new AnimationMixer(state.active_scene);
+
+        scene_state.animations.forEach((anim_data, index) => {
+            console.log(anim_data)
+            let action = scene_state.actions[index] = animation_mixer.clipAction(anim_data)
+            anim_data.custom_weight = 1
+            if (!animation_folder_gui.actions.children[index]) {
+                animation_folder_gui.actions.addInput(anim_data, 'custom_weight', {
+                    label: anim_data.name,
+                    min: 0,
+                    max: 1,
+                    step: 0.1
+                }).on('change', ({ value }) => {
+                    scene_state.actions[index].enabled = value > 0
+                    scene_state.actions[index].setEffectiveTimeScale(1);
+                    scene_state.actions[index].setEffectiveWeight(value);
+                })
+            } else {
+                animation_folder_gui.actions.children[index].label = anim_data.name
+            }
+        })
+
+        loop_tasks.update_animation_mixer = (d, td) => {
+            if (animation_state.disable_animations !== true) {
+                animation_mixer.update(td)
+                notify_render()
+            }
+        }
+    } else {
+        loop_tasks.update_animation_mixer = () => { }
     }
 
-    animation_folder_gui.item.hidden = scene_data.animations.length === 0
-
-    animation_folder_gui.item.children.forEach((child, index) => {
-        if (index > scene_data.animations.length) {
-            child.hidden = true
-        } else {
-            chil.hidden = false
-        }
+    scene_state.actions.forEach((action) => {
+        action.enabled = true;
+        action.play()
     })
-
-    scene_data.animations.forEach((anim_data, index) => {
-        console.log(anim_data)
-        anim_data.lel = 1
-        if (!animation_folder_gui.item.children[index]) {
-            animation_folder_gui.item.addInput(anim_data, 'lel', {
-                label: anim_data.name,
-                min: 0,
-                max: anim_data.duration,
-                step: anim_data.duration / 100
-            }).on('change', (evt) => {
-                console.log(evt)
-            })
-        } else {
-            console.log('exist', animation_folder_gui.item.children[index])
-        }
-    })
-
-    animation_folder_gui.item.chil
 }
 
 function load_sample(sample_name) {
@@ -91,12 +120,43 @@ function init_animation_player() {
     /** animation plauer */
     animation_folder_gui = extend_gui(panes.main.item, {
         type: 'folder',
-        title: '🤹‍♀️ Animations'
+        title: '🤹‍♀️ Animations',
+        children: {
+            'disable_animations': {
+                type: 'input',
+                bind: [animation_state, 'disable_animations'],
+                label: "Pause all",
+                on_change: ({ value }) => {
+                    console.log(value, scene_state)
+                }
+            },
+            'global_timescale': {
+                type: 'input',
+                bind: [animation_state, 'global_timescale'],
+                label: "Timescale",
+                min: 0,
+                max: 10,
+                step: 0.1,
+                on_change: ({ value }) => {
+                    animation_mixer.timeScale = value
+                }
+            },
+            'actions': {
+                type: 'folder',
+                title: '🎛 Actions weight'
+            }
+        }
     })
 
-
+    // panes.main.animations = animation_folder_gui.item
 }
 
+function kill_animations() {
+    scene_state.actions.forEach(action => {
+        action.enabled = false
+        action.stop()
+    })
+}
 
 async function launch() {
     if (is_running) return

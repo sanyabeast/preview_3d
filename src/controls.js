@@ -45,11 +45,6 @@ function init_controls(params) {
                 frame_object();
                 break;
             }
-            case 13: {
-                event.preventDefault()
-                file_input.click()
-                break;
-            }
             case 82: {
                 event.preventDefault()
                 if (event.ctrlKey) {
@@ -72,6 +67,11 @@ function init_controls(params) {
             case 79: {
                 event.preventDefault()
                 file_input.click()
+                break;
+            }
+            case 8: {
+                event.preventDefault()
+                collapse_gui()
                 break;
             }
             default: {

@@ -20,10 +20,11 @@ import { loaders } from './loaders.js';
 const USE_LOGDEPTHBUF = true
 
 let camera, world, renderer, composer
-
+let clock = new THREE.Clock();
 let render_needs_update = true
 let render_loop_id
 let render_timeout = +new Date()
+let loop_tasks = {}
 
 let bloom_pass, ssao_pass, render_pass
 
@@ -124,11 +125,15 @@ function notify_render(duration = 0) {
     render_needs_update = true
 }
 
+
 function render() {
     render_loop_id = requestAnimationFrame(render)
+    const time_delta = clock.getDelta();
+    const delta = time_delta / (1000 / 60)
+
+    _.forEach(loop_tasks, task => task(delta, time_delta))
 
     if (render_needs_update === true || +new Date() < render_timeout) {
-
         if (state.postfx_enabled) {
             composer.render();
         } else {
@@ -174,11 +179,13 @@ export {
     world,
     renderer,
     composer,
+    loop_tasks,
     set_environment_texture,
     start_render,
     stop_render,
     notify_render,
     set_active_scene,
     set_environment,
-    init_render
+    init_render,
+    clock
 }

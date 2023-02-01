@@ -39,7 +39,7 @@ function build_gui(layout, props, item_data) {
         case 'folder': {
             item = item_data.item.addFolder({
                 title: layout.title,
-                expanded: layout.expanded
+                expanded: layout.expanded || false
             })
             break;
         }
