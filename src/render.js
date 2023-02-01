@@ -102,7 +102,7 @@ function init_postfx() {
 }
 
 function init_render() {
-   
+
     //compos
 }
 
@@ -115,8 +115,7 @@ function set_environment_texture(texture) {
 }
 
 function set_environment(alias) {
-    console.log(`${LOCAL_BASE_PATH}/assets/hdr/${ASSETS.hdr[alias]}`)
-    loaders['hdr'](`${LOCAL_BASE_PATH}/assets/hdr/${ASSETS.hdr[alias]}`)
+    loaders['hdr'](`${__dirname}/assets/hdr/${ASSETS.hdr[alias]}`)
 }
 
 function notify_render(duration = 0) {

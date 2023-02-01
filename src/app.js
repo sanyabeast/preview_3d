@@ -33,7 +33,7 @@ async function load_scene(scene_src) {
 }
 
 function load_sample(sample_name) {
-    load_scene(`${LOCAL_BASE_PATH}/assets/samples/${ASSETS.samples[sample_name]}`)
+    load_scene(`${__dirname}/assets/samples/${ASSETS.samples[sample_name]}`)
 }
 
 async function launch() {

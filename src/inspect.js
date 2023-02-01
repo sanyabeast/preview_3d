@@ -55,7 +55,7 @@ let inspect_modes = {
                 return matcap_materials[state.inspect_matcap_mode]
             } else {
                 let mat = matcap_materials[state.inspect_matcap_mode] = new THREE.MeshMatcapMaterial({
-                    matcap: texture_loader.load(`${LOCAL_BASE_PATH}/assets/matcap/${state.inspect_matcap_file}`)
+                    matcap: texture_loader.load(`${__dirname}/assets/matcap/${state.inspect_matcap_file}`)
                 })
 
                 return mat

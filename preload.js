@@ -16,8 +16,6 @@ window.ASSETS = ASSETS
 window.open_browser = (url) => {
     shell.openExternal(url)
 }
-window.LOCAL_BASE_PATH = IS_DEVELOPMENT ? '.' : './resources/app'
-
 let OS_TOOLS = {
     path: path,
     directory_tree: directory_tree,
