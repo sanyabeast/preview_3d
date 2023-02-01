@@ -37,7 +37,6 @@ function build_gui(layout, props, item_data) {
             break;
         }
         case 'folder': {
-            console.log(item_data)
             item = item_data.item.addFolder({
                 title: layout.title,
                 expanded: layout.expanded
@@ -97,6 +96,12 @@ function build_gui(layout, props, item_data) {
     return item_data
 }
 
+function extend_gui(parent, layout, props) {
+    return build_gui(layout, props, {
+        item: parent
+    })
+}
+
 function loge(topic, ...args) {
     console.log(`%c[preview_3d] %c[!] %c[${topic}]: `, 'color: #4caf50', 'color: #f44336;', 'color: #cddc39', ...args)
 }
@@ -110,5 +115,7 @@ export {
     write_url,
     read_url,
     build_gui,
-    loge
+    extend_gui,
+    loge,
+    logd
 }

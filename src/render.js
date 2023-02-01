@@ -11,12 +11,11 @@ import { SAOPass } from 'three/addons/postprocessing/SAOPass.js';
 import { UnrealBloomPass } from 'three/addons/postprocessing/UnrealBloomPass.js';
 import { RenderPass } from 'three/addons/postprocessing/RenderPass.js';
 
-
-
 import { state } from './state.js'
-import { set_loader, update_title, panes, refresh_gui } from './gui.js';
+import { set_loader, update_title } from './gui.js';
 import { frame_object } from './controls.js';
 import { loaders } from './loaders.js';
+
 
 const USE_LOGDEPTHBUF = true
 
@@ -45,6 +44,8 @@ function preinit_render() {
 
     window.renderer = renderer
     window.camera = camera
+
+
 
     init_world()
     init_postfx()

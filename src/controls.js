@@ -64,6 +64,11 @@ function init_controls(params) {
                 collapse_gui()
                 break;
             }
+            case 78: {
+                event.preventDefault()
+                new_window(state.scene_src)
+                break;
+            }
             case 79: {
                 event.preventDefault()
                 file_input.click()

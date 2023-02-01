@@ -50,8 +50,8 @@ function init_gui(params) {
         setTimeout(check_updates, 15000)
     }
 
-    panes.main = create_file_pane()
-    panes.file = create_main_pane()
+    panes.file = create_file_pane()
+    panes.main = create_main_pane()
     panes.help = create_help_pane()
 
 

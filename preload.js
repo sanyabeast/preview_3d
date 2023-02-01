@@ -15,6 +15,11 @@ window.open_browser = (url) => {
     shell.openExternal(url)
 }
 
+window.new_window = (open_parameter) => {
+    console.log(open_parameter)
+    ipcRenderer.invoke('new_window', open_parameter)
+}
+
 if (!window.location.href.startsWith('file://')) {
     open_browser(window.location.href);
     window.open(`${__dirname}/index.html`)

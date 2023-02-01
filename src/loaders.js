@@ -46,11 +46,12 @@ let loaders = {
                 .setMeshoptDecoder(MeshoptDecoder)
 
             gltf_loader.load(scene_src, function (gltf) {
+                console.log(gltf)
                 set_active_scene(gltf.scene)
-                resolve()
+                resolve({
+                    animations: gltf.animations
+                })
             });
-
-
         })
     },
     glb: (scene_src) => loaders.gltf(scene_src),

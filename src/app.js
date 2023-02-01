@@ -2,14 +2,15 @@
 
 import { notify_render, start_render, init_render } from './render.js';
 import { loaders, init_loaders } from './loaders.js'
-import { init_gui, set_loader, notifications } from './gui.js'
+import { init_gui, set_loader, notifications, panes } from './gui.js'
 import { init_controls } from './controls.js'
 import { state } from './state.js';
 import { init_inspect } from './inspect.js';
-import { write_url, loge } from './util.js';
+import { write_url, loge, logd, extend_gui } from './util.js';
 
 let OS_TOOLS = window.OS_TOOLS
 let is_running = false
+let scene_data
 
 async function load_scene(scene_src) {
     console.log(`[load_scene] prepare to load: `, scene_src, state.scene_src)
@@ -21,7 +22,8 @@ async function load_scene(scene_src) {
         let model_format = OS_TOOLS.path.extname(state.scene_src).replace(".", '')
         try {
             if (model_format in loaders) {
-                await loaders[model_format](state.scene_src)
+                scene_data = await loaders[model_format](state.scene_src)
+                setup_scene()
             } else {
                 throw new Error(`Unrecognized file format: ${model_format}`)
             }
@@ -38,6 +40,12 @@ async function load_scene(scene_src) {
         console.log(`load_scene: attempt to load invalid src: ${scene_src}`)
     }
 
+}
+
+function setup_scene() {
+    scene_data = scene_data || {
+        animations: []
+    }
 }
 
 function load_sample(sample_name) {
@@ -57,6 +65,15 @@ async function launch() {
     await load_scene()
     start_render()
     notify_render()
+
+    console.log(panes)
+
+    extend_gui(panes.main.item, {
+        type: 'folder',
+        title: 'Animations'
+    })
+
+
 }
 
 window.load_file = async function (file_path) {

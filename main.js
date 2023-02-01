@@ -3,7 +3,7 @@
 
 const _ = require('lodash')
 const PACKAGE_INFO = require('./package.json')
-const { app, BrowserWindow, screen } = require('electron')
+const { app, BrowserWindow, screen, ipcMain } = require('electron')
 const path = require('path')
 const IS_DEVELOPMENT = process.env.NODE_ENV === 'development'
 const QUIT_ON_LAST_WINDOW_CLOSED = true;
@@ -55,6 +55,7 @@ function create_window() {
     main_window.setMenuBarVisibility(false)
     main_window.loadFile(`index.html`)
 
+
     if (IS_DEVELOPMENT) {
         main_window.webContents.openDevTools()
     }
@@ -74,6 +75,10 @@ if (!got_the_lock) {
         open_file()
         app.on('activate', () => {
             if (BrowserWindow.getAllWindows().length === 0) create_window()
+        })
+
+        ipcMain.handle('new_window', (ev, open_parameter) => {
+            console.dir(open_parameter)
         })
     })
 }
@@ -96,7 +101,6 @@ app.on('open-file', (event, file_path) => {
         open_file()
     }
 })
-
 
 app.on('window-all-closed', () => {
     if (process.platform !== 'darwin' || QUIT_ON_LAST_WINDOW_CLOSED) app.quit()
