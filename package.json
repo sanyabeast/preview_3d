@@ -8,7 +8,8 @@
     },
     "scripts": {
         "prebuild": "node prebuild.js",
-        "start": "npm run prebuild && cross-env NODE_ENV=development electron . assets/samples/Coffeemat.glb",
+        "start-sample": "npm run prebuild && cross-env NODE_ENV=development electron . assets/samples/Coffeemat.glb",
+        "start": "npm run prebuild && cross-env NODE_ENV=development electron .",
         "patch": "npm version patch",
         "make": "npm run prebuild && electron-builder --dir",
         "release": "npm run prebuild && electron-builder"
