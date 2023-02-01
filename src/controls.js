@@ -15,20 +15,6 @@ file_input.onchange = e => {
     load_scene(e.target.files[0].path)
 }
 
-document.body.addEventListener('mousedown', (ev)=>{
-    let target = ev.target
-    console.dir(target)
-    if (target.tagName === 'A'){
-        open_browser(target.src)
-        console.log(target)
-        ev.preventDefault()
-    }
-}, false)
-
-window.open = (url)=>{
-    console.log(url)
-}
-
 function init_controls(params) {
     load_scene = params.load_scene
     window.addEventListener('dragenter', handle_drag_and_drop, false)

@@ -42,7 +42,7 @@
         "tomoco": "tomoco.hdr"
     },
     "texts": {
-        "about": "# preview_3d\nFeature-rich meshes preview for Windows, Macos and Linux.\n[__Updates__](https://github.com/sanyabeast/preview_3d)\n## Authors\n    - Code: __@sanyabeast__\n    - Icon: __@nataleesha__\n## Credids\n    - Mr. Doob & THREE.js team\n    - Electron team\n    - Tweakpane team\n__Kyiv, Ukraine, 2023__",
+        "about": "# preview_3d\nFeature-rich meshes preview for Windows, Macos and Linux.\n## Authors\n    - Code: __@sanyabeast__\n    - Icon: __@nataleesha__\n## Credids\n    - Mr. Doob & THREE.js team\n    - Electron team\n    - Tweakpane team\n__Kyiv, Ukraine, 2023__",
         "info": "\n# keycodes\n## frame scene\n- [f] [space] [numpad .] [\\]\n\n## open file\n- [enter]\n\n## reload scene\n- [r]\n\n## collapse gui\n- [escape]\n"
     }
 }

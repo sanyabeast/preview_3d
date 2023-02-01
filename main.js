@@ -45,6 +45,7 @@ function create_window() {
         // width,
         // height,
         webPreferences: {
+            // webSecurity: false,
             preload: path.join(__dirname, 'preload.js'),
             devTools: true,
             contextIsolation: false,
