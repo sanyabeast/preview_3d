@@ -7,6 +7,8 @@ const { app, BrowserWindow, screen } = require('electron')
 const path = require('path')
 const IS_DEVELOPMENT = process.env.NODE_ENV === 'development'
 const QUIT_ON_LAST_WINDOW_CLOSED = true;
+const EXTENSIONS = require('./extensions.js')
+
 
 let app_ready = false
 let main_window = null
@@ -17,7 +19,7 @@ function get_file_parameter(list) {
     let result = null
     for (let i = 0; i < list.length; i++) {
         let extname = path.extname(list[i])
-        if (PACKAGE_INFO.extensions.indexOf(extname) > -1) {
+        if (EXTENSIONS.indexOf(extname) > -1) {
             console.log(`file format ${extname} is supported. opening...`)
             result = list[i]
             break
@@ -43,6 +45,7 @@ function create_window() {
         // width,
         // height,
         webPreferences: {
+            // webSecurity: false,
             preload: path.join(__dirname, 'preload.js'),
             devTools: true,
             contextIsolation: false,
@@ -51,6 +54,7 @@ function create_window() {
     })
     main_window.setMenuBarVisibility(false)
     main_window.loadFile(`index.html`)
+
     if (IS_DEVELOPMENT) {
         main_window.webContents.openDevTools()
     }
