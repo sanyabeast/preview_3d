@@ -56,6 +56,7 @@ function build_gui(layout, props, item_data) {
         }
         case 'button': {
             item = item_data.item.addButton({
+                label: layout.label,
                 title: layout.title,
                 hidden: layout.hidden,
             })
@@ -96,9 +97,18 @@ function build_gui(layout, props, item_data) {
     return item_data
 }
 
+function loge(topic, ...args) {
+    console.log(`%c[preview_3d] %c[!] %c[${topic}]: `, 'color: #4caf50', 'color: #f44336;', 'color: #cddc39', ...args)
+}
+
+function logd(topic, ...args) {
+    console.log(`%c[preview_3d] %c[i] %c[${topic}]: `, 'color: #4caf50', 'color: #8bc34a;', 'color: #cddc39', ...args)
+}
+
 export {
     random_choice,
     write_url,
     read_url,
-    build_gui
+    build_gui,
+    loge
 }

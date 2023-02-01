@@ -9,13 +9,36 @@ import { set_inspection_mode, set_matcap, inspect_modes, torch_light, gizmo } fr
 import { world, camera, renderer, composer, notify_render, set_environment } from './render.js';
 import { state } from './state.js';
 import { load_sample } from './app.js'
-import { build_gui } from './util.js';
+import { build_gui, loge } from './util.js';
 
 const notifications = new Notyf({
     position: {
         x: 'left',
         y: 'bottom'
-    }
+    },
+    types: [
+        {
+            type: 'error',
+            background: '#e93030',
+            icon: false,
+            dismissable: true,
+            duration: 5000
+        },
+        {
+            type: 'warn',
+            background: '#e97d30',
+            icon: false,
+            dismissable: true,
+            duration: 5000
+        },
+        {
+            type: 'info',
+            background: '#8bc34a',
+            icon: false,
+            dismissable: true,
+            duration: 5000
+        }
+    ]
 });
 
 let main_pane, file_pane, help_pane
@@ -183,12 +206,11 @@ function create_file_pane() {
                 expanded: false,
                 children: {
                     open_button: {
-                        type: 'input',
+                        type: 'button',
                         bind: [state, 'scene_src'],
                         label: "📎 Current",
-                        on_change: () => {
-                            file_input.click()
-                        }
+                        title: "Open",
+                        on_click: () => file_input.click()
                     },
                     samples_folder: {
                         type: 'folder',
@@ -203,9 +225,7 @@ function create_file_pane() {
                                     title: _.map(Object.keys(ASSETS.samples), item => [item])[y][x],
                                 }),
                                 label: 'Samples',
-                                on_click: ({ cell }) => {
-                                    load_sample(cell.title)
-                                }
+                                on_click: ({ cell }) => load_sample(cell.title)
                             }
                         }
                     }
@@ -304,7 +324,7 @@ function check_updates() {
             update_available_banner.hidden = true
         }
     } catch (err) {
-        console.error(err)
+        loge('gui/check_updates', err.message)
     }
 }
 function update_title() {

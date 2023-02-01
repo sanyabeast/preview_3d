@@ -11,7 +11,7 @@ const state = {
     env_default_background: null,
     env_default_texture: null,
     env_texture: null,
-    postfx_enabled: true,
+    postfx_enabled: false,
     postfx_bloom_exposure: 1,
     postfx_bloom_strength: 0.2,
     postfx_bloom_treshold: 0.5,

@@ -6,7 +6,7 @@ import { init_gui, set_loader, notifications } from './gui.js'
 import { init_controls } from './controls.js'
 import { state } from './state.js';
 import { init_inspect } from './inspect.js';
-import { write_url } from './util.js';
+import { write_url, loge } from './util.js';
 
 let OS_TOOLS = window.OS_TOOLS
 let is_running = false
@@ -27,8 +27,11 @@ async function load_scene(scene_src) {
             }
 
         } catch (error) {
-            console.error(error)
-            notifications.dismissable({ message: error.message, dismissable: true })
+            loge('app/load_scene', error.message)
+            notifications.open({
+                type: 'error',
+                message: error.message,
+            })
             set_loader(false)
         }
     } else {
