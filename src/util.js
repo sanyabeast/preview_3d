@@ -86,7 +86,7 @@ function build_gui(layout, props, item_data) {
         _.forEach(layout.children, (child_layout, ref) => {
             item_data.item = item
             if (ref in item_data) {
-               loge('utils/build_gui', `gui item reference duplicate: "${ref}"`, layout)
+                loge('utils/build_gui', `gui item reference duplicate: "${ref}"`, layout)
             }
             let child_item_data = build_gui(child_layout, props, item_data)
             item_data[ref] = child_item_data.item
@@ -112,8 +112,8 @@ function loge(topic, ...args) {
 function logd(topic, ...args) {
     console.log(`%c[preview_3d] %c[i] %c[${topic}]: `, 'color: #4caf50', 'color: #8bc34a;', 'color: #cddc39', ...args)
 }
-function lerp(a, b, alpha) {
-    return a + (b - a) * alpha
+function lerp(start, end, amt) {
+    return (1 - amt) * start + amt * end
 }
 
 export {

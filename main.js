@@ -105,9 +105,6 @@ if (!got_the_lock) {
         })
 
         ipcMain.handle('new_window', (ev, open_parameter) => {
-            for (k in ev) {
-                console.dir(ev)
-            }
             let win_query_data = get_query_parameters(ev.sender.getURL())
             if (_.isString(win_query_data.file_parameter)) {
                 file_parameter = win_query_data.file_parameter

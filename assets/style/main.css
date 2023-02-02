@@ -7,6 +7,7 @@ window {
 * {
     box-sizing: border-box;
     user-select: none;
+    text-transform: lowercase;
 }
 
 body {

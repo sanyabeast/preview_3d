@@ -18,7 +18,8 @@ import {
     set_sun_height,
     set_environment_intensity,
     set_daytime,
-    set_ambient_intentsity
+    set_ambient_intentsity,
+    set_environment_power
 } from './render.js';
 import { state } from './state.js';
 import { load_sample } from './app.js'
@@ -139,7 +140,7 @@ function create_main_pane() {
                                 },
                                 'daytime': {
                                     type: 'input',
-                                    bind: [{ value: 0.5 }, 'value'],
+                                    bind: [state, 'render_daytime'],
                                     label: "🔆 Daytime",
                                     min: 0,
                                     max: 1,
@@ -172,11 +173,20 @@ function create_main_pane() {
                                         'env_intensity': {
                                             type: 'input',
                                             bind: [state, 'env_intensity'],
-                                            label: "Environment",
+                                            label: "env. intensity",
                                             min: 0,
                                             max: 1,
                                             step: 0.01,
                                             on_change: ({ value }) => set_environment_intensity(value)
+                                        },
+                                        'env_power': {
+                                            type: 'input',
+                                            bind: [state, 'env_power'],
+                                            label: "env. power",
+                                            min: 0,
+                                            max: 5,
+                                            step: 0.1,
+                                            on_change: ({ value }) => set_environment_power(value)
                                         },
                                         'ambient_intensity': {
                                             type: 'input',

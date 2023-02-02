@@ -19,6 +19,7 @@ import { refresh_gui } from './gui.js';
 
 const MIN_DAYTIME_LIGHT_INTENSITY = 0.01
 const SUN_HEIGHT_MULTIPLIER = 1.5
+const SUN_AZIMUTH_OFFSET = Math.PI / 2
 const USE_LOGDEPTHBUF = true
 
 let camera, world, renderer, composer
@@ -188,9 +189,10 @@ function set_fps_limit(value) {
 }
 
 function set_sun_azimuth(value) {
+    value += SUN_AZIMUTH_OFFSET
     state.render_sun_azimuth = value
-    sun.position.x = Math.cos(value * Math.PI * 2) * sun_state.distance
-    sun.position.z = Math.sin(value * Math.PI * 2) * sun_state.distance
+    sun.position.x = Math.sin(value * Math.PI * 2) * sun_state.distance
+    sun.position.z = Math.cos(value * Math.PI * 2) * sun_state.distance
     notify_render()
 }
 
@@ -213,13 +215,23 @@ function set_environment_intensity(value) {
     notify_render()
 }
 
+function set_environment_power(value) {
+    state.env_power = value
+    /** USED MODIFIED THREE.JS API */
+    world.environment_power = state.env_power
+    notify_render()
+}
+
+
 function set_daytime(value) {
-    value = Math.pow(value, 2)
+    state.render_daytime = value
     let curved_value = Math.sin(value * Math.PI)
-    set_environment_intensity(lerp(0, 1, curved_value))
-    set_sun_height(lerp(0, 1, curved_value))
+    curved_value = Math.pow(curved_value, 2)
+    set_environment_intensity(lerp(0, 1, Math.pow(curved_value, 2)))
+    set_environment_power(lerp(5, 1, curved_value))
+    set_sun_height(lerp(0.02, 1, curved_value))
     set_sun_azimuth(lerp(0, 1, value))
-    set_ambient_intentsity(lerp(0, 1, Math.pow(curved_value, 2)))
+    set_ambient_intentsity(lerp(0, 0.9, curved_value))
     notify_render()
     refresh_gui();
 }
@@ -243,5 +255,6 @@ export {
     set_sun_height,
     set_ambient_intentsity,
     set_environment_intensity,
+    set_environment_power,
     set_daytime
 }

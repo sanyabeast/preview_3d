@@ -12,6 +12,7 @@ const state = {
     env_default_texture: null,
     env_texture: null,
     env_intensity: 1,
+    env_power: 1,
     postfx_enabled: false,
     postfx_bloom_exposure: 1,
     postfx_bloom_strength: 0.2,
@@ -31,7 +32,8 @@ const state = {
     render_fps_limit: process.platform === 'darwin' ? Infinity : Infinity,
     render_ambient_intensity: 0.5,
     render_sun_height: 1,
-    render_sun_azimuth: 0.5
+    render_sun_azimuth: 0.5,
+    render_daytime: 0.5
 }
 
 export {
