@@ -7,6 +7,10 @@ import * as THREE from 'three';
 import { RoomEnvironment } from 'three/addons/environments/RoomEnvironment.js';
 import { EffectComposer } from 'three/addons/postprocessing/EffectComposer.js';
 import { SSAOPass } from 'three/addons/postprocessing/SSAOPass.js';
+import { ShaderPass } from 'three/addons/postprocessing/ShaderPass.js';
+import { CopyShader } from 'three/addons/shaders/CopyShader.js';
+import { FXAAShader } from 'three/addons/shaders/FXAAShader.js';
+import { RGBShiftShader } from 'three/addons/shaders/RGBShiftShader.js';
 import { SAOPass } from 'three/addons/postprocessing/SAOPass.js';
 import { UnrealBloomPass } from 'three/addons/postprocessing/UnrealBloomPass.js';
 import { RenderPass } from 'three/addons/postprocessing/RenderPass.js';
@@ -30,6 +34,7 @@ let loop_tasks = {}
 let now = +new Date()
 let prev_render_time = 0
 let sun, amb
+let fog
 let sun_state = {
     distance: 100,
     height: 1,
@@ -80,6 +85,7 @@ function init_world() {
     world = new THREE.Scene();
     world.background = new THREE.Color(0xbbbbbb);
     world.environment = pmremGenerator.fromScene(environment).texture;
+    world.matrixWorldAutoUpdate = false
 
     world.backgroundBlurriness = 0.5
     world.backgroundIntensity = 1
@@ -98,6 +104,7 @@ function init_world() {
 
     world.add(sun)
     world.add(amb)
+
     window.world = world
     state.env_default_background = world.background
     state.env_default_texture = world.environment
@@ -111,24 +118,15 @@ function init_postfx() {
     bloom_pass.threshold = state.postfx_bloom_treshold;
     bloom_pass.strength = state.postfx_bloom_strength;
     bloom_pass.radius = state.postfx_bloom_radius;
-    //ssao_pass = new SSAOPass(world, camera, window.innerWidth, window.innerHeight);
-    //ssao_pass.kernelRadius = 16;
+
+    let fxaa_pass = new ShaderPass(FXAAShader);
+    fxaa_pass.material.uniforms['resolution'].value.x = 1 / (window.innerWidth * window.devicePixelRatio);
+    fxaa_pass.material.uniforms['resolution'].value.y = 1 / (window.innerHeight * window.devicePixelRatio);
 
     composer.addPass(render_pass);
-
-    let sao_pass = new SAOPass(world, camera, false, true)
-    sao_pass.params.saoScale = 1
-
-
-    //sao_pass.params.saoBlurRadius = 0
-    //sao_pass.params.saoKernelRadius = 10
-    // sao_pass.params.output = SAOPass.OUTPUT.SAO
-
-
-    //window.sao_pass = sao_pass
-    composer.addPass(sao_pass);
-
+    composer.addPass(fxaa_pass);
     composer.addPass(bloom_pass);
+
 }
 
 function init_render() {
@@ -236,6 +234,10 @@ function set_daytime(value) {
     refresh_gui();
 }
 
+function update_matrix() {
+    world.updateMatrixWorld()
+}
+
 preinit_render()
 
 export {
@@ -256,5 +258,6 @@ export {
     set_ambient_intentsity,
     set_environment_intensity,
     set_environment_power,
-    set_daytime
+    set_daytime,
+    update_matrix
 }

@@ -8,7 +8,7 @@
     },
     "scripts": {
         "prebuild": "node prebuild.js",
-        "start-sample": "npm run prebuild && cross-env NODE_ENV=development electron . assets/samples/Coffeemat.glb",
+        "start-sample": "npm run prebuild && cross-env NODE_ENV=development electron . assets/samples/Teapot.glb",
         "start-sample-alt": "npm run prebuild && cross-env NODE_ENV=development electron . assets/samples/Teapot.glb",
         "start": "npm run prebuild && cross-env NODE_ENV=development electron .",
         "release": "npm version patch --no-git-tag-version",

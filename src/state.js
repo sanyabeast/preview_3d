@@ -36,6 +36,8 @@ const state = {
     render_daytime: 0.5
 }
 
+window.state = state
+
 export {
     state
 }
