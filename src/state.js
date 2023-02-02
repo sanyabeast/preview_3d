@@ -29,7 +29,9 @@ const state = {
     inspect_matcap_file: '',
     inspect_matcap_mode: '',
     render_fps_limit: process.platform === 'darwin' ? Infinity : Infinity,
-    render_ambient_intensity: 0.5
+    render_ambient_intensity: 0.5,
+    render_sun_height: 1,
+    render_sun_azimuth: 0.5
 }
 
 export {

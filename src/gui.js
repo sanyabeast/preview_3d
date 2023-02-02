@@ -189,7 +189,7 @@ function create_main_pane() {
                                         },
                                         'sun_height': {
                                             type: 'input',
-                                            bind: [{ value: 1 }, 'value'],
+                                            bind: [state, 'render_sun_height'],
                                             label: "Sun height",
                                             min: 0,
                                             max: 1,
@@ -198,7 +198,7 @@ function create_main_pane() {
                                         },
                                         'sun_azimuth': {
                                             type: 'input',
-                                            bind: [{ value: 0.5 }, 'value'],
+                                            bind: [state, 'render_sun_azimuth'],
                                             label: "Sun azimuth",
                                             min: 0,
                                             max: 1,
@@ -335,17 +335,17 @@ function create_file_pane() {
                         size: [2, 1],
                         cells: (x, y) => ({
                             title: [
-                                ['New window', 'Quit']
+                                ['🐑 Clone', '🪦 Quit']
                             ][y][x],
                         }),
-                        label: 'More',
+                        label: '🪬 App',
                         on_click: ({ cell }) => {
                             switch (cell.title) {
-                                case 'New window': {
+                                case '🐑 Clone': {
                                     ipc_invoke('new_window')
                                     break;
                                 }
-                                case 'Quit': {
+                                case '🪦 Quit': {
                                     ipc_invoke('quit')
                                     break;
                                 }

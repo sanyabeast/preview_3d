@@ -188,14 +188,14 @@ function set_fps_limit(value) {
 }
 
 function set_sun_azimuth(value) {
-    sun_state.azimuth = value
+    state.render_sun_azimuth = value
     sun.position.x = Math.cos(value * Math.PI * 2) * sun_state.distance
     sun.position.z = Math.sin(value * Math.PI * 2) * sun_state.distance
     notify_render()
 }
 
 function set_sun_height(value) {
-    sun_state.height = value
+    state.render_sun_height = value
     sun.position.y = lerp(0, sun_state.distance * SUN_HEIGHT_MULTIPLIER, value)
     sun.intensity = value
     notify_render()
@@ -219,7 +219,7 @@ function set_daytime(value) {
     set_environment_intensity(lerp(0, 1, curved_value))
     set_sun_height(lerp(0, 1, curved_value))
     set_sun_azimuth(lerp(0, 1, value))
-    set_ambient_intentsity(lerp(1, 0, curved_value))
+    set_ambient_intentsity(lerp(0, 1, Math.pow(curved_value, 2)))
     notify_render()
     refresh_gui();
 }
