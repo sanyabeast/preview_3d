@@ -11,13 +11,23 @@ const ASSETS = require('./assets.json')
 const EXTENSIONS = require('./extensions.js')
 const shell = require('electron').shell;
 
+window.IS_MAIN_WINDOW = true
+window.IS_WINDOW_FOCUSED = true
+
 window.open_browser = (url) => {
     shell.openExternal(url)
 }
 
-window.new_window = (open_parameter) => {
-    console.log(open_parameter)
-    ipcRenderer.invoke('new_window', open_parameter)
+window.new_window = () => {
+    ipcRenderer.invoke('new_window')
+}
+
+window.ipc_invoke = (event_name, payload) => {
+    ipcRenderer.invoke(event_name, payload)
+}
+
+window.ipc_on = (event_name, callback) => {
+    ipcRenderer.on(event_name, callback)
 }
 
 if (!window.location.href.startsWith('file://')) {
@@ -42,4 +52,27 @@ if (!window.location.href.startsWith('file://')) {
             window.load_file(message.path)
         }
     });
+
+    ipcRenderer.on('secondary_window_mode', function (evt, message) {
+        window.IS_MAIN_WINDOW = false;
+        if (_.isFunction(window.handle_secondary_window_mode)) {
+            window.handle_secondary_window_mode()
+        }
+    });
+
+    ipcRenderer.on('main_window_mode', function (evt, message) {
+        window.IS_MAIN_WINDOW = true;
+        if (_.isFunction(window.handle_secondary_window_mode)) {
+            window.handle_main_window_mode()
+        }
+    });
+
+    ipcRenderer.on('window_focus', function (evt, message) {
+        window.IS_WINDOW_FOCUSED = true;
+    });
+
+    ipcRenderer.on('window_blur', function (evt, message) {
+        window.IS_WINDOW_FOCUSED = false;
+    });
+
 }

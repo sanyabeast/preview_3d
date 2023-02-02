@@ -111,14 +111,14 @@ function init_inspect() {
     world.add(torch_light)
 
     axes_helper = new THREE.AxesHelper(2);
-    axes_helper.visible = state.show_gizmo
+    axes_helper.visible = state.inspect_show_gizmo
     world.add(axes_helper)
 
     grid_helper = new THREE.GridHelper(100, 10, 0xffffff, 0xffffff);
     grid_helper.material.opacity = 0.1;
     grid_helper.material.depthWrite = false;
     grid_helper.material.transparent = true;
-    grid_helper.visible = state.show_gizmo
+    grid_helper.visible = state.inspect_show_gizmo
     world.add(grid_helper);
 
     gizmo.axes_helper = axes_helper

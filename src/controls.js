@@ -61,7 +61,9 @@ function init_controls(params) {
             }
             case 78: {
                 event.preventDefault()
-                new_window(state.scene_src)
+                if (event.metaKey || event.ctrlKey) {
+                    new_window()
+                }
                 break;
             }
             case 79: {

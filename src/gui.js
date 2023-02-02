@@ -17,7 +17,8 @@ import {
     set_sun_azimuth,
     set_sun_height,
     set_environment_intensity,
-    set_daytime
+    set_daytime,
+    set_ambient_intentsity
 } from './render.js';
 import { state } from './state.js';
 import { load_sample } from './app.js'
@@ -171,11 +172,20 @@ function create_main_pane() {
                                         'env_intensity': {
                                             type: 'input',
                                             bind: [state, 'env_intensity'],
-                                            label: "Intensity",
+                                            label: "Environment",
                                             min: 0,
                                             max: 1,
                                             step: 0.01,
                                             on_change: ({ value }) => set_environment_intensity(value)
+                                        },
+                                        'ambient_intensity': {
+                                            type: 'input',
+                                            bind: [state, 'render_ambient_intensity'],
+                                            label: "Ambient light",
+                                            min: 0,
+                                            max: 1,
+                                            step: 0.01,
+                                            on_change: ({ value }) => set_ambient_intentsity(value)
                                         },
                                         'sun_height': {
                                             type: 'input',
@@ -195,6 +205,7 @@ function create_main_pane() {
                                             step: 0.01,
                                             on_change: ({ value }) => set_sun_azimuth(value)
                                         },
+
                                     }
                                 },
 
@@ -221,11 +232,11 @@ function create_main_pane() {
                     type: 'folder',
                     title: "🔍 Inspect",
                     children: {
-                        'show_gizmo': {
+                        'inspect_show_gizmo': {
                             type: 'input',
-                            bind: [state, 'show_gizmo'],
+                            bind: [state, 'inspect_show_gizmo'],
                             label: "📏 Gizmo",
-                            on_change: 'on_show_gizmo_changed'
+                            on_change: 'on_inspect_show_gizmo_changed'
                         },
                         'inspect_mode': {
                             type: 'input',
@@ -270,7 +281,7 @@ function create_main_pane() {
                 torch_light.visible = value
                 notify_render()
             },
-            on_show_gizmo_changed: ({ value }) => {
+            on_inspect_show_gizmo_changed: ({ value }) => {
                 gizmo.axes_helper.visible = value
                 gizmo.grid_helper.visible = value
                 notify_render()
@@ -317,6 +328,30 @@ function create_file_pane() {
                                 on_click: ({ cell }) => load_sample(cell.title)
                             }
                         }
+                    },
+                    app_control: {
+                        type: 'blade',
+                        view: 'buttongrid',
+                        size: [2, 1],
+                        cells: (x, y) => ({
+                            title: [
+                                ['New window', 'Quit']
+                            ][y][x],
+                        }),
+                        label: 'More',
+                        on_click: ({ cell }) => {
+                            switch (cell.title) {
+                                case 'New window': {
+                                    ipc_invoke('new_window')
+                                    break;
+                                }
+                                case 'Quit': {
+                                    ipc_invoke('quit')
+                                    break;
+                                }
+                            }
+                            console.log(cell)
+                        }
                     }
                 }
             }
@@ -362,7 +397,7 @@ function create_help_pane() {
                         title: "🕴 About",
                         on_click: () => help_pane.info_folder.expanded = false,
                         children: {
-                            info_text: {
+                            about_text: {
                                 type: 'blade',
                                 view: 'infodump',
                                 class_list: ['ff-monospace'],
@@ -414,7 +449,9 @@ function check_updates() {
     }
 }
 function update_title() {
-    document.querySelector('head title').innerHTML = `preview_3d ${PACKAGE_INFO.version} | ${state.scene_src}`
+    let prefix = IS_MAIN_WINDOW ? '[*] ' : ''
+    let sep = state.scene_src && state.scene_src.length ? '|' : ''
+    document.querySelector('head title').innerHTML = `${prefix} preview_3d ${PACKAGE_INFO.version} ${sep} ${state.scene_src}`
 }
 function set_loader(visible, progress) {
     let loader = document.getElementById("loader")
@@ -447,6 +484,11 @@ const refresh_gui = _.debounce(() => {
     help_pane.item.refresh();
     file_pane.item.refresh();
 }, 1000 / 15)
+
+window.handle_secondary_window_mode = update_title
+window.handle_main_window_mode = update_title
+
+update_title()
 
 export {
     init_gui,

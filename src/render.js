@@ -18,6 +18,7 @@ import { refresh_gui } from './gui.js';
 
 
 const MIN_DAYTIME_LIGHT_INTENSITY = 0.01
+const SUN_HEIGHT_MULTIPLIER = 1.5
 const USE_LOGDEPTHBUF = true
 
 let camera, world, renderer, composer
@@ -35,7 +36,14 @@ let sun_state = {
     environment_multiplier: 1
 }
 
+let is_document_visible = document.visibilityState === 'visible'
 let bloom_pass, ssao_pass, render_pass
+
+document.addEventListener('visibilitychange', (event) => {
+    console.log(`document visibility: ${document.visibilityState}`)
+    is_document_visible = document.visibilityState === 'visible'
+})
+
 
 function preinit_render() {
     /** main renderer */
@@ -146,6 +154,9 @@ function notify_render(duration = 0) {
 
 function render() {
     render_loop_id = requestAnimationFrame(render)
+    if (!is_document_visible || !IS_WINDOW_FOCUSED) {
+        return
+    }
     now = +new Date()
     const time_delta = (now - prev_render_time) / 1000
     const delta = time_delta / (1 / 60)
@@ -178,21 +189,21 @@ function set_fps_limit(value) {
 
 function set_sun_azimuth(value) {
     sun_state.azimuth = value
-    sun.position.x = Math.sin(value * Math.PI * 2) * sun_state.distance
-    sun.position.z = Math.cos(value * Math.PI * 2) * sun_state.distance
+    sun.position.x = Math.cos(value * Math.PI * 2) * sun_state.distance
+    sun.position.z = Math.sin(value * Math.PI * 2) * sun_state.distance
     notify_render()
 }
 
 function set_sun_height(value) {
     sun_state.height = value
-    sun.position.y = lerp(0, sun_state.distance * 2, value)
+    sun.position.y = lerp(0, sun_state.distance * SUN_HEIGHT_MULTIPLIER, value)
     sun.intensity = value
-    set_sun_hardness(value)
     notify_render()
 }
 
-function set_sun_hardness(value) {
-    amb.intensity = lerp(sun.intensity * 0.666, MIN_DAYTIME_LIGHT_INTENSITY, 1 - value)
+function set_ambient_intentsity(value) {
+    state.render_ambient_intensity = value
+    amb.intensity = lerp(0, sun.intensity, value)
     notify_render()
 }
 
@@ -205,9 +216,10 @@ function set_environment_intensity(value) {
 function set_daytime(value) {
     value = Math.pow(value, 2)
     let curved_value = Math.sin(value * Math.PI)
-    set_environment_intensity(lerp(MIN_DAYTIME_LIGHT_INTENSITY, 1, curved_value))
-    set_sun_height(lerp(MIN_DAYTIME_LIGHT_INTENSITY, 1, curved_value))
+    set_environment_intensity(lerp(0, 1, curved_value))
+    set_sun_height(lerp(0, 1, curved_value))
     set_sun_azimuth(lerp(0, 1, value))
+    set_ambient_intentsity(lerp(1, 0, curved_value))
     notify_render()
     refresh_gui();
 }
@@ -229,7 +241,7 @@ export {
     set_fps_limit,
     set_sun_azimuth,
     set_sun_height,
-    set_sun_hardness,
+    set_ambient_intentsity,
     set_environment_intensity,
     set_daytime
 }

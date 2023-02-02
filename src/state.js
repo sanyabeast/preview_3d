@@ -3,7 +3,7 @@
 import { read_url } from "./util.js"
 
 console.log(`[state] open parameter: `, process.env.file_parameter)
-let startup_scene_src = read_url('scene_src') !== null ? read_url('scene_src') : process.env.file_parameter
+const STARTUP_SCENE = read_url('file_parameter') !== null ? read_url('file_parameter') : process.env.file_parameter
 
 const state = {
     env_enabled: true,
@@ -18,17 +18,18 @@ const state = {
     postfx_bloom_treshold: 0.5,
     postfx_bloom_radius: 0.2,
     camera_fov: 45,
-    scene_src: startup_scene_src || '',
+    scene_src: STARTUP_SCENE || '',
     resolution_scale: process.platform === 'darwin' ? 0.65 : 1,
     active_scene: null,
-    show_gizmo: true,
     torch_light: false,
     application_has_updates: '',
     check_updates: true,
     inspect_mode: '',
+    inspect_show_gizmo: true,
     inspect_matcap_file: '',
     inspect_matcap_mode: '',
     render_fps_limit: process.platform === 'darwin' ? Infinity : Infinity,
+    render_ambient_intensity: 0.5
 }
 
 export {

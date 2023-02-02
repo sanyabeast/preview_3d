@@ -34,7 +34,7 @@ async function load_scene(scene_src) {
     if (_.isString(scene_src) && scene_src.length > 0) {
         set_loader(true)
         state.scene_src = scene_src;
-        write_url('scene_src', scene_src)
+        write_url('file_parameter', scene_src)
         let model_format = OS_TOOLS.path.extname(state.scene_src).replace(".", '')
         let is_ok = false
         try {
