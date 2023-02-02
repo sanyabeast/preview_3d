@@ -38,14 +38,14 @@ let loaders = {
             /** --- */
             const base_path = OS_TOOLS.path.dirname(scene_src);
             const model_path = OS_TOOLS.path.basename(scene_src);
-            console.log(base_path)
 
             gltf_loader = gltf_loader || new GLTFLoader()
                 .setDRACOLoader(dracoLoader)
                 .setKTX2Loader(ktx2Loader)
                 .setMeshoptDecoder(MeshoptDecoder)
 
-            gltf_loader.load(scene_src, function (gltf) {
+            gltf_loader.setPath(`${base_path}/`)
+            gltf_loader.load(model_path, function (gltf) {
                 console.log(gltf)
                 resolve({
                     scene: gltf.scene,
