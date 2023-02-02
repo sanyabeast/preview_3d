@@ -16,7 +16,7 @@
         "bundle": "npm run prebuild && electron-builder --config build.config.json"
     },
     "main": "main.js",
-    "version": "1.0.2",
+    "version": "1.0.3",
     "license": "MIT",
     "description": "Preview 3d Scenes",
     "author": "@sanyabeast",
