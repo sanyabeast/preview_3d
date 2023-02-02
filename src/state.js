@@ -7,10 +7,11 @@ let startup_scene_src = read_url('scene_src') !== null ? read_url('scene_src') :
 
 const state = {
     env_enabled: true,
-    env_texture_src: 'assets/hdr/quarry.hdr',
+    env_texture_src: 'assets/hdr/atelier.hdr',
     env_default_background: null,
     env_default_texture: null,
     env_texture: null,
+    env_intensity: 1,
     postfx_enabled: false,
     postfx_bloom_exposure: 1,
     postfx_bloom_strength: 0.2,
@@ -27,7 +28,7 @@ const state = {
     inspect_mode: '',
     inspect_matcap_file: '',
     inspect_matcap_mode: '',
-    render_fps_limit: process.platform === 'darwin' ? Infinity : Infinity
+    render_fps_limit: process.platform === 'darwin' ? Infinity : Infinity,
 }
 
 export {

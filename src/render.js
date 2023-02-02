@@ -14,8 +14,10 @@ import { RenderPass } from 'three/addons/postprocessing/RenderPass.js';
 import { state } from './state.js'
 import { loaders } from './loaders.js';
 import { lerp } from './util.js';
+import { refresh_gui } from './gui.js';
 
 
+const MIN_DAYTIME_LIGHT_INTENSITY = 0.01
 const USE_LOGDEPTHBUF = true
 
 let camera, world, renderer, composer
@@ -29,7 +31,8 @@ let sun, amb
 let sun_state = {
     distance: 100,
     height: 1,
-    azimuth: 0.5
+    azimuth: 0.5,
+    environment_multiplier: 1
 }
 
 let bloom_pass, ssao_pass, render_pass
@@ -48,7 +51,6 @@ function preinit_render() {
     renderer.toneMappingExposure = 1;
     renderer.outputEncoding = THREE.sRGBEncoding;
     renderer.shadowMap.enabled = true;
-
 
     container.appendChild(renderer.domElement);
     /* main scene setup */
@@ -69,6 +71,10 @@ function init_world() {
     world = new THREE.Scene();
     world.background = new THREE.Color(0xbbbbbb);
     world.environment = pmremGenerator.fromScene(environment).texture;
+
+    world.backgroundBlurriness = 0.5
+    world.backgroundIntensity = 1
+
     environment.dispose();
 
     sun = new THREE.DirectionalLight()
@@ -179,15 +185,31 @@ function set_sun_azimuth(value) {
 
 function set_sun_height(value) {
     sun_state.height = value
-    sun.position.y = lerp(0, sun_state.distance, value)
+    sun.position.y = lerp(0, sun_state.distance * 2, value)
     sun.intensity = value
     set_sun_hardness(value)
     notify_render()
 }
 
 function set_sun_hardness(value) {
-    amb.intensity = lerp(sun.intensity / 2, 0, 1 - value)
+    amb.intensity = lerp(sun.intensity * 0.666, MIN_DAYTIME_LIGHT_INTENSITY, 1 - value)
     notify_render()
+}
+
+function set_environment_intensity(value) {
+    state.env_intensity = value
+    world.backgroundIntensity = state.env_intensity
+    notify_render()
+}
+
+function set_daytime(value) {
+    value = Math.pow(value, 2)
+    let curved_value = Math.sin(value * Math.PI)
+    set_environment_intensity(lerp(MIN_DAYTIME_LIGHT_INTENSITY, 1, curved_value))
+    set_sun_height(lerp(MIN_DAYTIME_LIGHT_INTENSITY, 1, curved_value))
+    set_sun_azimuth(lerp(0, 1, value))
+    notify_render()
+    refresh_gui();
 }
 
 preinit_render()
@@ -207,5 +229,7 @@ export {
     set_fps_limit,
     set_sun_azimuth,
     set_sun_height,
-    set_sun_hardness
+    set_sun_hardness,
+    set_environment_intensity,
+    set_daytime
 }

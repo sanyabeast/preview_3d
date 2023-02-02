@@ -16,7 +16,8 @@ import {
     set_fps_limit,
     set_sun_azimuth,
     set_sun_height,
-    set_sun_hardness
+    set_environment_intensity,
+    set_daytime
 } from './render.js';
 import { state } from './state.js';
 import { load_sample } from './app.js'
@@ -81,7 +82,7 @@ function create_main_pane() {
                     children: {
                         'performance': {
                             type: 'folder',
-                            title: 'Performace',
+                            title: '☄️ Performace',
                             children: {
                                 'postfx_enabled': {
                                     type: 'input',
@@ -92,7 +93,7 @@ function create_main_pane() {
                                 'shadows_enabled': {
                                     type: 'input',
                                     bind: [renderer.shadowMap, 'enabled'],
-                                    label: 'Shadows'
+                                    label: '🌚 Shadows'
                                 },
                                 'resolution_scale': {
                                     type: 'input',
@@ -118,51 +119,91 @@ function create_main_pane() {
                         },
                         'environment': {
                             type: 'folder',
-                            title: 'Environment settings',
+                            title: '🏝 Environment settings',
                             children: {
                                 'env_enabled': {
                                     type: 'input',
                                     bind: [state, 'env_enabled'],
-                                    label: '🏜 Environment',
+                                    label: '🎚 Enabled',
                                     on_change: 'on_env_enabled_changed'
                                 },
-                                'env_map_select_blade': {
-                                    type: 'blade',
-                                    view: 'buttongrid',
-                                    size: [1, Object.keys(ASSETS.hdr).length],
-                                    cells: (x, y) => ({
-                                        title: _.map(Object.keys(ASSETS.hdr), item => [item])[y][x],
-                                    }),
-                                    label: 'Map',
-                                    on_click: ({ cell }) => {
-                                        console.log(cell)
-                                        set_environment(cell.title)
-                                    }
+                                'env_blur': {
+                                    type: 'input',
+                                    bind: [world, 'backgroundBlurriness'],
+                                    label: "💧 Blurriness",
+                                    min: 0,
+                                    max: 1,
+                                    step: 0.01,
+                                    on_change: notify_render
                                 },
-                                'sun_azimuth': {
+                                'daytime': {
                                     type: 'input',
                                     bind: [{ value: 0.5 }, 'value'],
-                                    label: "Sun azimuth",
+                                    label: "🔆 Daytime",
                                     min: 0,
                                     max: 1,
-                                    step: 0.05,
-                                    on_change: ({ value }) => set_sun_azimuth(value)
+                                    step: 0.01,
+                                    on_change: ({ value }) => set_daytime(value)
                                 },
-                                'sun_height': {
-                                    type: 'input',
-                                    bind: [{ value: 1 }, 'value'],
-                                    label: "Sun height",
-                                    min: 0,
-                                    max: 1,
-                                    step: 0.05,
-                                    on_change: ({ value }) => set_sun_height(value)
-                                }
+                                'env_map_select_folder': {
+                                    type: 'folder',
+                                    title: '🖼 Texture',
+                                    children: {
+                                        'env_map_select_blade': {
+                                            type: 'blade',
+                                            view: 'buttongrid',
+                                            size: [1, Object.keys(ASSETS.hdr).length],
+                                            cells: (x, y) => ({
+                                                title: _.map(Object.keys(ASSETS.hdr), item => [item])[y][x],
+                                            }),
+                                            label: '',
+                                            on_click: ({ cell }) => {
+                                                console.log(cell)
+                                                set_environment(cell.title)
+                                            }
+                                        },
+                                    }
+                                },
+                                'env_settings_folder': {
+                                    type: 'folder',
+                                    title: '🔧 More settings...',
+                                    children: {
+                                        'env_intensity': {
+                                            type: 'input',
+                                            bind: [state, 'env_intensity'],
+                                            label: "Intensity",
+                                            min: 0,
+                                            max: 1,
+                                            step: 0.01,
+                                            on_change: ({ value }) => set_environment_intensity(value)
+                                        },
+                                        'sun_height': {
+                                            type: 'input',
+                                            bind: [{ value: 1 }, 'value'],
+                                            label: "Sun height",
+                                            min: 0,
+                                            max: 1,
+                                            step: 0.01,
+                                            on_change: ({ value }) => set_sun_height(value)
+                                        },
+                                        'sun_azimuth': {
+                                            type: 'input',
+                                            bind: [{ value: 0.5 }, 'value'],
+                                            label: "Sun azimuth",
+                                            min: 0,
+                                            max: 1,
+                                            step: 0.01,
+                                            on_change: ({ value }) => set_sun_azimuth(value)
+                                        },
+                                    }
+                                },
+
                             }
                         },
                         'camera_fov': {
                             type: 'input',
                             bind: [state, 'camera_fov'],
-                            label: "👁 Camera FOV",
+                            label: "📽 Camera FOV",
                             min: 1,
                             max: 120,
                             step: 1,
@@ -183,13 +224,13 @@ function create_main_pane() {
                         'show_gizmo': {
                             type: 'input',
                             bind: [state, 'show_gizmo'],
-                            label: "📐 Gizmo",
+                            label: "📏 Gizmo",
                             on_change: 'on_show_gizmo_changed'
                         },
                         'inspect_mode': {
                             type: 'input',
                             bind: [state, 'inspect_mode'],
-                            label: "🎲 Mode",
+                            label: "👓 Mode",
                             options: _generate_list_keys(inspect_modes),
                             on_change: 'on_inspect_mode_changed'
                         },
@@ -263,7 +304,7 @@ function create_file_pane() {
                     },
                     samples_folder: {
                         type: 'folder',
-                        title: "🏷 Load sample",
+                        title: "🗃 Load sample",
                         children: {
                             samples_selector: {
                                 type: 'blade',
@@ -401,11 +442,11 @@ function _generate_list_keys(data, mode = 0) {
     }
     return result
 }
-function refresh_gui() {
+const refresh_gui = _.debounce(() => {
     main_pane.item.refresh();
     help_pane.item.refresh();
     file_pane.item.refresh();
-}
+}, 1000 / 15)
 
 export {
     init_gui,

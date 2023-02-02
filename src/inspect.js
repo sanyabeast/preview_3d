@@ -107,7 +107,7 @@ function init_inspect() {
     torch_light = new THREE.PointLight()
     torch_light.intensity = 0.5
     torch_light.visible = state.torch_light
-    torch_light.castShadow = true
+    // torch_light.castShadow = true
     world.add(torch_light)
 
     axes_helper = new THREE.AxesHelper(2);

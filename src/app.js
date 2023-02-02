@@ -2,7 +2,7 @@
 import * as THREE from 'three';
 import { AnimationMixer } from 'three'
 
-import { notify_render, start_render, init_render, loop_tasks } from './render.js';
+import { notify_render, start_render, init_render, loop_tasks, set_daytime } from './render.js';
 import { loaders, init_loaders } from './loaders.js'
 import { init_gui, set_loader, notifications, panes, update_title } from './gui.js'
 import { init_controls, frame_object } from './controls.js'
@@ -28,6 +28,7 @@ let animation_mixer
 
 async function load_scene(scene_src) {
     kill_animations()
+    set_daytime(0.5)
     console.log(`[load_scene] prepare to load: `, scene_src, state.scene_src)
     scene_src = _.isString(scene_src) ? scene_src : state.scene_src
     if (_.isString(scene_src) && scene_src.length > 0) {
@@ -129,11 +130,10 @@ function setup_scene() {
         action.play()
     })
     /** shadows */
-    scene_state.scene.traverse((node)=>{
-        if (node.isMesh){
+    scene_state.scene.traverse((node) => {
+        if (node.isMesh) {
             node.receiveShadow = true
             node.castShadow = true
-            console.log(node)
         }
     })
 }
@@ -149,7 +149,7 @@ function init_animation_player() {
             'disable_animations': {
                 type: 'input',
                 bind: [animation_state, 'disable_animations'],
-                label: "Pause all",
+                label: "⛔️ Pause all",
                 on_change: ({ value }) => {
                     console.log(value, scene_state)
                 }
@@ -157,7 +157,7 @@ function init_animation_player() {
             'global_timescale': {
                 type: 'input',
                 bind: [animation_state, 'global_timescale'],
-                label: "Timescale",
+                label: "🕑 Timescale",
                 min: 0,
                 max: 10,
                 step: 0.1,
