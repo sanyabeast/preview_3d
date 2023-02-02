@@ -23,30 +23,44 @@
     --tp-monitor-foreground-color: hsla(230, 12%, 48%, 1.00);
 }
 
-body.production .pane {
+body .pane {
+    max-height: calc(100% - 16px);
+    overflow-y: auto;
+    overflow-x: hidden;
+}
+
+body .pane>* {
     opacity: 0;
-    transition: opacity 0.3s ease-in-out;
+    transition: opacity 1s ease;
+
 }
 
-body.production:hover .pane {
-    opacity: 0.2;
+body:hover .pane:hover {
+    z-index: 1;
 }
 
-body.production:hover .pane:hover {
+body:hover .pane:hover>* {
     opacity: 1;
+    transition: none;
 }
 
-body.development .pane {
-    opacity: 0.5;
-    transition: opacity 0.3s ease-in-out;
+.pane:after {
+    content: "";
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    box-sizing: border-box;
+    top: 0;
+    left: 0;
+    background-color: transparent;
+    transition: border-color 0.3s ease-in-out;
+    border: 2px solid #ffffff26;
+    border-radius: 4px;
+    pointer-events: none;
 }
 
-body.development:hover .pane {
-    opacity: 0.5;
-}
-
-body.development:hover .pane:hover {
-    opacity: 1;
+body:hover .pane:hover:after {
+    border-color: transparent;
 }
 
 .pane.inspect {
@@ -64,13 +78,13 @@ body.development:hover .pane:hover {
     text-overflow: ellipsis;
 }
 
-@media screen and (max-width: 600px) {
+@media screen and (max-width: 550px) {
     .pane {
         display: none !important;
     }
 }
 
-@media screen and (max-height: 600px) {
+@media screen and (max-height: 550px) {
     .pane {
         display: none !important;
     }
