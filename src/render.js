@@ -58,12 +58,15 @@ function preinit_render() {
     document.body.classList.add(window.IS_DEVELOPMENT ? 'development' : 'production')
     renderer = new THREE.WebGLRenderer({
         antialias: process.platform === 'darwin' ? false : true,
-        logarithmicDepthBuffer: USE_LOGDEPTHBUF
+        logarithmicDepthBuffer: USE_LOGDEPTHBUF,
+        stencil: true,
+        depth: true
     });
     renderer.setPixelRatio(window.devicePixelRatio);
     renderer.setSize(window.innerWidth, window.innerHeight);
     renderer.toneMappingExposure = 1;
     renderer.outputEncoding = THREE.sRGBEncoding;
+    renderer.gammaFactor = 1
     renderer.shadowMap.enabled = true;
 
     container.appendChild(renderer.domElement);
@@ -123,7 +126,15 @@ function init_postfx() {
     fxaa_pass.material.uniforms['resolution'].value.x = 1 / (window.innerWidth * window.devicePixelRatio);
     fxaa_pass.material.uniforms['resolution'].value.y = 1 / (window.innerHeight * window.devicePixelRatio);
 
+    const ssaoPass  = new SSAOPass(world, camera, 512, 512);
+    ssaoPass.kernelSize = 8;
+    ssaoPass.kernelRadius = 16;
+    ssaoPass.minDistance = 0.005;
+    ssaoPass.maxDistance = 0.1;
+    ssaoPass.output = SSAOPass.OUTPUT.Default
+
     composer.addPass(render_pass);
+    // composer.addPass(ssaoPass)
     composer.addPass(fxaa_pass);
     composer.addPass(bloom_pass);
 
