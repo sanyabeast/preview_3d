@@ -44,8 +44,8 @@ let sun_state = {
 }
 
 let render_state = {
-    frame_times: [],
-    average_fps_smoothing: 5,
+    tick_rates: [],
+    avg_tick_rate_period: 5,
     average_fps: 60,
     current_computed_resolution_scale: 1
 }
@@ -70,7 +70,7 @@ function preinit_render() {
         stencil: true,
         depth: true
     });
-    renderer.setPixelRatio(window.devicePixelRatio);
+    renderer.setPixelRatio(window.devicePixelRatio * 2);
     renderer.setSize(window.innerWidth, window.innerHeight);
     renderer.toneMappingExposure = 1;
     renderer.outputEncoding = THREE.sRGBEncoding;
@@ -178,13 +178,23 @@ function update_shadows() {
     renderer.shadowMap.needsUpdate = true
 }
 
-function update_dynamic_resolution() {
+const update_dynamic_resolution = _.throttle(() => {
     let tick_time = (+new Date() - last_tick_date)
     let fps_limit = isFinite(state.render_fps_limit) ? state.render_fps_limit : 60
     let tick_rate = tick_time / (1000 / fps_limit)
 
-    if (tick_rate > 1) {
-        let new_resolution = round_to(lerp(0.5, 1, clamp(tick_rate - 1, 0, 1)), 0.1)
+    render_state.tick_rates.push(tick_rate)
+    let avg_tick_rate = 0
+    for (let i = 0; i < render_state.tick_rates.length; i++) {
+        avg_tick_rate += render_state.tick_rates[i]
+    }
+    console.log(avg_tick_rate)
+    avg_tick_rate /= render_state.tick_rates.length;
+    render_state.tick_rates = render_state.tick_rates.slice(0, render_state.avg_tick_rate_period)
+   
+
+    if (avg_tick_rate > 1) {
+        let new_resolution = round_to(lerp(0.5, 1, clamp(avg_tick_rate - 1, 0, 1)), 0.1)
         console.log(new_resolution)
         if (state.resolution_scale !== new_resolution) {
             set_resolution_scale(new_resolution)
@@ -195,7 +205,7 @@ function update_dynamic_resolution() {
             set_resolution_scale(1)
         }
     }
-}
+}, 1000 / 30)
 
 function render() {
     render_loop_id = requestAnimationFrame(render)
