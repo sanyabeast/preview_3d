@@ -68,6 +68,7 @@ function preinit_render() {
     renderer.outputEncoding = THREE.sRGBEncoding;
     renderer.gammaFactor = 1
     renderer.shadowMap.enabled = true;
+    renderer.shadowMap.autoUpdate = false
 
     container.appendChild(renderer.domElement);
     /* main scene setup */
@@ -126,7 +127,7 @@ function init_postfx() {
     fxaa_pass.material.uniforms['resolution'].value.x = 1 / (window.innerWidth * window.devicePixelRatio);
     fxaa_pass.material.uniforms['resolution'].value.y = 1 / (window.innerHeight * window.devicePixelRatio);
 
-    const ssaoPass  = new SSAOPass(world, camera, 512, 512);
+    const ssaoPass = new SSAOPass(world, camera, 512, 512);
     ssaoPass.kernelSize = 8;
     ssaoPass.kernelRadius = 16;
     ssaoPass.minDistance = 0.005;
@@ -160,6 +161,10 @@ function set_environment(alias) {
 function notify_render(duration = 0) {
     render_timeout = +new Date() + duration
     render_needs_update = true
+}
+
+function update_shadows() {
+    renderer.shadowMap.needsUpdate = true
 }
 
 function render() {
@@ -202,6 +207,7 @@ function set_sun_azimuth(value) {
     state.render_sun_azimuth = value
     sun.position.x = Math.sin(value * Math.PI * 2) * sun_state.distance
     sun.position.z = Math.cos(value * Math.PI * 2) * sun_state.distance
+    update_shadows()
     notify_render()
 }
 
@@ -209,6 +215,7 @@ function set_sun_height(value) {
     state.render_sun_height = value
     sun.position.y = lerp(0, sun_state.distance * SUN_HEIGHT_MULTIPLIER, value)
     sun.intensity = value
+    update_shadows()
     notify_render()
 }
 
@@ -270,5 +277,6 @@ export {
     set_environment_intensity,
     set_environment_power,
     set_daytime,
-    update_matrix
+    update_matrix,
+    update_shadows
 }

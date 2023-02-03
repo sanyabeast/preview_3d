@@ -2,7 +2,7 @@
 import * as THREE from 'three';
 import { AnimationMixer } from 'three'
 
-import { notify_render, start_render, init_render, loop_tasks, set_daytime, update_matrix } from './render.js';
+import { notify_render, start_render, init_render, loop_tasks, set_daytime, update_matrix, update_shadows } from './render.js';
 import { loaders, init_loaders } from './loaders.js'
 import { init_gui, set_loader, notifications, panes, update_title } from './gui.js'
 import { init_controls, frame_object } from './controls.js'
@@ -119,6 +119,7 @@ function setup_scene() {
         loop_tasks.update_animation_mixer = (d, td) => {
             if (animation_state.disable_animations !== true) {
                 animation_mixer.update(td)
+                update_shadows()
                 update_matrix()
                 notify_render()
             }
