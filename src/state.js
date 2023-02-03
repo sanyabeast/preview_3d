@@ -33,7 +33,8 @@ const state = {
     render_ambient_intensity: 0.5,
     render_sun_height: 1,
     render_sun_azimuth: 0.5,
-    render_daytime: 0.5
+    render_daytime: 0.5,
+    render_dynamic_resolution: true
 }
 
 window.state = state

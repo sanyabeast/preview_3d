@@ -19,7 +19,8 @@ import {
     set_environment_intensity,
     set_daytime,
     set_ambient_intentsity,
-    set_environment_power
+    set_environment_power,
+    set_resolution_scale
 } from './render.js';
 import { state } from './state.js';
 import { load_sample } from './app.js'
@@ -63,14 +64,9 @@ function init_gui(params) {
     if (state.check_updates === true && Math.random() < 1) {
         setTimeout(check_updates, 15000)
     }
-
     panes.file = create_file_pane()
     panes.main = create_main_pane()
     panes.help = create_help_pane()
-
-
-    window.addEventListener('resize', handle_window_resized);
-    handle_window_resized()
 }
 function create_main_pane() {
     main_pane = build_gui(
@@ -97,12 +93,20 @@ function create_main_pane() {
                                     bind: [renderer.shadowMap, 'enabled'],
                                     label: '🌚 Shadows'
                                 },
+                                'dynamic_resoltuion': {
+                                    type: 'input',
+                                    bind: [state, 'render_dynamic_resolution'],
+                                    label: 'Dynamic Resolution',
+                                    on_change: ({ value }) => {
+                                        //set_resolution_scale(state.resolution_scale)
+                                    }
+                                },
                                 'resolution_scale': {
                                     type: 'input',
                                     bind: [state, 'resolution_scale'],
                                     min: 0.5, max: 1, step: 0.05,
                                     label: "🧇 Resolution",
-                                    on_change: 'on_resolution_scale_changed'
+                                    on_change: ({ value }) => set_resolution_scale(value)
                                 },
                                 'fps_limit': {
                                     type: 'blade',
@@ -471,17 +475,7 @@ function set_loader(visible, progress) {
         loader.classList.remove('active')
     }
 }
-function handle_window_resized() {
-    const width = Math.floor(window.innerWidth * state.resolution_scale);
-    const height = Math.floor(window.innerHeight * state.resolution_scale);
-    camera.aspect = width / height;
-    camera.updateProjectionMatrix();
-    renderer.setSize(width, height);
-    if (composer) {
-        composer.setSize(width, height);
-    }
-    notify_render()
-}
+
 function _generate_list_keys(data, mode = 0) {
     let result = {}
     for (let k in data) {
@@ -489,11 +483,11 @@ function _generate_list_keys(data, mode = 0) {
     }
     return result
 }
-const refresh_gui = _.debounce(() => {
+const refresh_gui = _.throttle(() => {
     main_pane.item.refresh();
     help_pane.item.refresh();
     file_pane.item.refresh();
-}, 1000 / 15)
+}, 1000 / 2)
 
 window.handle_secondary_window_mode = update_title
 window.handle_main_window_mode = update_title

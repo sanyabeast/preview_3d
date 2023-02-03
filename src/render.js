@@ -17,7 +17,7 @@ import { RenderPass } from 'three/addons/postprocessing/RenderPass.js';
 
 import { state } from './state.js'
 import { loaders } from './loaders.js';
-import { lerp } from './util.js';
+import { lerp, clamp, round_to } from './util.js';
 import { refresh_gui } from './gui.js';
 
 
@@ -32,7 +32,8 @@ let render_loop_id
 let render_timeout = +new Date()
 let loop_tasks = {}
 let now = +new Date()
-let prev_render_time = 0
+let last_render_date = 0
+let last_tick_date = 0
 let sun, amb
 let fog
 let sun_state = {
@@ -40,6 +41,13 @@ let sun_state = {
     height: 1,
     azimuth: 0.5,
     environment_multiplier: 1
+}
+
+let render_state = {
+    frame_times: [],
+    average_fps_smoothing: 5,
+    average_fps: 60,
+    current_computed_resolution_scale: 1
 }
 
 let is_document_visible = document.visibilityState === 'visible'
@@ -80,6 +88,9 @@ function preinit_render() {
 
     init_world()
     init_postfx()
+
+    window.addEventListener('resize', handle_window_resized);
+    handle_window_resized()
 }
 
 function init_world() {
@@ -167,25 +178,50 @@ function update_shadows() {
     renderer.shadowMap.needsUpdate = true
 }
 
+function update_dynamic_resolution() {
+    let tick_time = (+new Date() - last_tick_date)
+    let fps_limit = isFinite(state.render_fps_limit) ? state.render_fps_limit : 60
+    let tick_rate = tick_time / (1000 / fps_limit)
+
+    if (tick_rate > 1) {
+        let new_resolution = round_to(lerp(0.5, 1, clamp(tick_rate - 1, 0, 1)), 0.1)
+        console.log(new_resolution)
+        if (state.resolution_scale !== new_resolution) {
+            set_resolution_scale(new_resolution)
+        }
+
+    } else {
+        if (state.resolution_scale !== 1) {
+            set_resolution_scale(1)
+        }
+    }
+}
+
 function render() {
     render_loop_id = requestAnimationFrame(render)
     if (!is_document_visible || !IS_WINDOW_FOCUSED) {
         return
     }
-    now = +new Date()
-    const time_delta = (now - prev_render_time) / 1000
+
+    if (state.render_dynamic_resolution) {
+        update_dynamic_resolution()
+    }
+
+    last_tick_date = +new Date()
+    const time_delta = (last_tick_date - last_render_date) / 1000
     const delta = time_delta / (1 / 60)
     const frame_delta = time_delta / (1 / state.render_fps_limit)
+
     if (frame_delta > 1) {
         _.forEach(loop_tasks, task => task(delta, time_delta))
-        if (render_needs_update === true || now < render_timeout) {
+        if (render_needs_update === true || last_tick_date < render_timeout) {
             if (state.postfx_enabled) {
                 composer.render();
             } else {
                 renderer.render(world, camera);
             }
         }
-        prev_render_time = now
+        last_render_date = last_tick_date
         render_needs_update = false
     }
 }
@@ -256,6 +292,24 @@ function update_matrix() {
     world.updateMatrixWorld()
 }
 
+function handle_window_resized() {
+    const width = Math.floor(window.innerWidth * state.resolution_scale);
+    const height = Math.floor(window.innerHeight * state.resolution_scale);
+    camera.aspect = width / height;
+    camera.updateProjectionMatrix();
+    renderer.setSize(width, height);
+    if (composer) {
+        composer.setSize(width, height);
+    }
+    notify_render()
+}
+
+function set_resolution_scale(value) {
+    state.resolution_scale = value
+    refresh_gui()
+    handle_window_resized()
+}
+
 preinit_render()
 
 export {
@@ -278,5 +332,6 @@ export {
     set_environment_power,
     set_daytime,
     update_matrix,
-    update_shadows
+    update_shadows,
+    set_resolution_scale
 }

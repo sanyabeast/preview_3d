@@ -116,6 +116,14 @@ function lerp(start, end, amt) {
     return (1 - amt) * start + amt * end
 }
 
+function clamp(start, min, max) {
+    return Math.max(Math.min(start, max), min)
+}
+
+function round_to(num, div) {
+    return div * Math.ceil(num / div)
+}
+
 export {
     random_choice,
     write_url,
@@ -124,5 +132,7 @@ export {
     extend_gui,
     loge,
     logd,
-    lerp
+    lerp,
+    round_to,
+    clamp
 }
