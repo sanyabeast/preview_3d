@@ -17,8 +17,8 @@ import { RenderPass } from 'three/addons/postprocessing/RenderPass.js';
 
 import { state } from './state.js'
 import { loaders } from './loaders.js';
-import { lerp, clamp, round_to } from './util.js';
-import { refresh_gui } from './gui.js';
+import { lerp, clamp, round_to, extend_gui } from './util.js';
+import { panes, refresh_gui } from './gui.js';
 
 
 const MIN_DAYTIME_LIGHT_INTENSITY = 0.01
@@ -32,8 +32,8 @@ let render_loop_id
 let render_timeout = +new Date()
 let loop_tasks = {}
 let now = +new Date()
-let last_render_date = 0
-let last_tick_date = 0
+let last_render_date = +new Date()
+let last_tick_date = +new Date()
 let sun, amb
 let fog
 let sun_state = {
@@ -45,7 +45,7 @@ let sun_state = {
 
 let render_state = {
     tick_rates: [],
-    avg_tick_rate_period: 5,
+    avg_tick_rate_period: 8,
     average_fps: 60,
     current_computed_resolution_scale: 1
 }
@@ -64,13 +64,15 @@ function preinit_render() {
     const container = document.createElement('div');
     document.body.appendChild(container);
     document.body.classList.add(window.IS_DEVELOPMENT ? 'development' : 'production')
+
     renderer = new THREE.WebGLRenderer({
         antialias: process.platform === 'darwin' ? false : true,
         logarithmicDepthBuffer: USE_LOGDEPTHBUF,
         stencil: true,
         depth: true
     });
-    renderer.setPixelRatio(window.devicePixelRatio * 2);
+
+    renderer.setPixelRatio(window.devicePixelRatio * 1);
     renderer.setSize(window.innerWidth, window.innerHeight);
     renderer.toneMappingExposure = 1;
     renderer.outputEncoding = THREE.sRGBEncoding;
@@ -80,7 +82,7 @@ function preinit_render() {
 
     container.appendChild(renderer.domElement);
     /* main scene setup */
-    camera = new THREE.PerspectiveCamera(state.camera_fov, window.innerWidth / window.innerHeight, 0.1, 1000000);
+    camera = new THREE.PerspectiveCamera(state.camera_fov, window.innerWidth / window.innerHeight, 0.1, 10000);
     camera.position.set(0, 100, 0);
 
     window.renderer = renderer
@@ -91,6 +93,38 @@ function preinit_render() {
 
     window.addEventListener('resize', handle_window_resized);
     handle_window_resized()
+}
+
+const _dynamic_resolution_check = _.throttle(() => {
+    let avg_tick_rate = 0
+    for (let i = 0; i < render_state.tick_rates.length; i++) {
+        avg_tick_rate += render_state.tick_rates[i]
+    }
+
+    avg_tick_rate /= render_state.tick_rates.length;
+    avg_tick_rate /= Math.pow(state.resolution_scale, 2)
+
+    if (avg_tick_rate > 1) {
+        let new_resolution = round_to(lerp(1, 0.5, clamp(Math.pow((avg_tick_rate - 1), 2), 0, 1)), 0.05)
+        if (state.resolution_scale !== new_resolution) {
+            set_resolution_scale(new_resolution)
+        }
+    } else {
+        if (state.resolution_scale !== 1) {
+            set_resolution_scale(1)
+        }
+    }
+}, 1000 / 4)
+
+function update_dynamic_resolution() {
+    if (render_needs_update === true || last_tick_date < render_timeout) {
+        let tick_time = (+new Date() - last_tick_date)
+        let fps_limit = isFinite(state.render_fps_limit) ? state.render_fps_limit : 60
+        let tick_rate = tick_time / (1000 / fps_limit)
+        render_state.tick_rates.unshift(tick_rate)
+        render_state.tick_rates = render_state.tick_rates.splice(0, render_state.avg_tick_rate_period)
+        _dynamic_resolution_check()
+    }
 }
 
 function init_world() {
@@ -138,17 +172,69 @@ function init_postfx() {
     fxaa_pass.material.uniforms['resolution'].value.x = 1 / (window.innerWidth * window.devicePixelRatio);
     fxaa_pass.material.uniforms['resolution'].value.y = 1 / (window.innerHeight * window.devicePixelRatio);
 
-    const ssaoPass = new SSAOPass(world, camera, 512, 512);
-    ssaoPass.kernelSize = 8;
-    ssaoPass.kernelRadius = 16;
-    ssaoPass.minDistance = 0.005;
-    ssaoPass.maxDistance = 0.1;
+    const ssaoPass = new SSAOPass(world, camera, window.innerWidth, window.innerHeight);
+    ssaoPass.kernelSize = 16;
+    ssaoPass.kernelRadius = 0.08;
+    ssaoPass.minDistance = 0.00001;
+    ssaoPass.maxDistance = 1;
     ssaoPass.output = SSAOPass.OUTPUT.Default
 
-    composer.addPass(render_pass);
-    // composer.addPass(ssaoPass)
+    // setTimeout(() => {
+    //     extend_gui(panes.main.item, {
+    //         title: "SSAO",
+    //         type: 'folder',
+    //         children: {
+    //             ssao_output: {
+    //                 type: 'input',
+    //                 bind: [ssaoPass, 'output'],
+    //                 label: 'output',
+    //                 options: {
+    //                     'Default': 0,
+    //                     'SSAO': 1,
+    //                     'Blur': 2,
+    //                     'Beauty': 3,
+    //                     'Depth': 4,
+    //                     'Normal': 5
+    //                 },
+    //                 on_change: ({ value }) => {
+    //                     console.log(value)
+    //                 }
+    //             },
+    //             kernel_radius: {
+    //                 type: 'input',
+    //                 min: 0.0001,
+    //                 max: 0.1,
+    //                 step: 0.0001,
+    //                 bind: [ssaoPass, 'kernelRadius'],
+    //                 label: 'Kernel Radius'
+    //             },
+    //             minDistance: {
+    //                 type: 'input',
+    //                 min: 0.000001,
+    //                 max: 0.001,
+    //                 step: 0.000001,
+    //                 bind: [ssaoPass, 'minDistance'],
+    //                 label: 'minDistance'
+    //             },
+    //             maxDistance: {
+    //                 type: 'input',
+    //                 min: 0.01,
+    //                 max: 1,
+    //                 step: 0.05,
+    //                 bind: [ssaoPass, 'maxDistance'],
+    //                 label: 'maxDistance'
+    //             },
+    //         }
+    //     })
+    // }, 500)
+
+    //composer.addPass(render_pass);
+    composer.addPass(ssaoPass)
     composer.addPass(fxaa_pass);
     composer.addPass(bloom_pass);
+
+    bloom_pass.renderToScreen = true
+    
 
 }
 
@@ -178,35 +264,6 @@ function update_shadows() {
     renderer.shadowMap.needsUpdate = true
 }
 
-const update_dynamic_resolution = _.throttle(() => {
-    let tick_time = (+new Date() - last_tick_date)
-    let fps_limit = isFinite(state.render_fps_limit) ? state.render_fps_limit : 60
-    let tick_rate = tick_time / (1000 / fps_limit)
-
-    render_state.tick_rates.push(tick_rate)
-    let avg_tick_rate = 0
-    for (let i = 0; i < render_state.tick_rates.length; i++) {
-        avg_tick_rate += render_state.tick_rates[i]
-    }
-    console.log(avg_tick_rate)
-    avg_tick_rate /= render_state.tick_rates.length;
-    render_state.tick_rates = render_state.tick_rates.slice(0, render_state.avg_tick_rate_period)
-   
-
-    if (avg_tick_rate > 1) {
-        let new_resolution = round_to(lerp(0.5, 1, clamp(avg_tick_rate - 1, 0, 1)), 0.1)
-        console.log(new_resolution)
-        if (state.resolution_scale !== new_resolution) {
-            set_resolution_scale(new_resolution)
-        }
-
-    } else {
-        if (state.resolution_scale !== 1) {
-            set_resolution_scale(1)
-        }
-    }
-}, 1000 / 30)
-
 function render() {
     render_loop_id = requestAnimationFrame(render)
     if (!is_document_visible || !IS_WINDOW_FOCUSED) {
@@ -224,6 +281,7 @@ function render() {
 
     if (frame_delta > 1) {
         _.forEach(loop_tasks, task => task(delta, time_delta))
+
         if (render_needs_update === true || last_tick_date < render_timeout) {
             if (state.postfx_enabled) {
                 composer.render();

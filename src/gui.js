@@ -78,50 +78,44 @@ function create_main_pane() {
                     type: 'folder',
                     title: "👁️‍🗨️ Viewport",
                     children: {
-                        'performance': {
-                            type: 'folder',
-                            title: '☄️ Performace',
-                            children: {
-                                'postfx_enabled': {
-                                    type: 'input',
-                                    bind: [state, 'postfx_enabled'],
-                                    label: '✨ Postfx',
-                                    on_change: 'on_postfx_changed'
-                                },
-                                'shadows_enabled': {
-                                    type: 'input',
-                                    bind: [renderer.shadowMap, 'enabled'],
-                                    label: '🌚 Shadows'
-                                },
-                                'dynamic_resoltuion': {
-                                    type: 'input',
-                                    bind: [state, 'render_dynamic_resolution'],
-                                    label: 'Dynamic Resolution',
-                                    on_change: ({ value }) => {
-                                        //set_resolution_scale(state.resolution_scale)
-                                    }
-                                },
-                                'resolution_scale': {
-                                    type: 'input',
-                                    bind: [state, 'resolution_scale'],
-                                    min: 0.5, max: 1, step: 0.05,
-                                    label: "🧇 Resolution",
-                                    on_change: ({ value }) => set_resolution_scale(value)
-                                },
-                                'fps_limit': {
-                                    type: 'blade',
-                                    view: 'buttongrid',
-                                    size: [2, 2],
-                                    cells: (x, y) => ({
-                                        title: [
-                                            [15, 30],
-                                            [60, Infinity]
-                                        ][y][x],
-                                    }),
-                                    label: 'FPS Limit',
-                                    on_click: ({ cell }) => set_fps_limit(cell.title)
-                                },
+                        'postfx_enabled': {
+                            type: 'input',
+                            bind: [state, 'postfx_enabled'],
+                            label: '✨ Postfx',
+                            on_change: 'on_postfx_changed'
+                        },
+                        'shadows_enabled': {
+                            type: 'input',
+                            bind: [renderer.shadowMap, 'enabled'],
+                            label: '🌚 Shadows'
+                        },
+                        'dynamic_resoltuion': {
+                            type: 'input',
+                            bind: [state, 'render_dynamic_resolution'],
+                            label: 'Dynamic Resolution',
+                            on_change: ({ value }) => {
+                                //set_resolution_scale(state.resolution_scale)
                             }
+                        },
+                        'resolution_scale': {
+                            type: 'input',
+                            bind: [state, 'resolution_scale'],
+                            min: 0.5, max: 1, step: 0.05,
+                            label: "🧇 Resolution",
+                            on_change: ({ value }) => set_resolution_scale(value)
+                        },
+                        'fps_limit': {
+                            type: 'blade',
+                            view: 'buttongrid',
+                            size: [2, 2],
+                            cells: (x, y) => ({
+                                title: [
+                                    [15, 30],
+                                    [60, Infinity]
+                                ][y][x],
+                            }),
+                            label: 'FPS Limit',
+                            on_click: ({ cell }) => set_fps_limit(cell.title)
                         },
                         'environment': {
                             type: 'folder',

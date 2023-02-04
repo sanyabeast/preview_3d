@@ -13,11 +13,11 @@ const state = {
     env_texture: null,
     env_intensity: 1,
     env_power: 1,
-    postfx_enabled: false,
+    postfx_enabled: true,
     postfx_bloom_exposure: 1,
-    postfx_bloom_strength: 0.2,
-    postfx_bloom_treshold: 0.5,
-    postfx_bloom_radius: 0.2,
+    postfx_bloom_strength: 0.3,
+    postfx_bloom_treshold: 0.9,
+    postfx_bloom_radius: 1,
     camera_fov: 45,
     scene_src: STARTUP_SCENE || '',
     resolution_scale: process.platform === 'darwin' ? 0.65 : 1,
@@ -34,7 +34,7 @@ const state = {
     render_sun_height: 1,
     render_sun_azimuth: 0.5,
     render_daytime: 0.5,
-    render_dynamic_resolution: true
+    render_dynamic_resolution: false
 }
 
 window.state = state
