@@ -34,7 +34,8 @@ const state = {
     render_sun_height: 1,
     render_sun_azimuth: 0.5,
     render_daytime: 0.5,
-    render_dynamic_resolution: false
+    render_dynamic_resolution: false,
+    render_shadows_enabled: true
 }
 
 window.state = state

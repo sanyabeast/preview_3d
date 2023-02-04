@@ -51,7 +51,7 @@ let render_state = {
 }
 
 let is_document_visible = document.visibilityState === 'visible'
-let bloom_pass, ssao_pass, render_pass
+let bloom_pass, ssao_pass, render_pass, fxaa_pass
 
 document.addEventListener('visibilitychange', (event) => {
     console.log(`document visibility: ${document.visibilityState}`)
@@ -95,37 +95,6 @@ function preinit_render() {
     handle_window_resized()
 }
 
-const _dynamic_resolution_check = _.throttle(() => {
-    let avg_tick_rate = 0
-    for (let i = 0; i < render_state.tick_rates.length; i++) {
-        avg_tick_rate += render_state.tick_rates[i]
-    }
-
-    avg_tick_rate /= render_state.tick_rates.length;
-    avg_tick_rate /= Math.pow(state.resolution_scale, 2)
-
-    if (avg_tick_rate > 1) {
-        let new_resolution = round_to(lerp(1, 0.5, clamp(Math.pow((avg_tick_rate - 1), 2), 0, 1)), 0.05)
-        if (state.resolution_scale !== new_resolution) {
-            set_resolution_scale(new_resolution)
-        }
-    } else {
-        if (state.resolution_scale !== 1) {
-            set_resolution_scale(1)
-        }
-    }
-}, 1000 / 4)
-
-function update_dynamic_resolution() {
-    if (render_needs_update === true || last_tick_date < render_timeout) {
-        let tick_time = (+new Date() - last_tick_date)
-        let fps_limit = isFinite(state.render_fps_limit) ? state.render_fps_limit : 60
-        let tick_rate = tick_time / (1000 / fps_limit)
-        render_state.tick_rates.unshift(tick_rate)
-        render_state.tick_rates = render_state.tick_rates.splice(0, render_state.avg_tick_rate_period)
-        _dynamic_resolution_check()
-    }
-}
 
 function init_world() {
     const environment = new RoomEnvironment();
@@ -168,78 +137,53 @@ function init_postfx() {
     bloom_pass.strength = state.postfx_bloom_strength;
     bloom_pass.radius = state.postfx_bloom_radius;
 
-    let fxaa_pass = new ShaderPass(FXAAShader);
+    fxaa_pass = new ShaderPass(FXAAShader);
     fxaa_pass.material.uniforms['resolution'].value.x = 1 / (window.innerWidth * window.devicePixelRatio);
     fxaa_pass.material.uniforms['resolution'].value.y = 1 / (window.innerHeight * window.devicePixelRatio);
 
-    const ssaoPass = new SSAOPass(world, camera, window.innerWidth, window.innerHeight);
-    ssaoPass.kernelSize = 16;
-    ssaoPass.kernelRadius = 0.08;
-    ssaoPass.minDistance = 0.00001;
-    ssaoPass.maxDistance = 1;
-    ssaoPass.output = SSAOPass.OUTPUT.Default
-
-    // setTimeout(() => {
-    //     extend_gui(panes.main.item, {
-    //         title: "SSAO",
-    //         type: 'folder',
-    //         children: {
-    //             ssao_output: {
-    //                 type: 'input',
-    //                 bind: [ssaoPass, 'output'],
-    //                 label: 'output',
-    //                 options: {
-    //                     'Default': 0,
-    //                     'SSAO': 1,
-    //                     'Blur': 2,
-    //                     'Beauty': 3,
-    //                     'Depth': 4,
-    //                     'Normal': 5
-    //                 },
-    //                 on_change: ({ value }) => {
-    //                     console.log(value)
-    //                 }
-    //             },
-    //             kernel_radius: {
-    //                 type: 'input',
-    //                 min: 0.0001,
-    //                 max: 0.1,
-    //                 step: 0.0001,
-    //                 bind: [ssaoPass, 'kernelRadius'],
-    //                 label: 'Kernel Radius'
-    //             },
-    //             minDistance: {
-    //                 type: 'input',
-    //                 min: 0.000001,
-    //                 max: 0.001,
-    //                 step: 0.000001,
-    //                 bind: [ssaoPass, 'minDistance'],
-    //                 label: 'minDistance'
-    //             },
-    //             maxDistance: {
-    //                 type: 'input',
-    //                 min: 0.01,
-    //                 max: 1,
-    //                 step: 0.05,
-    //                 bind: [ssaoPass, 'maxDistance'],
-    //                 label: 'maxDistance'
-    //             },
-    //         }
-    //     })
-    // }, 500)
+    ssao_pass = new SSAOPass(world, camera, window.innerWidth, window.innerHeight);
+    ssao_pass.kernelSize = 16;
+    ssao_pass.kernelRadius = 0.08;
+    ssao_pass.minDistance = 0.00001;
+    ssao_pass.maxDistance = 1;
+    ssao_pass.output = SSAOPass.OUTPUT.Default
 
     //composer.addPass(render_pass);
-    composer.addPass(ssaoPass)
+    composer.addPass(ssao_pass)
     composer.addPass(fxaa_pass);
     composer.addPass(bloom_pass);
 
     bloom_pass.renderToScreen = true
-    
-
 }
 
 function init_render() {
-
+    extend_gui(panes.main.extra_settings_folder, {
+        title: "SSAO",
+        type: 'folder',
+        children: {
+            ssao_output: {
+                type: 'input',
+                bind: [ssao_pass, 'output'],
+                label: 'SSAO Output',
+                options: {
+                    'Default': 0,
+                    'SSAO': 1,
+                    'Blur': 2,
+                    'Beauty': 3,
+                    'Depth': 4,
+                    'Normal': 5
+                }
+            },
+            kernel_radius: {
+                type: 'input',
+                min: 0.0001,
+                max: 0.005,
+                step: 0.00001,
+                bind: [ssao_pass, 'kernelRadius'],
+                label: 'Kernel Radius'
+            },
+        }
+    })
     //compos
 }
 
@@ -372,10 +316,49 @@ function handle_window_resized() {
     notify_render()
 }
 
+
+const _dynamic_resolution_check = _.throttle(() => {
+    let avg_tick_rate = 0
+    for (let i = 0; i < render_state.tick_rates.length; i++) {
+        avg_tick_rate += render_state.tick_rates[i]
+    }
+
+    avg_tick_rate /= render_state.tick_rates.length;
+    avg_tick_rate /= Math.pow(state.resolution_scale, 2)
+
+    if (avg_tick_rate > 1) {
+        let new_resolution = round_to(lerp(1, 0.5, clamp(Math.pow((avg_tick_rate - 1), 2), 0, 1)), 0.05)
+        if (state.resolution_scale !== new_resolution) {
+            set_resolution_scale(new_resolution)
+        }
+    } else {
+        if (state.resolution_scale !== 1) {
+            set_resolution_scale(1)
+        }
+    }
+}, 1000 / 4)
+
+function update_dynamic_resolution() {
+    if (render_needs_update === true || last_tick_date < render_timeout) {
+        let tick_time = (+new Date() - last_tick_date)
+        let fps_limit = isFinite(state.render_fps_limit) ? state.render_fps_limit : 60
+        let tick_rate = tick_time / (1000 / fps_limit)
+        render_state.tick_rates.unshift(tick_rate)
+        render_state.tick_rates = render_state.tick_rates.splice(0, render_state.avg_tick_rate_period)
+        _dynamic_resolution_check()
+    }
+}
+
 function set_resolution_scale(value) {
     state.resolution_scale = value
     refresh_gui()
     handle_window_resized()
+}
+
+function set_shadows_enabled(enabled) {
+    state.render_shadows_enabled = enabled;
+    renderer.shadowMap.enabled = enabled;
+    renderer.render(world, camera);
 }
 
 preinit_render()
@@ -401,5 +384,6 @@ export {
     set_daytime,
     update_matrix,
     update_shadows,
-    set_resolution_scale
+    set_resolution_scale,
+    set_shadows_enabled
 }

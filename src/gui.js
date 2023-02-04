@@ -20,7 +20,9 @@ import {
     set_daytime,
     set_ambient_intentsity,
     set_environment_power,
-    set_resolution_scale
+    set_resolution_scale,
+    update_shadows,
+    set_shadows_enabled
 } from './render.js';
 import { state } from './state.js';
 import { load_sample } from './app.js'
@@ -86,8 +88,11 @@ function create_main_pane() {
                         },
                         'shadows_enabled': {
                             type: 'input',
-                            bind: [renderer.shadowMap, 'enabled'],
-                            label: '🌚 Shadows'
+                            bind: [state, 'render_shadows_enabled'],
+                            label: '🌚 Shadows',
+                            on_change: ({ value }) => {
+                                set_shadows_enabled(value)
+                            }
                         },
                         'dynamic_resoltuion': {
                             type: 'input',
@@ -261,6 +266,10 @@ function create_main_pane() {
                             on_change: 'on_inspect_matcap_mode_changed'
                         },
                     }
+                },
+                'extra_settings_folder': {
+                    title: '🎛 Extra settings',
+                    type: 'folder'
                 }
             }
         },

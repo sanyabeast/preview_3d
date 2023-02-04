@@ -132,12 +132,25 @@ function setup_scene() {
         action.play()
     })
     /** shadows */
-    scene_state.scene.traverse((node) => {
-        if (node.isMesh) {
-            node.receiveShadow = true
-            node.castShadow = true
-        }
-    })
+    // scene_state.scene.traverse((node) => {
+    //     if (node.isMesh) {
+    //         node.receiveShadow = true
+    //         node.castShadow = true
+    //     }
+
+    //     if (_.isArray(node.material)) {
+    //         node.material.forEach((material) => _setup_material(material))
+    //     } else if (_.isObject(node.material)) {
+    //         _setup_material(node.material)
+    //     }
+    // })
+}
+
+function _setup_material(material) {
+    if (material.transparent){
+        material.depthWrite = true
+    }
+    
 }
 
 function load_sample(sample_name) {
