@@ -89,14 +89,12 @@ function preinit_render() {
     camera = new THREE.PerspectiveCamera(state.camera_fov, window.innerWidth / window.innerHeight, 0.1, 10000);
     camera.position.set(0, 100, 0);
 
-
-
     window.renderer = renderer
     window.camera = camera
 
     init_world()
 
-    wboit_pass = new WboitPass(renderer, world, camera, 0 /* optional clear color */, 1.0 /* optional clear alpha */);
+    wboit_pass = new WboitPass(renderer, world, camera);
 
     init_postfx()
 
@@ -114,31 +112,31 @@ function update_scene() {
             let material = materials[i]
             let is_transparent = material.transparent
             WboitUtils.patch(material);
-            // console.log(material)
+            console.log(material)
             // // debugger
 
-            if (material.isMeshStandardMaterial) {
-                if (false && is_transparent) {
-                    material.wboitEnabled = false;
-                    // material.transparent = true;
-                    material.opacity = 0.5;
-                    material.weight = 1;
-                } else {
-                    material.wboitEnabled = true;
-                    material.transparent = true;
-                    material.opacity = 1;
-                    material.weight = 1;
-                }
+            // if (material.isMeshStandardMaterial) {
+            //     if (false && is_transparent) {
+            //         material.wboitEnabled = false;
+            //         // material.transparent = true;
+            //         material.opacity = 0.5;
+            //         material.weight = 1;
+            //     } else {
+            //         material.wboitEnabled = true;
+            //         material.transparent = true;
+            //         material.opacity = 1;
+            //         material.weight = 1;
+            //     }
 
 
-            } else if (material.isShaderMaterial) {
+            // } else if (material.isShaderMaterial) {
 
-                material.wboitEnabled = true;
-                material.transparent = true;
-                material.weight = 1;
-                material.uniforms.opacity.value = 1;
+            //     material.wboitEnabled = true;
+            //     material.transparent = true;
+            //     material.weight = 1;
+            //     material.uniforms.opacity.value = 1;
 
-            }
+            // }
 
         }
 
@@ -199,11 +197,18 @@ function init_postfx() {
     ssao_pass.maxDistance = 1;
     ssao_pass.output = SSAOPass.OUTPUT.Default
 
+    let copy_pass = new ShaderPass(CopyShader); /* LinearEncoding */
+    copy_pass.enabled = true;
+
     //composer.addPass(render_pass);
     composer.addPass(wboit_pass)
-    // composer.addPass(ssao_pass)
-    // composer.addPass(fxaa_pass);
-    // composer.addPass(bloom_pass);
+    composer.addPass(copy_pass);
+
+    composer.addPass(ssao_pass)
+    composer.addPass(fxaa_pass);
+    composer.addPass(bloom_pass);
+
+   
 
 
 
