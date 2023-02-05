@@ -70,7 +70,7 @@ function preinit_render() {
 
     renderer = new THREE.WebGLRenderer({
         // antialias: process.platform === 'darwin' ? false : true,
-        // logarithmicDepthBuffer: USE_LOGDEPTHBUF,
+        logarithmicDepthBuffer: USE_LOGDEPTHBUF,
         // stencil: true,
         // depth: true,
         preserveDrawingBuffer: true
@@ -84,6 +84,8 @@ function preinit_render() {
     renderer.shadowMap.enabled = true;
     renderer.shadowMap.autoUpdate = false
 
+    console.log(renderer.capabilities.isWebGL2)
+
     container.appendChild(renderer.domElement);
     /* main scene setup */
     camera = new THREE.PerspectiveCamera(state.camera_fov, window.innerWidth / window.innerHeight, 0.1, 10000);
@@ -94,7 +96,8 @@ function preinit_render() {
 
     init_world()
 
-    wboit_pass = new WboitPass(renderer, world, camera);
+    // wboit_pass = new WboitPass(renderer, world, camera);
+    // wboit_pass.scene = world
 
     init_postfx()
 
@@ -110,34 +113,14 @@ function update_scene() {
 
         for (let i = 0; i < materials.length; i++) {
             let material = materials[i]
-            let is_transparent = material.transparent
-            WboitUtils.patch(material);
+            material.depthWrite = true
+            // material.depthTest = true
+            material.transparent = false
+            material.opacity = 1
+            material.side = THREE.FrontSide
+            material.forceSinglePass = true
             console.log(material)
-            // // debugger
-
-            // if (material.isMeshStandardMaterial) {
-            //     if (false && is_transparent) {
-            //         material.wboitEnabled = false;
-            //         // material.transparent = true;
-            //         material.opacity = 0.5;
-            //         material.weight = 1;
-            //     } else {
-            //         material.wboitEnabled = true;
-            //         material.transparent = true;
-            //         material.opacity = 1;
-            //         material.weight = 1;
-            //     }
-
-
-            // } else if (material.isShaderMaterial) {
-
-            //     material.wboitEnabled = true;
-            //     material.transparent = true;
-            //     material.weight = 1;
-            //     material.uniforms.opacity.value = 1;
-
-            // }
-
+            // material.side = THREE.Two
         }
 
     });
@@ -192,32 +175,25 @@ function init_postfx() {
 
     ssao_pass = new SSAOPass(world, camera, window.innerWidth, window.innerHeight);
     ssao_pass.kernelSize = 16;
-    ssao_pass.kernelRadius = 0.08;
-    ssao_pass.minDistance = 0.00001;
-    ssao_pass.maxDistance = 1;
+    ssao_pass.kernelRadius = 0.5;
+    ssao_pass.minDistance = 0.00002;
+    ssao_pass.maxDistance = 10;
     ssao_pass.output = SSAOPass.OUTPUT.Default
 
     let copy_pass = new ShaderPass(CopyShader); /* LinearEncoding */
     copy_pass.enabled = true;
 
-    //composer.addPass(render_pass);
-    composer.addPass(wboit_pass)
-    composer.addPass(copy_pass);
-
+    composer.addPass(render_pass);
+    // composer.addPass(wboit_pass)
+    // composer.addPass(copy_pass);
     composer.addPass(ssao_pass)
     composer.addPass(fxaa_pass);
     composer.addPass(bloom_pass);
 
-   
-
-
-
     //bloom_pass.renderToScreen = true
 }
 
-
 function init_render() {
-
 
     extend_gui(panes.main.extra_settings_folder, {
         title: "SSAO",
@@ -292,8 +268,8 @@ function render() {
             if (state.postfx_enabled) {
                 composer.render();
             } else {
-                wboit_pass.render(renderer)
-                //renderer.render(world, camera);
+                // wboit_pass.render(renderer)
+                renderer.render(world, camera);
             }
         }
         last_render_date = last_tick_date
