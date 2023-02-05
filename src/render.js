@@ -69,11 +69,11 @@ function preinit_render() {
     document.body.classList.add(window.IS_DEVELOPMENT ? 'development' : 'production')
 
     renderer = new THREE.WebGLRenderer({
-        // antialias: process.platform === 'darwin' ? false : true,
+        antialias: process.platform === 'darwin' ? false : true,
         logarithmicDepthBuffer: USE_LOGDEPTHBUF,
-        // stencil: true,
-        // depth: true,
-        preserveDrawingBuffer: true
+        stencil: true,
+        depth: true,
+        // preserveDrawingBuffer: true
     });
 
     renderer.setPixelRatio(window.devicePixelRatio * 1);
@@ -112,14 +112,14 @@ function update_scene() {
         let materials = Array.isArray(object.material) ? object.material : [object.material];
 
         for (let i = 0; i < materials.length; i++) {
-            let material = materials[i]
-            material.depthWrite = true
-            // material.depthTest = true
-            material.transparent = false
-            material.opacity = 1
-            material.side = THREE.FrontSide
-            material.forceSinglePass = true
-            console.log(material)
+            // let material = materials[i]
+            // material.depthWrite = true
+            // // material.depthTest = true
+            // material.transparent = false
+            // material.opacity = 1
+            // material.side = THREE.FrontSide
+            // material.forceSinglePass = true
+            // console.log(material)
             // material.side = THREE.Two
         }
 
@@ -175,8 +175,8 @@ function init_postfx() {
 
     ssao_pass = new SSAOPass(world, camera, window.innerWidth, window.innerHeight);
     ssao_pass.kernelSize = 16;
-    ssao_pass.kernelRadius = 0.5;
-    ssao_pass.minDistance = 0.00002;
+    ssao_pass.kernelRadius = 0.01;
+    ssao_pass.minDistance = 0.000001;
     ssao_pass.maxDistance = 10;
     ssao_pass.output = SSAOPass.OUTPUT.Default
 
