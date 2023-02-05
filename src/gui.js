@@ -267,10 +267,10 @@ function create_main_pane() {
                         },
                     }
                 },
-                'extra_settings_folder': {
-                    title: '🎛 Extra settings',
-                    type: 'folder'
-                }
+                // 'extra_settings_folder': {
+                //     title: '🎛 Extra settings',
+                //     type: 'folder'
+                // }
             }
         },
         {

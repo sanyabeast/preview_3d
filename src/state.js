@@ -36,7 +36,7 @@ const state = {
     render_daytime: 0.5,
     render_dynamic_resolution: false,
     render_shadows_enabled: true,
-    postfx_enabled: false,
+    postfx_enabled: true,
 }
 
 window.state = state

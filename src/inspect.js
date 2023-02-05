@@ -4,7 +4,7 @@
 import * as THREE from 'three';
 import { texture_loader } from './loaders.js';
 import { state } from './state.js';
-import { notify_render, world, camera } from './render.js';
+import { notify_render, world, camera, update_matrix } from './render.js';
 import { random_choice } from './util.js';
 import { watch_controls } from './controls.js';
 import { refresh_gui } from './gui.js';
@@ -104,8 +104,8 @@ let inspect_modes = {
 }
 
 function init_inspect() {
-    torch_light = new THREE.PointLight()
-    torch_light.intensity = 0.5
+    torch_light = new THREE.DirectionalLight(0xffb4a4, 0.6666)
+    // torch_light.intensity = 2
     torch_light.visible = state.torch_light
     // torch_light.castShadow = true
     world.add(torch_light)
@@ -128,6 +128,7 @@ function init_inspect() {
 
     watch_controls(() => {
         torch_light.position.copy(camera.position)
+        update_matrix()
     })
 }
 

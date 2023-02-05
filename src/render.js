@@ -112,15 +112,15 @@ function update_scene() {
         let materials = Array.isArray(object.material) ? object.material : [object.material];
 
         for (let i = 0; i < materials.length; i++) {
-            // let material = materials[i]
-            // material.depthWrite = true
-            // // material.depthTest = true
-            // material.transparent = false
-            // material.opacity = 1
-            // material.side = THREE.FrontSide
-            // material.forceSinglePass = true
-            // console.log(material)
-            // material.side = THREE.Two
+            let material = materials[i]
+            if (material.transparent) {
+                material.transparent = false
+                material.depthWrite = true
+                material.alphaTest = 0.5;
+                console.log('transparent', material)
+            } else {
+                console.log('non-transparent', material)
+            }
         }
 
     });
@@ -195,33 +195,33 @@ function init_postfx() {
 
 function init_render() {
 
-    extend_gui(panes.main.extra_settings_folder, {
-        title: "SSAO",
-        type: 'folder',
-        children: {
-            ssao_output: {
-                type: 'input',
-                bind: [ssao_pass, 'output'],
-                label: 'SSAO Output',
-                options: {
-                    'Default': 0,
-                    'SSAO': 1,
-                    'Blur': 2,
-                    'Beauty': 3,
-                    'Depth': 4,
-                    'Normal': 5
-                }
-            },
-            kernel_radius: {
-                type: 'input',
-                min: 0.0001,
-                max: 0.005,
-                step: 0.00001,
-                bind: [ssao_pass, 'kernelRadius'],
-                label: 'Kernel Radius'
-            },
-        }
-    })
+    // extend_gui(panes.main.extra_settings_folder, {
+    //     title: "SSAO",
+    //     type: 'folder',
+    //     children: {
+    //         ssao_output: {
+    //             type: 'input',
+    //             bind: [ssao_pass, 'output'],
+    //             label: 'SSAO Output',
+    //             options: {
+    //                 'Default': 0,
+    //                 'SSAO': 1,
+    //                 'Blur': 2,
+    //                 'Beauty': 3,
+    //                 'Depth': 4,
+    //                 'Normal': 5
+    //             }
+    //         },
+    //         kernel_radius: {
+    //             type: 'input',
+    //             min: 0.0001,
+    //             max: 0.005,
+    //             step: 0.00001,
+    //             bind: [ssao_pass, 'kernelRadius'],
+    //             label: 'Kernel Radius'
+    //         },
+    //     }
+    // })
     //compos
 }
 
