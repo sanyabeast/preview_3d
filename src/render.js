@@ -20,6 +20,8 @@ import { loaders } from './loaders.js';
 import { lerp, clamp, round_to, extend_gui } from './util.js';
 import { panes, refresh_gui } from './gui.js';
 
+import { WboitPass, WboitUtils, MeshWboitMaterial } from 'wboit';
+
 
 const MIN_DAYTIME_LIGHT_INTENSITY = 0.01
 const SUN_HEIGHT_MULTIPLIER = 1.5
@@ -52,6 +54,7 @@ let render_state = {
 
 let is_document_visible = document.visibilityState === 'visible'
 let bloom_pass, ssao_pass, render_pass, fxaa_pass
+let wboit_pass
 
 document.addEventListener('visibilitychange', (event) => {
     console.log(`document visibility: ${document.visibilityState}`)
@@ -66,10 +69,11 @@ function preinit_render() {
     document.body.classList.add(window.IS_DEVELOPMENT ? 'development' : 'production')
 
     renderer = new THREE.WebGLRenderer({
-        antialias: process.platform === 'darwin' ? false : true,
-        logarithmicDepthBuffer: USE_LOGDEPTHBUF,
-        stencil: true,
-        depth: true
+        // antialias: process.platform === 'darwin' ? false : true,
+        // logarithmicDepthBuffer: USE_LOGDEPTHBUF,
+        // stencil: true,
+        // depth: true,
+        preserveDrawingBuffer: true
     });
 
     renderer.setPixelRatio(window.devicePixelRatio * 1);
@@ -85,14 +89,60 @@ function preinit_render() {
     camera = new THREE.PerspectiveCamera(state.camera_fov, window.innerWidth / window.innerHeight, 0.1, 10000);
     camera.position.set(0, 100, 0);
 
+
+
     window.renderer = renderer
     window.camera = camera
 
     init_world()
+
+    wboit_pass = new WboitPass(renderer, world, camera, 0 /* optional clear color */, 1.0 /* optional clear alpha */);
+
     init_postfx()
 
     window.addEventListener('resize', handle_window_resized);
     handle_window_resized()
+}
+
+function update_scene() {
+    world.traverse((object) => {
+
+        if (!object.material) return;
+        let materials = Array.isArray(object.material) ? object.material : [object.material];
+
+        for (let i = 0; i < materials.length; i++) {
+            let material = materials[i]
+            let is_transparent = material.transparent
+            WboitUtils.patch(material);
+            // console.log(material)
+            // // debugger
+
+            if (material.isMeshStandardMaterial) {
+                if (false && is_transparent) {
+                    material.wboitEnabled = false;
+                    // material.transparent = true;
+                    material.opacity = 0.5;
+                    material.weight = 1;
+                } else {
+                    material.wboitEnabled = true;
+                    material.transparent = true;
+                    material.opacity = 1;
+                    material.weight = 1;
+                }
+
+
+            } else if (material.isShaderMaterial) {
+
+                material.wboitEnabled = true;
+                material.transparent = true;
+                material.weight = 1;
+                material.uniforms.opacity.value = 1;
+
+            }
+
+        }
+
+    });
 }
 
 
@@ -128,6 +178,7 @@ function init_world() {
     state.env_default_texture = world.environment
 }
 
+
 function init_postfx() {
     composer = new EffectComposer(renderer);
 
@@ -149,14 +200,20 @@ function init_postfx() {
     ssao_pass.output = SSAOPass.OUTPUT.Default
 
     //composer.addPass(render_pass);
-    composer.addPass(ssao_pass)
-    composer.addPass(fxaa_pass);
-    composer.addPass(bloom_pass);
+    composer.addPass(wboit_pass)
+    // composer.addPass(ssao_pass)
+    // composer.addPass(fxaa_pass);
+    // composer.addPass(bloom_pass);
 
-    bloom_pass.renderToScreen = true
+
+
+    //bloom_pass.renderToScreen = true
 }
 
+
 function init_render() {
+
+
     extend_gui(panes.main.extra_settings_folder, {
         title: "SSAO",
         type: 'folder',
@@ -230,7 +287,8 @@ function render() {
             if (state.postfx_enabled) {
                 composer.render();
             } else {
-                renderer.render(world, camera);
+                wboit_pass.render(renderer)
+                //renderer.render(world, camera);
             }
         }
         last_render_date = last_tick_date
@@ -286,7 +344,6 @@ function set_environment_power(value) {
     notify_render()
 }
 
-
 function set_daytime(value) {
     state.render_daytime = value
     let curved_value = Math.sin(value * Math.PI)
@@ -315,7 +372,6 @@ function handle_window_resized() {
     }
     notify_render()
 }
-
 
 const _dynamic_resolution_check = _.throttle(() => {
     let avg_tick_rate = 0
@@ -361,6 +417,7 @@ function set_shadows_enabled(enabled) {
     renderer.render(world, camera);
 }
 
+
 preinit_render()
 
 export {
@@ -385,5 +442,6 @@ export {
     update_matrix,
     update_shadows,
     set_resolution_scale,
-    set_shadows_enabled
+    set_shadows_enabled,
+    update_scene
 }

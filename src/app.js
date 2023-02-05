@@ -2,7 +2,7 @@
 import * as THREE from 'three';
 import { AnimationMixer } from 'three'
 
-import { notify_render, start_render, init_render, loop_tasks, set_daytime, update_matrix, update_shadows } from './render.js';
+import { notify_render, start_render, init_render, loop_tasks, set_daytime, update_matrix, update_shadows, update_scene } from './render.js';
 import { loaders, init_loaders } from './loaders.js'
 import { init_gui, set_loader, notifications, panes, update_title } from './gui.js'
 import { init_controls, frame_object } from './controls.js'
@@ -131,26 +131,8 @@ function setup_scene() {
         action.enabled = true;
         action.play()
     })
-    /** shadows */
-    // scene_state.scene.traverse((node) => {
-    //     if (node.isMesh) {
-    //         node.receiveShadow = true
-    //         node.castShadow = true
-    //     }
-
-    //     if (_.isArray(node.material)) {
-    //         node.material.forEach((material) => _setup_material(material))
-    //     } else if (_.isObject(node.material)) {
-    //         _setup_material(node.material)
-    //     }
-    // })
-}
-
-function _setup_material(material) {
-    if (material.transparent){
-        material.depthWrite = true
-    }
     
+    update_scene()
 }
 
 function load_sample(sample_name) {

@@ -13,7 +13,7 @@ const state = {
     env_texture: null,
     env_intensity: 1,
     env_power: 1,
-    postfx_enabled: true,
+
     postfx_bloom_exposure: 1,
     postfx_bloom_strength: 0.3,
     postfx_bloom_treshold: 0.9,
@@ -35,7 +35,8 @@ const state = {
     render_sun_azimuth: 0.5,
     render_daytime: 0.5,
     render_dynamic_resolution: false,
-    render_shadows_enabled: true
+    render_shadows_enabled: true,
+    postfx_enabled: false,
 }
 
 window.state = state
