@@ -20,7 +20,6 @@ import { loaders } from './loaders.js';
 import { lerp, clamp, round_to, extend_gui } from './util.js';
 import { panes, refresh_gui } from './gui.js';
 
-import { WboitPass, WboitUtils, MeshWboitMaterial } from 'wboit';
 
 
 const MIN_DAYTIME_LIGHT_INTENSITY = 0.01
@@ -54,7 +53,6 @@ let render_state = {
 
 let is_document_visible = document.visibilityState === 'visible'
 let bloom_pass, ssao_pass, render_pass, fxaa_pass
-let wboit_pass
 
 document.addEventListener('visibilitychange', (event) => {
     console.log(`document visibility: ${document.visibilityState}`)
@@ -95,10 +93,6 @@ function preinit_render() {
     window.camera = camera
 
     init_world()
-
-    // wboit_pass = new WboitPass(renderer, world, camera);
-    // wboit_pass.scene = world
-
     init_postfx()
 
     window.addEventListener('resize', handle_window_resized);
@@ -184,8 +178,6 @@ function init_postfx() {
     copy_pass.enabled = true;
 
     composer.addPass(render_pass);
-    // composer.addPass(wboit_pass)
-    // composer.addPass(copy_pass);
     composer.addPass(ssao_pass)
     composer.addPass(fxaa_pass);
     composer.addPass(bloom_pass);
