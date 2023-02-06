@@ -19,6 +19,7 @@ import { state } from './state.js'
 import { loaders } from './loaders.js';
 import { lerp, clamp, round_to, extend_gui } from './util.js';
 import { panes, refresh_gui } from './gui.js';
+import { createDitherTexture, DitheredTransparencyShaderMixin} from '../lib/ScreenDoorShader.js'
 
 
 
@@ -104,6 +105,7 @@ function update_scene() {
 
         if (!object.material) return;
         let materials = Array.isArray(object.material) ? object.material : [object.material];
+        let object_has_transparency = false
 
         for (let i = 0; i < materials.length; i++) {
             let material = materials[i]
@@ -118,6 +120,7 @@ function update_scene() {
             material.dithering = true
 
             if (material.transparent) {
+                object_has_transparency = true
                 material.transparent = false
                 material.depthWrite = true
                 material.alphaTest = 0.5;
@@ -128,7 +131,15 @@ function update_scene() {
             }
         }
 
+        if (!object_has_transparency) {
+            console.log(object)
+            object.castShadow = true
+        }
+
+
     });
+
+    update_shadows()
 }
 
 
@@ -247,6 +258,7 @@ function notify_render(duration = 0) {
 
 function update_shadows() {
     renderer.shadowMap.needsUpdate = true
+    notify_render()
 }
 
 function render() {
