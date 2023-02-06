@@ -86,7 +86,7 @@ function preinit_render() {
 
     container.appendChild(renderer.domElement);
     /* main scene setup */
-    camera = new THREE.PerspectiveCamera(state.camera_fov, window.innerWidth / window.innerHeight, 0.1, 10000);
+    camera = new THREE.PerspectiveCamera(state.render_camera_fov, window.innerWidth / window.innerHeight, 0.1, 10000);
     camera.position.set(0, 100, 0);
 
     window.renderer = renderer

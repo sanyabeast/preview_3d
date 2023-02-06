@@ -224,14 +224,14 @@ function create_main_pane() {
 
                             }
                         },
-                        'camera_fov': {
+                        'render_camera_fov': {
                             type: 'input',
-                            bind: [state, 'camera_fov'],
+                            bind: [state, 'render_camera_fov'],
                             label: "📽 Camera FOV",
                             min: 1,
                             max: 120,
                             step: 1,
-                            on_change: 'on_camera_fov_changed'
+                            on_change: 'on_render_camera_fov_changed'
                         },
                         'torchlight': {
                             type: 'input',
@@ -285,7 +285,7 @@ function create_main_pane() {
                 }
                 notify_render()
             },
-            on_camera_fov_changed: ({ value }) => {
+            on_render_camera_fov_changed: ({ value }) => {
                 camera.fov = value
                 camera.updateProjectionMatrix()
                 notify_render()

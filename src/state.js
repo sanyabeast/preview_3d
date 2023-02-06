@@ -13,12 +13,10 @@ const state = {
     env_texture: null,
     env_intensity: 1,
     env_power: 1,
-
     postfx_bloom_exposure: 1,
     postfx_bloom_strength: 0.3,
     postfx_bloom_treshold: 0.9,
     postfx_bloom_radius: 1,
-    camera_fov: 45,
     scene_src: STARTUP_SCENE || '',
     resolution_scale: process.platform === 'darwin' ? 0.65 : 1,
     active_scene: null,
@@ -37,6 +35,7 @@ const state = {
     render_dynamic_resolution: false,
     render_shadows_enabled: true,
     postfx_enabled: true,
+    render_camera_fov: 35,
 }
 
 window.state = state
