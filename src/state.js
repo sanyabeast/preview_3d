@@ -18,7 +18,7 @@ const state = {
     postfx_bloom_treshold: 0.9,
     postfx_bloom_radius: 1,
     scene_src: STARTUP_SCENE || '',
-    resolution_scale: process.platform === 'darwin' ? 0.65 : 1,
+    resolution_scale: process.platform === 'darwin' ? 0.6 : 1,
     active_scene: null,
     torch_light: false,
     application_has_updates: '',
@@ -34,7 +34,7 @@ const state = {
     render_daytime: 0.5,
     render_dynamic_resolution: false,
     render_shadows_enabled: true,
-    postfx_enabled: true,
+    postfx_enabled: process.platform !== 'darwin',
     render_camera_fov: 35,
 }
 
