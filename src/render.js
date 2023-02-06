@@ -26,7 +26,7 @@ import { createDitherTexture, DitheredTransparencyShaderMixin } from '../lib/Scr
 const MIN_DAYTIME_LIGHT_INTENSITY = 0.01
 const SUN_HEIGHT_MULTIPLIER = 1.5
 const SUN_AZIMUTH_OFFSET = Math.PI / 2
-const USE_LOGDEPTHBUF = true
+const USE_LOGDEPTHBUF = false
 
 let camera, world, renderer, composer
 let render_needs_update = true
@@ -185,7 +185,7 @@ function init_postfx() {
 
     ssao_pass = new SSAOPass(world, camera, window.innerWidth, window.innerHeight);
     ssao_pass.kernelSize = 8;
-    ssao_pass.kernelRadius = 0.01;
+    ssao_pass.kernelRadius = 1;
     ssao_pass.minDistance = 0.00001;
     ssao_pass.maxDistance = 100;
     ssao_pass.output = SSAOPass.OUTPUT.Default
@@ -301,7 +301,7 @@ function set_fps_limit(value) {
 function set_sun_azimuth(value) {
     value += SUN_AZIMUTH_OFFSET
     state.render_sun_azimuth = value
-    sun.position.x = Math.sin(value * Math.PI * 2) * sun_state.distance
+    sun.position.x = -Math.sin(value * Math.PI * 2) * sun_state.distance
     sun.position.z = Math.cos(value * Math.PI * 2) * sun_state.distance
     update_shadows()
     notify_render()

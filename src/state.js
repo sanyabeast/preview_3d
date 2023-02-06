@@ -34,7 +34,7 @@ const state = {
     render_daytime: 0.5,
     render_dynamic_resolution: false,
     render_shadows_enabled: true,
-    postfx_enabled: process.platform !== 'darwin',
+    postfx_enabled: true,
     render_camera_fov: 35,
 }
 
