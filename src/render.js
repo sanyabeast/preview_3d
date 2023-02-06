@@ -108,8 +108,10 @@ function update_scene() {
             let materials = Array.isArray(object.material) ? object.material : [object.material];
             let object_has_transparency = false
 
+
             for (let i = 0; i < materials.length; i++) {
                 let material = materials[i]
+                // material.dithering = true
                 if (!material._original_material_settings) {
                     material._original_material_settings = {
                         transparent: material.transparent,
@@ -118,9 +120,11 @@ function update_scene() {
                     }
                 }
 
-
                 if (material.transparent) {
-                    patch_transparent_material(material)
+                    material.transparent = false
+                    material.depthWrite = true
+                    material.alphaTest = 0.5;
+                    material.dithering = true
 
                     console.log('transparent', material)
                 } else {
@@ -138,12 +142,25 @@ function update_scene() {
     update_shadows()
 }
 
-function patch_transparent_material() {
+function patch_transparent_material(material) {
+    let ditherTex = createDitherTexture();
+    let diMtherShader = DitheredTransparencyShaderMixin(THREE.ShaderLib.phong);
     const ditherShader = DitheredTransparencyShaderMixin(THREE.ShaderLib.phong);
-    // material.transparent = false
-    // material.depthWrite = true
-    // material.alphaTest = 0.5;
-    // material.dithering = true
+    const ditherMat = new THREE.ShaderMaterial(ditherShader);
+    ditherMat.uniforms.ditherTex.value = ditherTex;
+    ditherMat.uniforms.opacity.value = 0.5;
+    ditherMat.uniforms.diffuse.value.copy(color);
+    ditherMat.lights = true;
+
+    // opacity is not available in the shader by default
+    const depthShader = DitheredTransparencyShaderMixin(THREE.ShaderLib.depth);
+    depthShader.fragmentShader = `uniform float opacity;\n${depthShader.fragmentShader}`;
+
+    const depthMat = new THREE.ShaderMaterial(depthShader);
+    depthMat.defines.DEPTH_PACKING = THREE.RGBADepthPacking;
+    depthMat.uniforms.ditherTex.value = ditherTex;
+    depthMat.uniforms.opacity.value = opacity;
+
 }
 
 
