@@ -19,7 +19,7 @@ import { state } from './state.js'
 import { loaders } from './loaders.js';
 import { lerp, clamp, round_to, extend_gui } from './util.js';
 import { panes, refresh_gui } from './gui.js';
-import { createDitherTexture, DitheredTransparencyShaderMixin} from '../lib/ScreenDoorShader.js'
+import { createDitherTexture, DitheredTransparencyShaderMixin } from '../lib/ScreenDoorShader.js'
 
 
 
@@ -103,43 +103,47 @@ function preinit_render() {
 function update_scene() {
     world.traverse((object) => {
 
-        if (!object.material) return;
-        let materials = Array.isArray(object.material) ? object.material : [object.material];
-        let object_has_transparency = false
+        if (object.isMesh) {
+            if (!object.material) return;
+            let materials = Array.isArray(object.material) ? object.material : [object.material];
+            let object_has_transparency = false
 
-        for (let i = 0; i < materials.length; i++) {
-            let material = materials[i]
-            if (!material._original_material_settings) {
-                material._original_material_settings = {
-                    transparent: material.transparent,
-                    alphaTest: material.alphaTest,
-                    depthWrite: material.depthWrite
+            for (let i = 0; i < materials.length; i++) {
+                let material = materials[i]
+                if (!material._original_material_settings) {
+                    material._original_material_settings = {
+                        transparent: material.transparent,
+                        alphaTest: material.alphaTest,
+                        depthWrite: material.depthWrite
+                    }
+                }
+
+
+                if (material.transparent) {
+                    patch_transparent_material(material)
+
+                    console.log('transparent', material)
+                } else {
+                    console.log('non-transparent material', material.name)
                 }
             }
 
-            material.dithering = true
-
-            if (material.transparent) {
-                object_has_transparency = true
-                material.transparent = false
-                material.depthWrite = true
-                material.alphaTest = 0.5;
-                material.dithering = true
-                console.log('transparent', material)
-            } else {
-                console.log('non-transparent material', material.name)
+            if (!object_has_transparency) {
+                object.castShadow = true
+                object.receiveShadow = true
             }
         }
-
-        if (!object_has_transparency) {
-            console.log(object)
-            object.castShadow = true
-        }
-
-
     });
 
     update_shadows()
+}
+
+function patch_transparent_material() {
+    const ditherShader = DitheredTransparencyShaderMixin(THREE.ShaderLib.phong);
+    // material.transparent = false
+    // material.depthWrite = true
+    // material.alphaTest = 0.5;
+    // material.dithering = true
 }
 
 
