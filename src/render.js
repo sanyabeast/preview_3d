@@ -17,7 +17,7 @@ import { RenderPass } from 'three/addons/postprocessing/RenderPass.js';
 
 import { state } from './state.js'
 import { loaders } from './loaders.js';
-import { lerp, clamp, round_to, extend_gui } from './util.js';
+import { lerp, clamp, round_to, extend_gui, logd } from './util.js';
 import { panes, refresh_gui } from './gui.js';
 import { createDitherTexture, DitheredTransparencyShaderMixin } from '../lib/ScreenDoorShader.js'
 
@@ -87,7 +87,7 @@ function preinit_render() {
 
     container.appendChild(renderer.domElement);
     /* main scene setup */
-    camera = new THREE.PerspectiveCamera(state.render_camera_fov, window.innerWidth / window.innerHeight, 0.1, 10000);
+    camera = new THREE.PerspectiveCamera(state.render_camera_fov, window.innerWidth / window.innerHeight, 0.01, 100);
     camera.position.set(0, 100, 0);
 
     window.renderer = renderer
@@ -104,6 +104,7 @@ function update_scene() {
     world.traverse((object) => {
 
         if (object.isMesh) {
+            logd('update_scene', `found mesh "${object.name}"`)
             if (!object.material) return;
             let materials = Array.isArray(object.material) ? object.material : [object.material];
             let object_has_transparency = false
@@ -121,10 +122,10 @@ function update_scene() {
                 if (material.transparent) {
                     material.transparent = false
                     material.depthWrite = true
-                    material.alphaTest = 0.5; 
-                    console.log('transparent', material)
+                    material.alphaTest = 0.5;
+                    logd('update_scene', `found transparent material "${material.name}". Material is set up for dithered transparency rendering`,)
                 } else {
-                    console.log('non-transparent material', material)
+                    logd('update_scene', `found opaque material "${material.name}"`)
                 }
             }
             if (!object_has_transparency) {
@@ -185,9 +186,9 @@ function init_postfx() {
 
     ssao_pass = new SSAOPass(world, camera, window.innerWidth, window.innerHeight);
     ssao_pass.kernelSize = 8;
-    ssao_pass.kernelRadius = 1;
-    ssao_pass.minDistance = 0.00001;
-    ssao_pass.maxDistance = 100;
+    ssao_pass.kernelRadius = 0.05;
+    ssao_pass.minDistance = 0.0000001;
+    ssao_pass.maxDistance = 0.0015;
     ssao_pass.output = SSAOPass.OUTPUT.Default
 
     let copy_pass = new ShaderPass(CopyShader); /* LinearEncoding */

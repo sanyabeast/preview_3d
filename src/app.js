@@ -73,9 +73,22 @@ function set_active_scene(scene) {
 
         state.active_scene = scene
         state.scene_aabb = new THREE.Box3();
+        
+        state.scene_aabb.setFromObject(scene);
+        let scene_size_x = state.scene_aabb.max.x - state.scene_aabb.min.x;
+        let scene_size_y = state.scene_aabb.max.y - state.scene_aabb.min.y;
+        let scene_size_z = state.scene_aabb.max.z - state.scene_aabb.min.z;
+        let scene_size_max = Math.max(scene_size_x, scene_size_y, scene_size_z);
+        scene_size_max = scene_size_max || 1;
+        logd('set_active_scene', `maximum original scene scale in one dimension: ${scene_size_max}`)
+        logd('set_active_scene', `computed virtual scene's scale: ${1 / scene_size_max}`)
+        state.active_scene.scale.setScalar(1 / scene_size_max)
+
+        
         state.scene_aabb.setFromObject(scene);
         console.log('spawning scene...')
-        console.log(scene)
+        console.log(scene, state.scene_aabb)
+        
         world.add(scene);
         update_title()
         frame_object()
