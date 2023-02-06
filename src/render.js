@@ -174,10 +174,10 @@ function init_postfx() {
     fxaa_pass.material.uniforms['resolution'].value.y = 1 / (window.innerHeight * window.devicePixelRatio);
 
     ssao_pass = new SSAOPass(world, camera, window.innerWidth, window.innerHeight);
-    ssao_pass.kernelSize = 16;
+    ssao_pass.kernelSize = 8;
     ssao_pass.kernelRadius = 0.01;
-    ssao_pass.minDistance = 0.000001;
-    ssao_pass.maxDistance = 10;
+    ssao_pass.minDistance = 0.00000005;
+    ssao_pass.maxDistance = 100;
     ssao_pass.output = SSAOPass.OUTPUT.Default
 
     let copy_pass = new ShaderPass(CopyShader); /* LinearEncoding */
