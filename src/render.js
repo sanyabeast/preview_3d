@@ -108,7 +108,6 @@ function update_scene() {
             let materials = Array.isArray(object.material) ? object.material : [object.material];
             let object_has_transparency = false
 
-
             for (let i = 0; i < materials.length; i++) {
                 let material = materials[i]
                 // material.dithering = true
@@ -125,10 +124,9 @@ function update_scene() {
                     material.depthWrite = true
                     material.alphaTest = 0.5;
                     material.dithering = true
-
                     console.log('transparent', material)
                 } else {
-                    console.log('non-transparent material', material.name)
+                    console.log('non-transparent material', material)
                 }
             }
 
@@ -213,7 +211,7 @@ function init_postfx() {
     ssao_pass = new SSAOPass(world, camera, window.innerWidth, window.innerHeight);
     ssao_pass.kernelSize = 8;
     ssao_pass.kernelRadius = 0.01;
-    ssao_pass.minDistance = 0.00000005;
+    ssao_pass.minDistance = 0.00001;
     ssao_pass.maxDistance = 100;
     ssao_pass.output = SSAOPass.OUTPUT.Default
 
