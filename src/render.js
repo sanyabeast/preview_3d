@@ -107,13 +107,24 @@ function update_scene() {
 
         for (let i = 0; i < materials.length; i++) {
             let material = materials[i]
+            if (!material._original_material_settings) {
+                material._original_material_settings = {
+                    transparent: material.transparent,
+                    alphaTest: material.alphaTest,
+                    depthWrite: material.depthWrite
+                }
+            }
+
+            material.dithering = true
+
             if (material.transparent) {
                 material.transparent = false
                 material.depthWrite = true
                 material.alphaTest = 0.5;
+                material.dithering = true
                 console.log('transparent', material)
             } else {
-                console.log('non-transparent', material)
+                console.log('non-transparent material', material.name)
             }
         }
 
