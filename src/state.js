@@ -34,7 +34,7 @@ const state = {
     render_daytime: 0.55,
     render_dynamic_resolution: false,
     render_shadows_enabled: true,
-    postfx_enabled: !IS_MACOS,
+    postfx_enabled: false,
     render_camera_fov: 45,
 }
 

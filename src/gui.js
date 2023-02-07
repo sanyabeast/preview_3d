@@ -84,7 +84,7 @@ function create_main_pane() {
                             type: 'input',
                             bind: [state, 'postfx_enabled'],
                             label: '✨ Postfx',
-                            hidden: IS_MACOS,
+                            hidden: true,
                             on_change: 'on_postfx_changed'
                         },
                         'shadows_enabled': {
