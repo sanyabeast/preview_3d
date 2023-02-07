@@ -7,7 +7,7 @@ const STARTUP_SCENE = read_url('file_parameter') !== null ? read_url('file_param
 
 const state = {
     env_enabled: true,
-    env_texture_src: 'assets/hdr/atelier.hdr',
+    env_texture_src: 'assets/hdr/gdansk.hdr',
     env_default_background: null,
     env_default_texture: null,
     env_texture: null,
@@ -18,7 +18,7 @@ const state = {
     postfx_bloom_treshold: 0.9,
     postfx_bloom_radius: 1,
     scene_src: STARTUP_SCENE || '',
-    resolution_scale: process.platform === 'darwin' ? 0.65 : 1,
+    resolution_scale: process.platform === 'darwin' ? 0.7 : 1,
     active_scene: null,
     torch_light: false,
     application_has_updates: '',
@@ -33,8 +33,8 @@ const state = {
     render_sun_azimuth: 0.5,
     render_daytime: 0.5,
     render_dynamic_resolution: false,
-    render_shadows_enabled: false   ,
-    postfx_enabled: true,
+    render_shadows_enabled: false,
+    postfx_enabled: false,
     render_camera_fov: 35,
 }
 

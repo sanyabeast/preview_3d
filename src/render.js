@@ -152,7 +152,7 @@ function init_world() {
     world.environment = pmremGenerator.fromScene(environment).texture;
     world.matrixWorldAutoUpdate = false
 
-    world.backgroundBlurriness = 0.5
+    world.backgroundBlurriness = 1
     world.backgroundIntensity = 1
 
     environment.dispose();
