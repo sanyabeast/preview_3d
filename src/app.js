@@ -1,5 +1,5 @@
 /** Created by @sanyabeast | 28 Jan 2023 | Kyiv, Ukraine */
-import * as THREE from 'three';
+import { Box3 } from 'three';
 import { AnimationMixer } from 'three'
 
 import { notify_render, start_render, init_render, loop_tasks, set_daytime, update_matrix, update_shadows, update_scene } from './render.js';
@@ -72,8 +72,8 @@ function set_active_scene(scene) {
         }
 
         state.active_scene = scene
-        state.scene_aabb = new THREE.Box3();
-        
+        state.scene_aabb = new Box3();
+
         state.scene_aabb.setFromObject(scene);
         let scene_size_x = state.scene_aabb.max.x - state.scene_aabb.min.x;
         let scene_size_y = state.scene_aabb.max.y - state.scene_aabb.min.y;
@@ -84,11 +84,10 @@ function set_active_scene(scene) {
         logd('set_active_scene', `computed virtual scene's scale: ${1 / scene_size_max}`)
         state.active_scene.scale.setScalar(1 / scene_size_max)
 
-        
         state.scene_aabb.setFromObject(scene);
         console.log('spawning scene...')
         console.log(scene, state.scene_aabb)
-        
+
         world.add(scene);
         update_title()
         frame_object()
@@ -144,7 +143,7 @@ function setup_scene() {
         action.enabled = true;
         action.play()
     })
-    
+
     update_scene()
 }
 

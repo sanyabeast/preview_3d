@@ -31,6 +31,7 @@ function build_gui(layout, props, item_data) {
     switch (layout.type) {
         case 'pane': {
             item = new Tweakpane.Pane()
+            console.log(Tweakpane, item)
             item.registerPlugin(TweakpaneEssentialsPlugin);
             item.registerPlugin(TweakpaneInfodumpPlugin)
             item.element.parentElement.classList.add('pane')
@@ -39,7 +40,8 @@ function build_gui(layout, props, item_data) {
         case 'folder': {
             item = item_data.item.addFolder({
                 title: layout.title,
-                expanded: layout.expanded || false
+                expanded: layout.expanded || false,
+                hidden: layout.hidden
             })
             break;
         }
@@ -50,6 +52,7 @@ function build_gui(layout, props, item_data) {
                 max: layout.max,
                 step: layout.step,
                 options: _.isString(layout.options) ? props[layout.options] : layout.options,
+                hidden: layout.hidden
             })
             break;
         }

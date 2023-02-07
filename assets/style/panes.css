@@ -29,10 +29,10 @@ body .pane {
     overflow-x: hidden;
 }
 
+
 body .pane>* {
     opacity: 0;
     transition: opacity 1s ease;
-
 }
 
 body:hover .pane:hover {

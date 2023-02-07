@@ -3,7 +3,20 @@
 
 /** Created by @sanyabeast | 28 Jan 2023 | Kyiv, Ukraine */
 
-import * as THREE from 'three';
+import {
+    ShaderChunk,
+    WebGLRenderer,
+    PerspectiveCamera,
+    Scene,
+    sRGBEncoding,
+    DirectionalLight,
+    PMREMGenerator,
+    Color,
+    AmbientLight,
+    Vector2,
+    EquirectangularReflectionMapping,
+    NormalBlending
+} from 'three';
 import { RoomEnvironment } from 'three/addons/environments/RoomEnvironment.js';
 import { EffectComposer } from 'three/addons/postprocessing/EffectComposer.js';
 import { SSAOPass } from 'three/addons/postprocessing/SSAOPass.js';
@@ -11,7 +24,6 @@ import { ShaderPass } from 'three/addons/postprocessing/ShaderPass.js';
 import { CopyShader } from 'three/addons/shaders/CopyShader.js';
 import { FXAAShader } from 'three/addons/shaders/FXAAShader.js';
 import { RGBShiftShader } from 'three/addons/shaders/RGBShiftShader.js';
-import { SAOPass } from 'three/addons/postprocessing/SAOPass.js';
 import { UnrealBloomPass } from 'three/addons/postprocessing/UnrealBloomPass.js';
 import { RenderPass } from 'three/addons/postprocessing/RenderPass.js';
 
@@ -19,14 +31,28 @@ import { state } from './state.js'
 import { loaders } from './loaders.js';
 import { lerp, clamp, round_to, extend_gui, logd } from './util.js';
 import { panes, refresh_gui } from './gui.js';
-import { createDitherTexture, DitheredTransparencyShaderMixin } from '../lib/ScreenDoorShader.js'
 
+ShaderChunk.alphatest_fragment = `
+#ifdef USE_ALPHATEST
+	float ad_orig_alpha = diffuseColor.a;
+	float alpha_dithered = 1.;
+	float ad_x_fract = pow( fract(gl_FragCoord.x / round(((1.-ad_orig_alpha) + 1.) * 1.)) , 1. );
+	float ad_y_fract = pow( fract(gl_FragCoord.y / round(((1.-ad_orig_alpha) + 1.) * 1.)) , 1. );
 
+	alpha_dithered = pow(
+		(ad_x_fract + ad_y_fract) * pow(ad_orig_alpha, mix(0.2, 1.5, ad_orig_alpha)) + pow(ad_orig_alpha, 1.5),
+		2.
+	);
+	
+	if ( alpha_dithered < alphaTest ) discard;
+#endif
+`
 
 const MIN_DAYTIME_LIGHT_INTENSITY = 0.01
-const SUN_HEIGHT_MULTIPLIER = 1.5
-const SUN_AZIMUTH_OFFSET = Math.PI / 2
-const USE_LOGDEPTHBUF = true
+const SUN_HEIGHT_MULTIPLIER = 0.666
+const SUN_AZIMUTH_OFFSET = Math.PI / 1.9
+const USE_LOGDEPTHBUF = false
+// const USE_LOGDEPTHBUF = !IS_MACOS
 
 let camera, world, renderer, composer
 let render_needs_update = true
@@ -39,7 +65,7 @@ let last_tick_date = +new Date()
 let sun, amb
 let fog
 let sun_state = {
-    distance: 100,
+    distance: 10,
     height: 1,
     azimuth: 0.5,
     environment_multiplier: 1
@@ -67,8 +93,8 @@ function preinit_render() {
     document.body.appendChild(container);
     document.body.classList.add(window.IS_DEVELOPMENT ? 'development' : 'production')
 
-    renderer = new THREE.WebGLRenderer({
-        antialias: process.platform === 'darwin' ? false : true,
+    renderer = new WebGLRenderer({
+        antialias: true,
         logarithmicDepthBuffer: USE_LOGDEPTHBUF,
         stencil: true,
         depth: true,
@@ -78,7 +104,7 @@ function preinit_render() {
     renderer.setPixelRatio(window.devicePixelRatio * 1);
     renderer.setSize(window.innerWidth, window.innerHeight);
     renderer.toneMappingExposure = 1;
-    renderer.outputEncoding = THREE.sRGBEncoding;
+    renderer.outputEncoding = sRGBEncoding;
     renderer.gammaFactor = 1
     renderer.shadowMap.enabled = state.render_shadows_enabled;
     renderer.shadowMap.autoUpdate = false
@@ -87,7 +113,7 @@ function preinit_render() {
 
     container.appendChild(renderer.domElement);
     /* main scene setup */
-    camera = new THREE.PerspectiveCamera(state.render_camera_fov, window.innerWidth / window.innerHeight, 0.001, 100);
+    camera = new PerspectiveCamera(state.render_camera_fov, window.innerWidth / window.innerHeight, 0.001, 100);
     camera.position.set(0, 100, 0);
 
     window.renderer = renderer
@@ -104,7 +130,7 @@ function update_scene() {
     world.traverse((object) => {
 
         if (object.isMesh) {
-            logd('update_scene', `found mesh "${object.name}"`)
+            //logd('update_scene', `found mesh "${object.name}"`)
             if (!object.material) return;
             let materials = Array.isArray(object.material) ? object.material : [object.material];
             let object_has_transparency = false
@@ -112,7 +138,7 @@ function update_scene() {
 
             for (let i = 0; i < materials.length; i++) {
                 let material = materials[i]
-                console.log(material)
+                // console.log(material)
                 if (!material._original_material_settings) {
                     material._original_material_settings = {
                         transparent: material.transparent,
@@ -126,10 +152,10 @@ function update_scene() {
                     material.transparent = false
                     material.depthWrite = true
                     material.alphaTest = 0.5;
-                    material.blending = THREE.NormalBlending
-                    logd('update_scene', `found transparent material "${material.name}". Material is set up for dithered transparency rendering`,)
+                    material.blending = NormalBlending
+                    //logd('update_scene', `found transparent material "${material.name}". Material is set up for dithered transparency rendering`,)
                 } else {
-                    logd('update_scene', `found opaque material "${material.name}"`)
+                    //logd('update_scene', `found opaque material "${material.name}"`)
                 }
             }
             if (!object_has_transparency) {
@@ -146,10 +172,10 @@ function update_scene() {
 
 function init_world() {
     const environment = new RoomEnvironment();
-    const pmremGenerator = new THREE.PMREMGenerator(renderer);
+    const pmremGenerator = new PMREMGenerator(renderer);
 
-    world = new THREE.Scene();
-    world.background = new THREE.Color(0xbbbbbb);
+    world = new Scene();
+    world.background = new Color(0xbbbbbb);
     world.environment = pmremGenerator.fromScene(environment).texture;
     world.matrixWorldAutoUpdate = false
 
@@ -158,12 +184,25 @@ function init_world() {
 
     environment.dispose();
 
-    sun = new THREE.DirectionalLight()
-    amb = new THREE.AmbientLight()
+    sun = new DirectionalLight()
+    amb = new AmbientLight()
     amb.intensity = 0.2;
     sun.position.set(1000, 1000, 1000)
     sun.intensity = 1
     sun.castShadow = true
+
+    // shadows
+    sun.shadow.mapSize.width = 2048
+    sun.shadow.mapSize.height = 2048
+    sun.shadow.camera.left = -0.5
+    sun.shadow.camera.right = 0.5
+    sun.shadow.camera.left = -0.5
+    sun.shadow.camera.top = -0.5
+    sun.shadow.camera.bottom = 0.5
+    sun.shadow.camera.near = 0.00001
+    sun.shadow.radius = 3
+    sun.shadow.blurSamples = 3
+    sun.shadow.bias = 0.0000005
 
     set_sun_azimuth(0.5)
     set_sun_height(1)
@@ -181,7 +220,7 @@ function init_postfx() {
     composer = new EffectComposer(renderer);
 
     render_pass = new RenderPass(world, camera);
-    bloom_pass = new UnrealBloomPass(new THREE.Vector2(window.innerWidth, window.innerHeight), 1.5, 0.4, 0.85);
+    bloom_pass = new UnrealBloomPass(new Vector2(window.innerWidth, window.innerHeight), 1.5, 0.4, 0.85);
     bloom_pass.threshold = state.postfx_bloom_treshold;
     bloom_pass.strength = state.postfx_bloom_strength;
     bloom_pass.radius = state.postfx_bloom_radius;
@@ -204,51 +243,22 @@ function init_postfx() {
     rgb_shift.uniforms['amount'].value = 0.0015;
 
 
-    //composer.addPass(render_pass);
-    composer.addPass(ssao_pass)
+    composer.addPass(render_pass);
+    // composer.addPass(ssao_pass)
     composer.addPass(fxaa_pass);
     // composer.addPass(rgb_shift);
     composer.addPass(bloom_pass);
-
 
     //bloom_pass.renderToScreen = true
 }
 
 function init_render() {
-
-    // extend_gui(panes.main.extra_settings_folder, {
-    //     title: "SSAO",
-    //     type: 'folder',
-    //     children: {
-    //         ssao_output: {
-    //             type: 'input',
-    //             bind: [ssao_pass, 'output'],
-    //             label: 'SSAO Output',
-    //             options: {
-    //                 'Default': 0,
-    //                 'SSAO': 1,
-    //                 'Blur': 2,
-    //                 'Beauty': 3,
-    //                 'Depth': 4,
-    //                 'Normal': 5
-    //             }
-    //         },
-    //         kernel_radius: {
-    //             type: 'input',
-    //             min: 0.0001,
-    //             max: 0.005,
-    //             step: 0.00001,
-    //             bind: [ssao_pass, 'kernelRadius'],
-    //             label: 'Kernel Radius'
-    //         },
-    //     }
-    // })
-    //compos
+    /** */
 }
 
 function set_environment_texture(texture) {
     state.env_texture = texture
-    texture.mapping = THREE.EquirectangularReflectionMapping;
+    texture.mapping = EquirectangularReflectionMapping;
     world.background = texture;
     world.environment = texture;
     notify_render();
@@ -263,10 +273,10 @@ function notify_render(duration = 0) {
     render_needs_update = true
 }
 
-const update_shadows = _.throttle(() => {
+function update_shadows() {
     renderer.shadowMap.needsUpdate = true
     notify_render()
-}, 1000 / 1)
+}
 
 function render() {
     render_loop_id = requestAnimationFrame(render)
@@ -330,7 +340,7 @@ function set_sun_height(value) {
 
 function set_ambient_intentsity(value) {
     state.render_ambient_intensity = value
-    amb.intensity = lerp(0, sun.intensity, value)
+    amb.intensity = lerp(0, sun.intensity * 0.75, value)
     notify_render()
 }
 
@@ -342,7 +352,7 @@ function set_environment_intensity(value) {
 
 function set_environment_power(value) {
     state.env_power = value
-    /** USED MODIFIED THREE.JS API */
+    /** USED MODIFIED JS API */
     world.environment_power = state.env_power
     notify_render()
 }

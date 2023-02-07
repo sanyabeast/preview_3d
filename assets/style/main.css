@@ -17,6 +17,7 @@ body {
 canvas[data-engine] {
     width: 100% !important;
     height: 100% !important;
+    image-rendering: pixelated;
 }
 
 #file_input {

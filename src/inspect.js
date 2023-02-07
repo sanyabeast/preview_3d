@@ -1,7 +1,18 @@
 
 /** Created by @sanyabeast | 28 Jan 2023 | Kyiv, Ukraine */
 
-import * as THREE from 'three';
+import {
+    MeshBasicMaterial,
+    MeshPhongMaterial,
+    MeshNormalMaterial,
+    MeshMatcapMaterial,
+    MeshLambertMaterial,
+    PointLight,
+    SpotLight,
+    DirectionalLight,
+    AxesHelper,
+    GridHelper,
+} from 'three';
 import { texture_loader } from './loaders.js';
 import { state } from './state.js';
 import { notify_render, world, camera, update_matrix } from './render.js';
@@ -16,14 +27,14 @@ let axes_helper, grid_helper
 let gizmo = {}
 
 let inspect_modes = {
-    "None": {
+    "None (PBR)": {
         get_material: () => null
     },
     "Albedo": {
         get_material: () => {
             let mat = inspect_materials.Albedo
             if (!mat) {
-                mat = inspect_materials.mat = new THREE.MeshBasicMaterial()
+                mat = inspect_materials.mat = new MeshBasicMaterial()
                 mat.override_map = 'map'
             }
             return mat
@@ -33,7 +44,7 @@ let inspect_modes = {
         get_material: () => {
             let mat = inspect_materials.Albedo
             if (!mat) {
-                mat = inspect_materials.mat = new THREE.MeshBasicMaterial()
+                mat = inspect_materials.mat = new MeshBasicMaterial()
                 mat.override_map = 'roughnessMap'
             }
             return mat
@@ -43,7 +54,7 @@ let inspect_modes = {
         get_material: () => {
             let mat = inspect_materials.Wireframe
             if (!mat) {
-                mat = inspect_materials.mat = new THREE.MeshBasicMaterial({ wireframe: true })
+                mat = inspect_materials.mat = new MeshNormalMaterial({ wireframe: true })
             }
             return mat
 
@@ -54,7 +65,7 @@ let inspect_modes = {
             if (matcap_materials[state.inspect_matcap_mode]) {
                 return matcap_materials[state.inspect_matcap_mode]
             } else {
-                let mat = matcap_materials[state.inspect_matcap_mode] = new THREE.MeshMatcapMaterial({
+                let mat = matcap_materials[state.inspect_matcap_mode] = new MeshMatcapMaterial({
                     matcap: texture_loader.load(`${__dirname}/assets/matcap/${state.inspect_matcap_file}`)
                 })
 
@@ -66,26 +77,17 @@ let inspect_modes = {
         get_material: () => {
             let mat = inspect_materials.Normal
             if (!mat) {
-                mat = inspect_materials.mat = new THREE.MeshNormalMaterial()
+                mat = inspect_materials.mat = new MeshNormalMaterial()
             }
             return mat
 
-        }
-    },
-    "Distance": {
-        get_material: () => {
-            let mat = inspect_materials.Wireframe
-            if (!mat) {
-                mat = inspect_materials.mat = new THREE.MeshDistanceMaterial()
-            }
-            return mat
         }
     },
     "Lambert": {
         get_material: () => {
             let mat = inspect_materials.Wireframe
             if (!mat) {
-                mat = inspect_materials.mat = new THREE.MeshLambertMaterial()
+                mat = inspect_materials.mat = new MeshLambertMaterial()
                 mat.override_map = 'map'
             }
             return mat
@@ -95,7 +97,7 @@ let inspect_modes = {
         get_material: () => {
             let mat = inspect_materials.Wireframe
             if (!mat) {
-                mat = inspect_materials.mat = new THREE.MeshPhongMaterial()
+                mat = inspect_materials.mat = new MeshPhongMaterial()
                 mat.override_map = 'map'
             }
             return mat
@@ -104,18 +106,18 @@ let inspect_modes = {
 }
 
 function init_inspect() {
-    torch_light = new THREE.DirectionalLight(0xffb4a4, 0.6666)
+    torch_light = new PointLight(0xffffff, 0.6666, 1, 1, 128)
     // torch_light.intensity = 2
     torch_light.visible = state.torch_light
     // torch_light.castShadow = true
     world.add(torch_light)
 
-    axes_helper = new THREE.AxesHelper(0.1);
+    axes_helper = new AxesHelper(0.1);
     axes_helper.position.set(0.5, 0, 0.5)
     axes_helper.visible = state.inspect_show_gizmo
     world.add(axes_helper)
 
-    grid_helper = new THREE.GridHelper(1, 10, 0xffffff, 0xffffff);
+    grid_helper = new GridHelper(1, 10, 0xffffff, 0xffffff);
     grid_helper.material.opacity = 0.1;
     grid_helper.material.depthWrite = false;
     grid_helper.material.transparent = true;
@@ -146,11 +148,13 @@ function set_matcap(alias) {
 
 function set_inspection_mode(mode) {
     state.inspect_mode = mode
-    if (mode !== "None") {
+    if (mode !== "None (PBR)") {
         state.postfx_enabled = false
         refresh_gui()
     }
     world.overrideMaterial = inspect_modes[mode]?.get_material() || null
+    window.RENDER_SKIP_BACKGROUND_RENDERING = mode !== "None (PBR)"
+    window.RENDER_SKIP_SHADOWMAP_RENDERING = mode !== "None (PBR)"
     notify_render(1000)
 }
 

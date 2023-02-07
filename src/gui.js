@@ -84,6 +84,7 @@ function create_main_pane() {
                             type: 'input',
                             bind: [state, 'postfx_enabled'],
                             label: '✨ Postfx',
+                            hidden: IS_MACOS,
                             on_change: 'on_postfx_changed'
                         },
                         'shadows_enabled': {
@@ -98,6 +99,7 @@ function create_main_pane() {
                             type: 'input',
                             bind: [state, 'render_dynamic_resolution'],
                             label: 'Dynamic Resolution',
+                            hidden: true,
                             on_change: ({ value }) => {
                                 //set_resolution_scale(state.resolution_scale)
                             }
@@ -108,19 +110,15 @@ function create_main_pane() {
                             min: 0.5, max: 1, step: 0.05,
                             label: "🧇 Resolution",
                             on_change: ({ value }) => set_resolution_scale(value)
-                        },
-                        'fps_limit': {
-                            type: 'blade',
-                            view: 'buttongrid',
-                            size: [2, 2],
-                            cells: (x, y) => ({
-                                title: [
-                                    [15, 30],
-                                    [60, Infinity]
-                                ][y][x],
-                            }),
-                            label: 'FPS Limit',
-                            on_click: ({ cell }) => set_fps_limit(cell.title)
+                        },  
+                        'render_camera_fov': {
+                            type: 'input',
+                            bind: [state, 'render_camera_fov'],
+                            label: "📽 Camera FOV",
+                            min: 1,
+                            max: 120,
+                            step: 1,
+                            on_change: 'on_render_camera_fov_changed'
                         },
                         'environment': {
                             type: 'folder',
@@ -224,21 +222,31 @@ function create_main_pane() {
 
                             }
                         },
-                        'render_camera_fov': {
-                            type: 'input',
-                            bind: [state, 'render_camera_fov'],
-                            label: "📽 Camera FOV",
-                            min: 1,
-                            max: 120,
-                            step: 1,
-                            on_change: 'on_render_camera_fov_changed'
-                        },
-                        'torchlight': {
-                            type: 'input',
-                            bind: [state, 'torch_light'],
-                            label: "💡 Torchlight",
-                            on_change: 'on_torchlight_changed'
-                        },
+                        'rendering_settings_extra_folder': {
+                            type: 'folder',
+                            title: '🎛 Extra settings',
+                            children: {
+                                'torchlight': {
+                                    type: 'input',
+                                    bind: [state, 'torch_light'],
+                                    label: "💡 Torchlight",
+                                    on_change: 'on_torchlight_changed'
+                                },
+                                'fps_limit': {
+                                    type: 'blade',
+                                    view: 'buttongrid',
+                                    size: [2, 2],
+                                    cells: (x, y) => ({
+                                        title: [
+                                            [15, 30],
+                                            [60, Infinity]
+                                        ][y][x],
+                                    }),
+                                    label: 'FPS Limit',
+                                    on_click: ({ cell }) => set_fps_limit(cell.title)
+                                },
+                            }
+                        }
                     }
                 },
                 'inspect_folder': {
