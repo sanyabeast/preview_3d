@@ -33,7 +33,7 @@ const state = {
     render_sun_azimuth: 0.5,
     render_daytime: 0.5,
     render_dynamic_resolution: false,
-    render_shadows_enabled: true,
+    render_shadows_enabled: false   ,
     postfx_enabled: true,
     render_camera_fov: 35,
 }
