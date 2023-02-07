@@ -204,7 +204,7 @@ function init_postfx() {
     composer.addPass(render_pass);
     composer.addPass(ssao_pass)
     composer.addPass(fxaa_pass);
-    composer.addPass(rgb_shift);
+   // composer.addPass(rgb_shift);
     composer.addPass(bloom_pass);
 
 
