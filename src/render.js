@@ -109,8 +109,11 @@ function update_scene() {
             let materials = Array.isArray(object.material) ? object.material : [object.material];
             let object_has_transparency = false
 
+
+
             for (let i = 0; i < materials.length; i++) {
                 let material = materials[i]
+                console.log(material)
                 if (!material._original_material_settings) {
                     material._original_material_settings = {
                         transparent: material.transparent,
@@ -184,20 +187,26 @@ function init_postfx() {
     fxaa_pass.material.uniforms['resolution'].value.x = 1 / (window.innerWidth * window.devicePixelRatio);
     fxaa_pass.material.uniforms['resolution'].value.y = 1 / (window.innerHeight * window.devicePixelRatio);
 
-    ssao_pass = new SSAOPass(world, camera, window.innerWidth, window.innerHeight);
+    ssao_pass = new SSAOPass(world, camera, window.innerWidth / 2, window.innerHeight / 2);
     ssao_pass.kernelSize = 8;
-    ssao_pass.kernelRadius = 0.05;
+    ssao_pass.kernelRadius = 0.03;
     ssao_pass.minDistance = 0.0000001;
-    ssao_pass.maxDistance = 0.0015;
+    ssao_pass.maxDistance = 0.001;
     ssao_pass.output = SSAOPass.OUTPUT.Default
 
     let copy_pass = new ShaderPass(CopyShader); /* LinearEncoding */
     copy_pass.enabled = true;
 
+    let rgb_shift = new ShaderPass(RGBShiftShader);
+    rgb_shift.uniforms['amount'].value = 0.0025;
+
+
     composer.addPass(render_pass);
     composer.addPass(ssao_pass)
     composer.addPass(fxaa_pass);
+    composer.addPass(rgb_shift);
     composer.addPass(bloom_pass);
+
 
     //bloom_pass.renderToScreen = true
 }
@@ -251,10 +260,10 @@ function notify_render(duration = 0) {
     render_needs_update = true
 }
 
-function update_shadows() {
+const update_shadows = _.throttle(() => {
     renderer.shadowMap.needsUpdate = true
     notify_render()
-}
+}, 1000 / 1)
 
 function render() {
     render_loop_id = requestAnimationFrame(render)

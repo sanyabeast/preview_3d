@@ -110,7 +110,8 @@ function frame_object() {
     );
     // grid_helper.scale.setScalar(max_value / 2)
     console.log(max_value)
-    controls.object.position.set(0, max_value * 1.5, max_value * 3)
+    // controls.target.set(0, 0.1, 0)
+    controls.object.position.set(0,1, 2)
     controls.saveState()
     controls.reset()
 }

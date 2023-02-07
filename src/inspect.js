@@ -110,11 +110,12 @@ function init_inspect() {
     // torch_light.castShadow = true
     world.add(torch_light)
 
-    axes_helper = new THREE.AxesHelper(2);
+    axes_helper = new THREE.AxesHelper(0.1);
+    axes_helper.position.set(0.5, 0, 0.5)
     axes_helper.visible = state.inspect_show_gizmo
     world.add(axes_helper)
 
-    grid_helper = new THREE.GridHelper(100, 10, 0xffffff, 0xffffff);
+    grid_helper = new THREE.GridHelper(1, 10, 0xffffff, 0xffffff);
     grid_helper.material.opacity = 0.1;
     grid_helper.material.depthWrite = false;
     grid_helper.material.transparent = true;
