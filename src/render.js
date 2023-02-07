@@ -26,7 +26,7 @@ import { createDitherTexture, DitheredTransparencyShaderMixin } from '../lib/Scr
 const MIN_DAYTIME_LIGHT_INTENSITY = 0.01
 const SUN_HEIGHT_MULTIPLIER = 1.5
 const SUN_AZIMUTH_OFFSET = Math.PI / 2
-const USE_LOGDEPTHBUF = false
+const USE_LOGDEPTHBUF = true
 
 let camera, world, renderer, composer
 let render_needs_update = true
@@ -126,6 +126,7 @@ function update_scene() {
                     material.transparent = false
                     material.depthWrite = true
                     material.alphaTest = 0.5;
+                    material.blending = THREE.NormalBlending
                     logd('update_scene', `found transparent material "${material.name}". Material is set up for dithered transparency rendering`,)
                 } else {
                     logd('update_scene', `found opaque material "${material.name}"`)
