@@ -87,7 +87,7 @@ function preinit_render() {
 
     container.appendChild(renderer.domElement);
     /* main scene setup */
-    camera = new THREE.PerspectiveCamera(state.render_camera_fov, window.innerWidth / window.innerHeight, 0.01, 100);
+    camera = new THREE.PerspectiveCamera(state.render_camera_fov, window.innerWidth / window.innerHeight, 0.001, 100);
     camera.position.set(0, 100, 0);
 
     window.renderer = renderer
@@ -110,7 +110,6 @@ function update_scene() {
             let object_has_transparency = false
 
 
-
             for (let i = 0; i < materials.length; i++) {
                 let material = materials[i]
                 console.log(material)
@@ -123,6 +122,7 @@ function update_scene() {
                 }
 
                 if (material.transparent) {
+                    object_has_transparency = true
                     material.transparent = false
                     material.depthWrite = true
                     material.alphaTest = 0.5;
@@ -134,6 +134,8 @@ function update_scene() {
             if (!object_has_transparency) {
                 object.castShadow = true
                 object.receiveShadow = true
+            } else {
+                object.has_transparency = true
             }
         }
     });
@@ -189,7 +191,7 @@ function init_postfx() {
 
     ssao_pass = new SSAOPass(world, camera, window.innerWidth / 2, window.innerHeight / 2);
     ssao_pass.kernelSize = 8;
-    ssao_pass.kernelRadius = 0.05;
+    ssao_pass.kernelRadius = 0.1;
     ssao_pass.minDistance = 0.0000001;
     ssao_pass.maxDistance = 0.001;
     ssao_pass.output = SSAOPass.OUTPUT.Default
@@ -201,10 +203,10 @@ function init_postfx() {
     rgb_shift.uniforms['amount'].value = 0.0015;
 
 
-    composer.addPass(render_pass);
+    //composer.addPass(render_pass);
     composer.addPass(ssao_pass)
     composer.addPass(fxaa_pass);
-   // composer.addPass(rgb_shift);
+    // composer.addPass(rgb_shift);
     composer.addPass(bloom_pass);
 
 
