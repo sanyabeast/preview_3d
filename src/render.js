@@ -198,7 +198,7 @@ function init_postfx() {
     copy_pass.enabled = true;
 
     let rgb_shift = new ShaderPass(RGBShiftShader);
-    rgb_shift.uniforms['amount'].value = 0.0025;
+    rgb_shift.uniforms['amount'].value = 0.0015;
 
 
     composer.addPass(render_pass);
