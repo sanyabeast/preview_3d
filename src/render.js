@@ -80,7 +80,7 @@ function preinit_render() {
     renderer.toneMappingExposure = 1;
     renderer.outputEncoding = THREE.sRGBEncoding;
     renderer.gammaFactor = 1
-    renderer.shadowMap.enabled = true;
+    renderer.shadowMap.enabled = state.render_shadows_enabled;
     renderer.shadowMap.autoUpdate = false
 
     console.log(renderer.capabilities.isWebGL2)
@@ -189,7 +189,7 @@ function init_postfx() {
 
     ssao_pass = new SSAOPass(world, camera, window.innerWidth / 2, window.innerHeight / 2);
     ssao_pass.kernelSize = 8;
-    ssao_pass.kernelRadius = 0.03;
+    ssao_pass.kernelRadius = 0.05;
     ssao_pass.minDistance = 0.0000001;
     ssao_pass.maxDistance = 0.001;
     ssao_pass.output = SSAOPass.OUTPUT.Default
