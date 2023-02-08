@@ -23,9 +23,9 @@ let stage
 
 const contact_shadow_state = {
     shadow: {
-        blur: 2.5,
+        blur: 1.5,
         darkness: 0.0,
-        opacity: 0.3,
+        opacity: 0.4,
     },
     plane: {
         color: '#000000',
@@ -176,7 +176,7 @@ function _render_contact_shadow_blur(amount) {
     blur_plane.visible = false;
 }
 
-render_contact_shadows = _.throttle(render_contact_shadows, 1000 / 15)
+// render_contact_shadows = _.throttle(render_contact_shadows, 1000 / 15)
 
 export {
     init_contact_shadows,

@@ -18,7 +18,8 @@ import {
     NormalBlending,
     VSMShadowMap,
     Group,
-    Box3
+    Box3,
+    AnimationMixer
 } from 'three';
 import { RoomEnvironment } from 'three/addons/environments/RoomEnvironment.js';
 import { EffectComposer } from 'three/addons/postprocessing/EffectComposer.js';
@@ -33,8 +34,8 @@ import { RenderPass } from 'three/addons/postprocessing/RenderPass.js';
 
 import { state } from './state.js'
 import { loaders } from './loaders.js';
-import { lerp, clamp, round_to, logd } from './util.js';
-import { refresh_gui, update_title, set_loader } from './gui.js';
+import { lerp, clamp, round_to, logd, extend_gui } from './util.js';
+import { refresh_gui, update_title, panes } from './gui.js';
 import { init_contact_shadows, render_contact_shadows, contact_shadow_state } from './contact_shadows.js';
 import { frame_object } from './controls.js';
 
@@ -64,18 +65,36 @@ let render_state = {
     tick_rates: [],
     avg_tick_rate_period: 8,
     average_fps: 60,
-    current_computed_resolution_scale: 1
+    current_computed_resolution_scale: 1,
+    get render_camera() {
+        return render_state.override_camera || camera
+    },
+    override_camera: null,
 }
 
 let is_document_visible = document.visibilityState === 'visible'
 let bloom_pass, ssao_pass, render_pass, fxaa_pass
 
+let scene_state = {
+    animations: [],
+    cameras: [],
+    actions: [],
+    current_position: 0,
+}
+let animation_state = {
+    disable_animations: false,
+    global_timescale: 1
+}
+
+let animation_folder_gui
+let animation_mixer
+
+let camera_helper_gui
 
 document.addEventListener('visibilitychange', (event) => {
     console.log(`document visibility: ${document.visibilityState}`)
     is_document_visible = document.visibilityState === 'visible'
 })
-
 
 function preinit_render() {
     /** main renderer */
@@ -118,52 +137,6 @@ function preinit_render() {
 
     window.addEventListener('resize', handle_window_resized);
     handle_window_resized()
-}
-
-function update_scene() {
-    main_stage.traverse((object) => {
-
-        if (object.isMesh) {
-            let box = new Box3()
-            console.log(box)
-            //logd('update_scene', `found mesh "${object.name}"`)
-            if (!object.material) return;
-            let materials = Array.isArray(object.material) ? object.material : [object.material];
-            let object_has_transparency = false
-
-
-            for (let i = 0; i < materials.length; i++) {
-                let material = materials[i]
-                // console.log(material)
-                if (!material._original_material_settings) {
-                    material._original_material_settings = {
-                        transparent: material.transparent,
-                        alphaTest: material.alphaTest,
-                        depthWrite: material.depthWrite
-                    }
-                }
-
-                if (material.transparent) {
-                    object_has_transparency = true
-                    material.transparent = false
-                    material.depthWrite = true
-                    material.alphaTest = 0.5;
-                    material.blending = NormalBlending
-                    //logd('update_scene', `found transparent material "${material.name}". Material is set up for dithered transparency rendering`,)
-                } else {
-                    //logd('update_scene', `found opaque material "${material.name}"`)
-                }
-            }
-            if (!object_has_transparency) {
-                object.castShadow = true
-                object.receiveShadow = true
-            } else {
-                object.has_transparency = true
-            }
-        }
-    });
-
-    update_shadows()
 }
 
 function init_world() {
@@ -215,54 +188,181 @@ function init_world() {
     state.env_default_texture = world.environment
 }
 
-function set_main_stage_content(scene) {
-    if (scene.isObject3D) {
-        if (state.active_scene) {
-            console.log('removing scene...')
-            main_stage.remove(state.active_scene)
-        }
+function set_scene(scene, animations = []) {
+    console.log(scene, animations)
 
-        state.active_scene = scene
-        state.scene_aabb = new Box3();
+    scene_state.scene = scene
+    scene_state.animations = animations
+    scene_state.current_position = 0
+    scene_state.actions = []
+    scene_state.cameras = []
 
-        state.scene_aabb.setFromObject(scene);
-        let scene_size_x = state.scene_aabb.max.x - state.scene_aabb.min.x;
-        let scene_size_y = state.scene_aabb.max.y - state.scene_aabb.min.y;
-        let scene_size_z = state.scene_aabb.max.z - state.scene_aabb.min.z;
-        let scene_size_max = Math.max(scene_size_x, scene_size_y, scene_size_z);
-        scene_size_max = scene_size_max || 1;
-        logd('set_active_scene', `maximum original scene scale in one dimension: ${scene_size_max}`)
-        logd('set_active_scene', `computed virtual scene's scale: ${1 / scene_size_max}`)
+    kill_animations()
 
-        state.active_scene.scale.setScalar(1 / scene_size_max)
-
-        state.scene_aabb.setFromObject(scene);
-
-        let vertical_nudge_ratio = Math.abs(state.scene_aabb.min.y) / Math.abs(state.scene_aabb.max.y)
-        let offset_x = (state.scene_aabb.max.x + state.scene_aabb.min.x) / 2
-        let offset_z = (state.scene_aabb.max.z + state.scene_aabb.min.z) / 2
-
-        logd(`set_active_scene`, `computed xz-offset: [${offset_x}:${offset_z}]`)
-        logd('set_active_scene', `computed vertical nudge ration: ${vertical_nudge_ratio}`)
-        state.active_scene.position.y = vertical_nudge_ratio > 0.25 ? -state.scene_aabb.min.y : 0;
-        if (state.scene_aabb.min.y > 0) {
-            state.active_scene.position.y = -state.scene_aabb.min.y
-        }
-        state.active_scene.position.x = -offset_x;
-        state.active_scene.position.z = -offset_z;
-        state.scene_aabb.setFromObject(scene);
-        console.log('spawning scene...')
-        console.log(scene, state.scene_aabb)
-
-        main_stage.add(scene);
-        update_title()
-        frame_object()
+    if (state.active_scene) {
+        console.log('removing scene...')
+        main_stage.remove(state.active_scene)
     }
 
+    state.active_scene = scene
+    state.scene_aabb = new Box3();
+
+    state.scene_aabb.setFromObject(scene);
+    let scene_size_x = state.scene_aabb.max.x - state.scene_aabb.min.x;
+    let scene_size_y = state.scene_aabb.max.y - state.scene_aabb.min.y;
+    let scene_size_z = state.scene_aabb.max.z - state.scene_aabb.min.z;
+    let scene_size_max = Math.max(scene_size_x, scene_size_y, scene_size_z);
+    scene_size_max = scene_size_max || 1;
+    logd('set_scene', `maximum original scene scale in one dimension: ${scene_size_max}`)
+    logd('set_scene', `computed virtual scene's scale: ${1 / scene_size_max}`)
+
+    state.active_scene.scale.setScalar(1 / scene_size_max)
+
+    state.scene_aabb.setFromObject(scene);
+
+    let vertical_nudge_ratio = Math.abs(state.scene_aabb.min.y) / Math.abs(state.scene_aabb.max.y)
+    let offset_x = (state.scene_aabb.max.x + state.scene_aabb.min.x) / 2
+    let offset_z = (state.scene_aabb.max.z + state.scene_aabb.min.z) / 2
+
+    logd(`set_scene`, `computed xz-offset: [${offset_x}:${offset_z}]`)
+    logd('set_scene', `computed vertical nudge ration: ${vertical_nudge_ratio}`)
+    state.active_scene.position.y = vertical_nudge_ratio > 0.25 ? -state.scene_aabb.min.y : 0;
+    if (state.scene_aabb.min.y > 0) {
+        state.active_scene.position.y = -state.scene_aabb.min.y
+    }
+    state.active_scene.position.x = -offset_x;
+    state.active_scene.position.z = -offset_z;
+    state.scene_aabb.setFromObject(scene);
+    console.log('spawning scene...')
+    console.log(scene, state.scene_aabb)
+
+    main_stage.add(scene);
+
+    init_scene()
+    update_shadows()
+    update_title()
+    frame_object()
     notify_render(1000);
-    set_loader(false)
 }
 
+
+function init_scene() {
+    /** animations */
+    animation_folder_gui.item.hidden = scene_state.animations.length === 0;
+    animation_folder_gui.actions.children.forEach((child, index) => {
+        child.hidden = index >= scene_state.animations.length
+    })
+
+
+    if (scene_state.animations.length > 0) {
+        animation_mixer = new AnimationMixer(state.active_scene);
+        scene_state.animations.forEach((animation_clip, index) => {
+            scene_state.actions[index] = animation_mixer.clipAction(animation_clip)
+            if (!animation_folder_gui.actions.children[index]) {
+                let slider_data = { weight: 1 }
+                let slider = animation_folder_gui.actions.addInput(slider_data, 'weight', {
+                    label: animation_clip.name,
+                    min: 0,
+                    max: 1,
+                    step: 0.1
+                }).on('change', ({ value }) => {
+                    scene_state.actions[index].enabled = value > 0
+                    scene_state.actions[index].setEffectiveTimeScale(1);
+                    scene_state.actions[index].setEffectiveWeight(value);
+                })
+                slider.slider_data = slider_data;
+            } else {
+                let slider = animation_folder_gui.actions.children[index]
+                slider.label = animation_clip.name
+                slider.slider_data.weight = 1
+                slider.refresh()
+            }
+        })
+        loop_tasks.update_animation_mixer = (d, td) => {
+            if (animation_state.disable_animations !== true) {
+                animation_mixer.update(td)
+                update_shadows()
+                update_matrix()
+                notify_render()
+            }
+        }
+    } else {
+        loop_tasks.update_animation_mixer = () => { }
+    }
+    scene_state.actions.forEach((action) => {
+        action.enabled = true;
+        action.play()
+    })
+
+    /**traverse */
+    let camera_index = 0
+    main_stage.traverse((object) => {
+        logd('init_scene', `found ${object.type} "${object.name}"`)
+        if (object.isMesh) {
+            // let box = new Box3()
+            // console.log(box)
+
+            if (!object.material) return;
+            let materials = Array.isArray(object.material) ? object.material : [object.material];
+            let object_has_transparency = false
+
+            for (let i = 0; i < materials.length; i++) {
+                let material = materials[i]
+                // console.log(material)
+                if (!material._original_material_settings) {
+                    material._original_material_settings = {
+                        transparent: material.transparent,
+                        alphaTest: material.alphaTest,
+                        depthWrite: material.depthWrite
+                    }
+                }
+
+                if (material.transparent) {
+                    object_has_transparency = true
+                    material.transparent = false
+                    material.depthWrite = true
+                    material.alphaTest = 0.5;
+                    material.blending = NormalBlending
+                    //logd('init_scene', `found transparent material "${material.name}". Material is set up for dithered transparency rendering`,)
+                } else {
+                    //logd('init_scene', `found opaque material "${material.name}"`)
+                }
+            }
+            if (!object_has_transparency) {
+                object.castShadow = true
+                object.receiveShadow = true
+            } else {
+                object.has_transparency = true
+            }
+        }
+        if (object.isCamera) {
+            scene_state.cameras.push(object)
+            if (!camera_helper_gui.cameras.children[camera_index]) {
+                let bound_camera_index = camera_index
+                let button = camera_helper_gui.cameras.addButton({
+                    label: '',
+                    title: object.name,
+                    min: 0,
+                    max: 1,
+                    step: 0.1
+                }).on('click', (ev) => pilot_camera(bound_camera_index))
+            } else {
+                let button = camera_helper_gui.cameras.children[camera_index]
+                button.label = object.name
+            }
+
+            camera_index++
+        }
+    });
+
+    handle_window_resized()
+
+    /**reset camera helper gui */
+    camera_helper_gui.item.hidden = scene_state.cameras.length === 0;
+    camera_helper_gui.cameras.children.forEach((child, index) => {
+        child.hidden = index >= scene_state.cameras.length
+    })
+}
 
 function init_postfx() {
     composer = new EffectComposer(renderer);
@@ -301,8 +401,73 @@ function init_postfx() {
 }
 
 function init_render() {
+    init_animation_player()
+    init_camera_helper()
     /** */
 }
+
+function init_animation_player() {
+    animation_folder_gui = extend_gui(panes.main.item, {
+        type: 'folder',
+        title: '🤹‍♀️ Animations',
+        children: {
+            'disable_animations': {
+                type: 'input',
+                bind: [animation_state, 'disable_animations'],
+                label: "⛔️ Pause all",
+                on_change: ({ value }) => {
+                    console.log(value, scene_state)
+                }
+            },
+            'global_timescale': {
+                type: 'input',
+                bind: [animation_state, 'global_timescale'],
+                label: "🕑 Timescale",
+                min: 0,
+                max: 10,
+                step: 0.1,
+                on_change: ({ value }) => {
+                    animation_mixer.timeScale = value
+                }
+            },
+            'actions': {
+                type: 'folder',
+                title: '🎛 Actions weight'
+            }
+        }
+    })
+}
+
+
+function kill_animations() {
+    scene_state.actions.forEach(action => {
+        action.enabled = false
+        action.stop()
+    })
+}
+
+function init_camera_helper() {
+    camera_helper_gui = extend_gui(panes.main.item, {
+        type: 'folder',
+        title: '📽 Cameras',
+        children: {
+            'reset': {
+                type: 'button',
+                label: "",
+                title: 'Reset',
+                on_click: ({ value }) => {
+                    pilot_camera(null)
+                }
+            },
+            'cameras': {
+                type: 'folder',
+                title: 'Cameras on the scene',
+                expanded: true
+            }
+        }
+    })
+}
+
 
 function set_environment_texture(texture) {
     state.env_texture = texture
@@ -355,7 +520,7 @@ function render() {
                 }
 
                 second_stage.visible = window.RENDER_ONLY_MAIN !== true
-                renderer.render(world, camera);
+                renderer.render(world, render_state.render_camera);
             }
         }
         last_render_date = last_tick_date
@@ -433,10 +598,17 @@ function handle_window_resized() {
     const height = Math.floor(window.innerHeight * state.resolution_scale);
     camera.aspect = width / height;
     camera.updateProjectionMatrix();
+
+    scene_state.cameras.forEach((scene_camera) => {
+        scene_camera.aspect = width / height;
+        scene_camera.updateProjectionMatrix();
+    })
+
     renderer.setSize(width, height);
     if (composer) {
         composer.setSize(width, height);
     }
+
     notify_render()
 }
 
@@ -483,9 +655,19 @@ function set_shadows_enabled(enabled) {
     state.render_shadows_enabled = enabled;
     renderer.shadowMap.enabled = enabled;
     renderer.render(world, camera);
+    notify_render()
+}
+
+function pilot_camera(index) {
+    logd('pilot_camera', `new piloted camera index: ${index}`)
+    render_state.override_camera = _.isNumber(index) ? scene_state.cameras[index] : null
+    notify_render()
 }
 
 preinit_render()
+
+window.scene_state = scene_state
+window.render_state = render_state
 
 export {
     camera,
@@ -512,6 +694,6 @@ export {
     update_shadows,
     set_resolution_scale,
     set_shadows_enabled,
-    update_scene,
-    set_main_stage_content
+    set_scene,
+    pilot_camera
 }

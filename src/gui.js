@@ -59,11 +59,10 @@ const notifications = new Notyf({
 });
 
 let main_pane, file_pane, help_pane
-let update_available_banner
 let panes = {}
 
 function init_gui(params) {
-    if (state.check_updates === true && Math.random() < 1) {
+    if (state.check_updates === true) {
         setTimeout(check_updates, 15000)
     }
     panes.file = create_file_pane()
@@ -110,7 +109,7 @@ function create_main_pane() {
                             min: 0.5, max: 1, step: 0.05,
                             label: "🧇 Resolution",
                             on_change: ({ value }) => set_resolution_scale(value)
-                        },  
+                        },
                         'render_camera_fov': {
                             type: 'input',
                             bind: [state, 'render_camera_fov'],
@@ -464,10 +463,10 @@ function check_updates() {
 
         if (window.PACKAGE_INFO.version !== remote_package.version) {
             state.application_has_updates = remote_package.version
-            update_available_banner.title = `Update: ${remote_package.version}`
-            update_available_banner.hidden = false
+            help_pane.update_available_banner.title = `Update: ${remote_package.version}`
+            help_pane.update_available_banner.hidden = false
         } else {
-            update_available_banner.hidden = true
+            help_pane.update_available_banner.hidden = true
         }
     } catch (err) {
         loge('gui/check_updates', err.message)
