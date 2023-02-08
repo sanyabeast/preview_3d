@@ -23,12 +23,12 @@ let stage
 
 const contact_shadow_state = {
     shadow: {
-        blur: 1.5,
+        blur: 1.75,
         darkness: 0.0,
-        opacity: 0.4,
+        opacity: 0.3,
     },
     plane: {
-        color: '#000000',
+        color: '#222222',
         opacity: 0,
     },
     showWireframe: false,
@@ -62,7 +62,7 @@ function init_contact_shadows(_scene, _stage, _renderer, _camera) {
     const plane_geometry = new PlaneGeometry(PLANE_WIDTH, PLANE_HEIGHT).rotateX(Math.PI / 2);
     const plane_material = new MeshBasicMaterial({
         map: renderTarget.texture,
-        color: 0x000000,
+        color: 0x111111,
         opacity: contact_shadow_state.shadow.opacity,
         transparent: true,
         depthWrite: false,

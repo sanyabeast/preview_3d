@@ -54,13 +54,33 @@ body:hover .pane:hover>* {
     left: 0;
     background-color: transparent;
     transition: border-color 0.3s ease-in-out;
-    border: 2px solid #ffffff26;
+    border: 2px solid #00000017;
     border-radius: 4px;
     pointer-events: none;
+    /* backdrop-filter: saturate(2); */
+    background: rgb(255 255 255 / 1%);
+    animation: pane-placeholder-glitter-animation 20s ease-in-out infinite;
+}
+
+@keyframes pane-placeholder-glitter-animation {
+
+    0%,
+    100%,
+    47%,
+    553% {
+        background: rgb(255 255 255 / 0%);
+    }
+
+    50% {
+        background: rgb(255 255 255 / 8%);
+    }
+
 }
 
 body:hover .pane:hover:after {
     border-color: transparent;
+    animation: none;
+
 }
 
 .pane.inspect {

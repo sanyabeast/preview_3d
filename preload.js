@@ -4,6 +4,7 @@ const directory_tree = require('directory-tree')
 const jsonfile = require('jsonfile')
 
 const path = require('path')
+const fs = require('fs')
 const ipcRenderer = window.require('electron').ipcRenderer;
 const IS_DEVELOPMENT = process.env.NODE_ENV === 'development'
 const PACKAGE_INFO = require('./package.json')
@@ -38,7 +39,8 @@ if (!window.location.href.startsWith('file://')) {
     let OS_TOOLS = {
         path: path,
         directory_tree: directory_tree,
-        jsonfile
+        jsonfile,
+        fs
     }
 
     window.PACKAGE_INFO = PACKAGE_INFO

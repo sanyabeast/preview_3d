@@ -75,6 +75,8 @@ let render_state = {
 let is_document_visible = document.visibilityState === 'visible'
 let bloom_pass, ssao_pass, render_pass, fxaa_pass
 
+let contact_shadows_needs_update = true
+
 let scene_state = {
     animations: [],
     cameras: [],
@@ -190,6 +192,9 @@ function init_world() {
 
 function set_scene(scene, animations = []) {
     console.log(scene, animations)
+
+    /** resetting some things to defaults */
+    set_daytime(0.5)
 
     scene_state.scene = scene
     scene_state.animations = animations
@@ -410,6 +415,7 @@ function init_animation_player() {
     animation_folder_gui = extend_gui(panes.main.item, {
         type: 'folder',
         title: '🤹‍♀️ Animations',
+        hidden: true,
         children: {
             'disable_animations': {
                 type: 'input',
@@ -450,6 +456,7 @@ function init_camera_helper() {
     camera_helper_gui = extend_gui(panes.main.item, {
         type: 'folder',
         title: '📽 Cameras',
+        hidden: true,
         children: {
             'reset': {
                 type: 'button',
@@ -487,6 +494,7 @@ function notify_render(duration = 0) {
 }
 
 function update_shadows() {
+    contact_shadows_needs_update = true
     renderer.shadowMap.needsUpdate = true
     notify_render()
 }
@@ -516,7 +524,10 @@ function render() {
                 // wboit_pass.render(renderer)
                 if (window.RENDER_ONLY_MAIN !== true) {
                     second_stage.visible = false
-                    render_contact_shadows()
+                    if (contact_shadows_needs_update) {
+                        contact_shadows_needs_update = false
+                        render_contact_shadows()
+                    }
                 }
 
                 second_stage.visible = window.RENDER_ONLY_MAIN !== true

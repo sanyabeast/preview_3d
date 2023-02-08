@@ -13,15 +13,26 @@ import { init_gui, set_loader, notifications } from './gui.js'
 import { init_controls } from './controls.js'
 import { state } from './state.js';
 import { init_inspect } from './inspect.js';
-import { write_url, loge } from './util.js';
+import { write_url, loge, logd } from './util.js';
 
 let OS_TOOLS = window.OS_TOOLS
 let is_running = false
 
 async function load_scene(scene_src) {
-    set_daytime(0.5)
-    console.log(`[load_scene] prepare to load: `, scene_src, state.scene_src)
     scene_src = _.isString(scene_src) ? scene_src : state.scene_src
+    logd(`load_scene`, scene_src)
+
+    /** file existing check */
+    let file_exists = OS_TOOLS.fs.existsSync(scene_src)
+    
+    if (file_exists === false){
+        notifications.open({
+            type: 'error',
+            message: `file "${scene_src} does not exist"`,
+        })
+        return;
+    }
+
     if (_.isString(scene_src) && scene_src.length > 0) {
         set_loader(true)
         state.scene_src = scene_src;
@@ -67,7 +78,7 @@ async function launch() {
     init_gui()
     init_render()
     /* loading assets */
-    loaders['hdr'](state.env_texture_src)
+    await loaders['hdr'](state.env_texture_src)
     await load_scene()
     start_render()
     notify_render()
