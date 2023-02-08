@@ -2,7 +2,7 @@
 import { Box3 } from 'three';
 import { AnimationMixer } from 'three'
 
-import { notify_render, start_render, init_render, loop_tasks, set_daytime, update_matrix, update_shadows, update_scene } from './render.js';
+import { notify_render, start_render, init_render, loop_tasks, set_daytime, update_matrix, update_shadows, update_scene, stage, set_contact_shadow_height } from './render.js';
 import { loaders, init_loaders } from './loaders.js'
 import { init_gui, set_loader, notifications, panes, update_title } from './gui.js'
 import { init_controls, frame_object } from './controls.js'
@@ -68,7 +68,7 @@ function set_active_scene(scene) {
     if (scene.isObject3D) {
         if (state.active_scene) {
             console.log('removing scene...')
-            world.remove(state.active_scene)
+            stage.remove(state.active_scene)
         }
 
         state.active_scene = scene
@@ -88,9 +88,13 @@ function set_active_scene(scene) {
         console.log('spawning scene...')
         console.log(scene, state.scene_aabb)
 
-        world.add(scene);
+        stage.add(scene);
         update_title()
         frame_object()
+
+        //**contact shadows */
+        set_contact_shadow_height(state.scene_aabb.min.z)
+
     }
 
     notify_render(1000);

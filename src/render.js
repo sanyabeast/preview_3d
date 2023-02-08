@@ -15,7 +15,9 @@ import {
     AmbientLight,
     Vector2,
     EquirectangularReflectionMapping,
-    NormalBlending
+    NormalBlending,
+    VSMShadowMap,
+    Group
 } from 'three';
 import { RoomEnvironment } from 'three/addons/environments/RoomEnvironment.js';
 import { EffectComposer } from 'three/addons/postprocessing/EffectComposer.js';
@@ -27,29 +29,28 @@ import { RGBShiftShader } from 'three/addons/shaders/RGBShiftShader.js';
 import { UnrealBloomPass } from 'three/addons/postprocessing/UnrealBloomPass.js';
 import { RenderPass } from 'three/addons/postprocessing/RenderPass.js';
 
+
 import { state } from './state.js'
 import { loaders } from './loaders.js';
-import { lerp, clamp, round_to, extend_gui, logd } from './util.js';
-import { panes, refresh_gui } from './gui.js';
+import { lerp, clamp, round_to } from './util.js';
+import { refresh_gui } from './gui.js';
+import { init_contact_shadows, render_contact_shadows, contact_shadow_state } from './contact_shadows.js';
 
 ShaderChunk.alphatest_fragment = ASSETS.texts.dither_alphatest_glsl
 
-const MIN_DAYTIME_LIGHT_INTENSITY = 0.01
 const SUN_HEIGHT_MULTIPLIER = 0.666
 const SUN_AZIMUTH_OFFSET = Math.PI / 1.9
 const USE_LOGDEPTHBUF = false
 // const USE_LOGDEPTHBUF = !IS_MACOS
 
-let camera, world, renderer, composer
+let camera, world, renderer, composer, stage
 let render_needs_update = true
 let render_loop_id
 let render_timeout = +new Date()
 let loop_tasks = {}
-let now = +new Date()
 let last_render_date = +new Date()
 let last_tick_date = +new Date()
 let sun, amb
-let fog
 let sun_state = {
     distance: 10,
     height: 1,
@@ -66,6 +67,7 @@ let render_state = {
 
 let is_document_visible = document.visibilityState === 'visible'
 let bloom_pass, ssao_pass, render_pass, fxaa_pass
+
 
 document.addEventListener('visibilitychange', (event) => {
     console.log(`document visibility: ${document.visibilityState}`)
@@ -94,6 +96,7 @@ function preinit_render() {
     renderer.gammaFactor = 1
     renderer.shadowMap.enabled = state.render_shadows_enabled;
     renderer.shadowMap.autoUpdate = false
+    renderer.shadowMap.type = VSMShadowMap
 
     console.log(renderer.capabilities.isWebGL2)
 
@@ -105,34 +108,18 @@ function preinit_render() {
     window.renderer = renderer
     window.camera = camera
 
-    // init_pcss_shadows()
+    // enable_pcss_shadows()
+
     init_world()
+    init_contact_shadows(world, renderer, camera)
     init_postfx()
 
     window.addEventListener('resize', handle_window_resized);
     handle_window_resized()
 }
 
-function init_pcss_shadows() {
-    let shader = ShaderChunk.shadowmap_pars_fragment;
-
-    shader = shader.replace(
-        '#ifdef USE_SHADOWMAP',
-        '#ifdef USE_SHADOWMAP' +
-        ASSETS.texts.pcss_glsl
-    );
-
-    shader = shader.replace(
-        '#if defined( SHADOWMAP_TYPE_PCF )',
-        ASSETS.texts.pcss_get_shadow_glsl +
-        '#if defined( SHADOWMAP_TYPE_PCF )'
-    );
-
-    ShaderChunk.shadowmap_pars_fragment = shader;
-}
-
 function update_scene() {
-    world.traverse((object) => {
+    stage.traverse((object) => {
 
         if (object.isMesh) {
             //logd('update_scene', `found mesh "${object.name}"`)
@@ -180,6 +167,8 @@ function init_world() {
     const pmremGenerator = new PMREMGenerator(renderer);
 
     world = new Scene();
+    stage = new Group();
+    world.add(stage)
     world.background = new Color(0xbbbbbb);
     world.environment = pmremGenerator.fromScene(environment).texture;
     world.matrixWorldAutoUpdate = false
@@ -205,9 +194,9 @@ function init_world() {
     sun.shadow.camera.top = -0.5
     sun.shadow.camera.bottom = 0.5
     sun.shadow.camera.near = 0.00001
-    sun.shadow.radius = 3
-    sun.shadow.blurSamples = 3
-    sun.shadow.bias = 0.0000005
+    sun.shadow.radius = 8
+    sun.shadow.blurSamples = 8
+    //sun.shadow.bias = 0.0000005
 
     set_sun_azimuth(0.5)
     set_sun_height(1)
@@ -306,6 +295,7 @@ function render() {
                 composer.render();
             } else {
                 // wboit_pass.render(renderer)
+                render_contact_shadows()
                 renderer.render(world, camera);
             }
         }
@@ -435,12 +425,18 @@ function set_shadows_enabled(enabled) {
     renderer.render(world, camera);
 }
 
+function set_contact_shadow_height(h){
+    contact_shadow_state.shadow.group.position.y = h + 0.1;
+    contact_shadow_state.plane.mesh.position.y = -(h + 0.1);
+    update_matrix();
+}
 
 preinit_render()
 
 export {
     camera,
     world,
+    stage,
     renderer,
     composer,
     loop_tasks,
@@ -461,5 +457,6 @@ export {
     update_shadows,
     set_resolution_scale,
     set_shadows_enabled,
-    update_scene
+    update_scene,
+    set_contact_shadow_height
 }
