@@ -32,21 +32,7 @@ import { loaders } from './loaders.js';
 import { lerp, clamp, round_to, extend_gui, logd } from './util.js';
 import { panes, refresh_gui } from './gui.js';
 
-ShaderChunk.alphatest_fragment = `
-#ifdef USE_ALPHATEST
-	float ad_orig_alpha = diffuseColor.a;
-	float alpha_dithered = 1.;
-	float ad_x_fract = pow( fract(gl_FragCoord.x / round(((1.-ad_orig_alpha) + 1.) * 1.)) , 1. );
-	float ad_y_fract = pow( fract(gl_FragCoord.y / round(((1.-ad_orig_alpha) + 1.) * 1.)) , 1. );
-
-	alpha_dithered = pow(
-		(ad_x_fract + ad_y_fract) * pow(ad_orig_alpha, mix(0.2, 1.5, ad_orig_alpha)) + pow(ad_orig_alpha, 1.5),
-		2.
-	);
-	
-	if ( alpha_dithered < alphaTest ) discard;
-#endif
-`
+ShaderChunk.alphatest_fragment = ASSETS.texts.dither_alphatest_glsl
 
 const MIN_DAYTIME_LIGHT_INTENSITY = 0.01
 const SUN_HEIGHT_MULTIPLIER = 0.666
@@ -119,11 +105,30 @@ function preinit_render() {
     window.renderer = renderer
     window.camera = camera
 
+    // init_pcss_shadows()
     init_world()
     init_postfx()
 
     window.addEventListener('resize', handle_window_resized);
     handle_window_resized()
+}
+
+function init_pcss_shadows() {
+    let shader = ShaderChunk.shadowmap_pars_fragment;
+
+    shader = shader.replace(
+        '#ifdef USE_SHADOWMAP',
+        '#ifdef USE_SHADOWMAP' +
+        ASSETS.texts.pcss_glsl
+    );
+
+    shader = shader.replace(
+        '#if defined( SHADOWMAP_TYPE_PCF )',
+        ASSETS.texts.pcss_get_shadow_glsl +
+        '#if defined( SHADOWMAP_TYPE_PCF )'
+    );
+
+    ShaderChunk.shadowmap_pars_fragment = shader;
 }
 
 function update_scene() {

@@ -411,7 +411,7 @@ function create_help_pane() {
                                 type: 'blade',
                                 view: 'infodump',
                                 class_list: ['ff-monospace'],
-                                content: ASSETS.texts.info,
+                                content: ASSETS.texts.info_md,
                                 border: false,
                                 markdown: true,
                             }
@@ -426,7 +426,7 @@ function create_help_pane() {
                                 type: 'blade',
                                 view: 'infodump',
                                 class_list: ['ff-monospace'],
-                                content: ASSETS.texts.about,
+                                content: ASSETS.texts.about_md,
                                 border: false,
                                 markdown: true,
                             }

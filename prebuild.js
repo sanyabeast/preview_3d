@@ -41,7 +41,7 @@ function preload_texts(data) {
     let r = {}
     if (data.children) {
         data.children.forEach((child) => {
-            let alias = child.name.replace(path.extname(child.name), '')
+            let alias = `${child.name.replace(path.extname(child.name), '')}_${path.extname(child.name).replace('.', '')}`
             r[alias] = fs.readFileSync(child.path, { encoding: 'utf-8' })
         })
     }
