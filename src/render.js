@@ -17,7 +17,8 @@ import {
     EquirectangularReflectionMapping,
     NormalBlending,
     VSMShadowMap,
-    Group
+    Group,
+    Box3
 } from 'three';
 import { RoomEnvironment } from 'three/addons/environments/RoomEnvironment.js';
 import { EffectComposer } from 'three/addons/postprocessing/EffectComposer.js';
@@ -32,9 +33,10 @@ import { RenderPass } from 'three/addons/postprocessing/RenderPass.js';
 
 import { state } from './state.js'
 import { loaders } from './loaders.js';
-import { lerp, clamp, round_to } from './util.js';
-import { refresh_gui } from './gui.js';
+import { lerp, clamp, round_to, logd } from './util.js';
+import { refresh_gui, update_title, set_loader } from './gui.js';
 import { init_contact_shadows, render_contact_shadows, contact_shadow_state } from './contact_shadows.js';
+import { frame_object } from './controls.js';
 
 ShaderChunk.alphatest_fragment = ASSETS.texts.dither_alphatest_glsl
 
@@ -43,7 +45,7 @@ const SUN_AZIMUTH_OFFSET = Math.PI / 1.9
 const USE_LOGDEPTHBUF = false
 // const USE_LOGDEPTHBUF = !IS_MACOS
 
-let camera, world, renderer, composer, stage
+let camera, world, renderer, composer, main_stage, second_stage
 let render_needs_update = true
 let render_loop_id
 let render_timeout = +new Date()
@@ -96,7 +98,7 @@ function preinit_render() {
     renderer.gammaFactor = 1
     renderer.shadowMap.enabled = state.render_shadows_enabled;
     renderer.shadowMap.autoUpdate = false
-    renderer.shadowMap.type = VSMShadowMap
+    // renderer.shadowMap.type = VSMShadowMap
 
     console.log(renderer.capabilities.isWebGL2)
 
@@ -111,7 +113,7 @@ function preinit_render() {
     // enable_pcss_shadows()
 
     init_world()
-    init_contact_shadows(world, renderer, camera)
+    init_contact_shadows(world, second_stage, renderer, camera)
     init_postfx()
 
     window.addEventListener('resize', handle_window_resized);
@@ -119,9 +121,11 @@ function preinit_render() {
 }
 
 function update_scene() {
-    stage.traverse((object) => {
+    main_stage.traverse((object) => {
 
         if (object.isMesh) {
+            let box = new Box3()
+            console.log(box)
             //logd('update_scene', `found mesh "${object.name}"`)
             if (!object.material) return;
             let materials = Array.isArray(object.material) ? object.material : [object.material];
@@ -167,8 +171,10 @@ function init_world() {
     const pmremGenerator = new PMREMGenerator(renderer);
 
     world = new Scene();
-    stage = new Group();
-    world.add(stage)
+    main_stage = new Group();
+    second_stage = new Group();
+    world.add(main_stage)
+    world.add(second_stage)
     world.background = new Color(0xbbbbbb);
     world.environment = pmremGenerator.fromScene(environment).texture;
     world.matrixWorldAutoUpdate = false
@@ -196,17 +202,65 @@ function init_world() {
     sun.shadow.camera.near = 0.00001
     sun.shadow.radius = 8
     sun.shadow.blurSamples = 8
-    //sun.shadow.bias = 0.0000005
+    sun.shadow.bias = 0.0000005
 
     set_sun_azimuth(0.5)
     set_sun_height(1)
 
-    world.add(sun)
-    world.add(amb)
+    second_stage.add(sun)
+    second_stage.add(amb)
 
     window.world = world
     state.env_default_background = world.background
     state.env_default_texture = world.environment
+}
+
+function set_main_stage_content(scene) {
+    if (scene.isObject3D) {
+        if (state.active_scene) {
+            console.log('removing scene...')
+            main_stage.remove(state.active_scene)
+        }
+
+        state.active_scene = scene
+        state.scene_aabb = new Box3();
+
+        state.scene_aabb.setFromObject(scene);
+        let scene_size_x = state.scene_aabb.max.x - state.scene_aabb.min.x;
+        let scene_size_y = state.scene_aabb.max.y - state.scene_aabb.min.y;
+        let scene_size_z = state.scene_aabb.max.z - state.scene_aabb.min.z;
+        let scene_size_max = Math.max(scene_size_x, scene_size_y, scene_size_z);
+        scene_size_max = scene_size_max || 1;
+        logd('set_active_scene', `maximum original scene scale in one dimension: ${scene_size_max}`)
+        logd('set_active_scene', `computed virtual scene's scale: ${1 / scene_size_max}`)
+
+        state.active_scene.scale.setScalar(1 / scene_size_max)
+
+        state.scene_aabb.setFromObject(scene);
+
+        let vertical_nudge_ratio = Math.abs(state.scene_aabb.min.y) / Math.abs(state.scene_aabb.max.y)
+        let offset_x = (state.scene_aabb.max.x + state.scene_aabb.min.x) / 2
+        let offset_z = (state.scene_aabb.max.z + state.scene_aabb.min.z) / 2
+
+        logd(`set_active_scene`, `computed xz-offset: [${offset_x}:${offset_z}]`)
+        logd('set_active_scene', `computed vertical nudge ration: ${vertical_nudge_ratio}`)
+        state.active_scene.position.y = vertical_nudge_ratio > 0.25 ? -state.scene_aabb.min.y : 0;
+        if (state.scene_aabb.min.y > 0) {
+            state.active_scene.position.y = -state.scene_aabb.min.y
+        }
+        state.active_scene.position.x = -offset_x;
+        state.active_scene.position.z = -offset_z;
+        state.scene_aabb.setFromObject(scene);
+        console.log('spawning scene...')
+        console.log(scene, state.scene_aabb)
+
+        main_stage.add(scene);
+        update_title()
+        frame_object()
+    }
+
+    notify_render(1000);
+    set_loader(false)
 }
 
 
@@ -291,11 +345,16 @@ function render() {
         _.forEach(loop_tasks, task => task(delta, time_delta))
 
         if (render_needs_update === true || last_tick_date < render_timeout) {
-            if (state.postfx_enabled) {
+            if (state.postfx_enabled && window.RENDER_ONLY_MAIN !== true) {
                 composer.render();
             } else {
                 // wboit_pass.render(renderer)
-                render_contact_shadows()
+                if (window.RENDER_ONLY_MAIN !== true) {
+                    second_stage.visible = false
+                    render_contact_shadows()
+                }
+
+                second_stage.visible = window.RENDER_ONLY_MAIN !== true
                 renderer.render(world, camera);
             }
         }
@@ -420,15 +479,10 @@ function set_resolution_scale(value) {
 }
 
 function set_shadows_enabled(enabled) {
+    contact_shadow_state.shadow.group.visible = enabled
     state.render_shadows_enabled = enabled;
     renderer.shadowMap.enabled = enabled;
     renderer.render(world, camera);
-}
-
-function set_contact_shadow_height(h){
-    contact_shadow_state.shadow.group.position.y = h + 0.1;
-    contact_shadow_state.plane.mesh.position.y = -(h + 0.1);
-    update_matrix();
 }
 
 preinit_render()
@@ -436,7 +490,8 @@ preinit_render()
 export {
     camera,
     world,
-    stage,
+    main_stage,
+    second_stage,
     renderer,
     composer,
     loop_tasks,
@@ -458,5 +513,5 @@ export {
     set_resolution_scale,
     set_shadows_enabled,
     update_scene,
-    set_contact_shadow_height
+    set_main_stage_content
 }

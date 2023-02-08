@@ -15,7 +15,7 @@ import {
 } from 'three';
 import { texture_loader } from './loaders.js';
 import { state } from './state.js';
-import { notify_render, world, camera, update_matrix } from './render.js';
+import { notify_render, second_stage, camera, update_matrix, world } from './render.js';
 import { random_choice } from './util.js';
 import { watch_controls } from './controls.js';
 import { refresh_gui } from './gui.js';
@@ -110,19 +110,19 @@ function init_inspect() {
     // torch_light.intensity = 2
     torch_light.visible = state.torch_light
     // torch_light.castShadow = true
-    world.add(torch_light)
+    second_stage.add(torch_light)
 
     axes_helper = new AxesHelper(0.1);
     axes_helper.position.set(0.5, 0, 0.5)
     axes_helper.visible = state.inspect_show_gizmo
-    world.add(axes_helper)
+    second_stage.add(axes_helper)
 
     grid_helper = new GridHelper(1, 10, 0xffffff, 0xffffff);
     grid_helper.material.opacity = 0.1;
     grid_helper.material.depthWrite = false;
     grid_helper.material.transparent = true;
     grid_helper.visible = state.inspect_show_gizmo
-    world.add(grid_helper);
+    second_stage.add(grid_helper);
 
     gizmo.axes_helper = axes_helper
     gizmo.grid_helper = grid_helper
@@ -152,7 +152,11 @@ function set_inspection_mode(mode) {
         state.postfx_enabled = false
         refresh_gui()
     }
+
+
     world.overrideMaterial = inspect_modes[mode]?.get_material() || null
+    world.inspect_feature_cloned_override_material = mode !== "None (PBR)"
+    window.RENDER_ONLY_MAIN = mode !== "None (PBR)"
     window.RENDER_SKIP_BACKGROUND_RENDERING = mode !== "None (PBR)"
     window.RENDER_SKIP_SHADOWMAP_RENDERING = mode !== "None (PBR)"
     notify_render(1000)

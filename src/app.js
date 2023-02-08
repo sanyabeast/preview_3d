@@ -2,7 +2,17 @@
 import { Box3 } from 'three';
 import { AnimationMixer } from 'three'
 
-import { notify_render, start_render, init_render, loop_tasks, set_daytime, update_matrix, update_shadows, update_scene, stage, set_contact_shadow_height } from './render.js';
+import {
+    notify_render,
+    start_render,
+    init_render,
+    loop_tasks,
+    set_daytime,
+    update_matrix,
+    update_shadows,
+    update_scene,
+    set_main_stage_content
+} from './render.js';
 import { loaders, init_loaders } from './loaders.js'
 import { init_gui, set_loader, notifications, panes, update_title } from './gui.js'
 import { init_controls, frame_object } from './controls.js'
@@ -54,51 +64,13 @@ async function load_scene(scene_src) {
         }
 
         if (is_ok) {
-            set_active_scene(scene_state.scene)
+            set_main_stage_content(scene_state.scene)
             setup_scene()
         }
 
     } else {
         console.log(`load_scene: attempt to load invalid src: ${scene_src}`)
     }
-}
-
-
-function set_active_scene(scene) {
-    if (scene.isObject3D) {
-        if (state.active_scene) {
-            console.log('removing scene...')
-            stage.remove(state.active_scene)
-        }
-
-        state.active_scene = scene
-        state.scene_aabb = new Box3();
-
-        state.scene_aabb.setFromObject(scene);
-        let scene_size_x = state.scene_aabb.max.x - state.scene_aabb.min.x;
-        let scene_size_y = state.scene_aabb.max.y - state.scene_aabb.min.y;
-        let scene_size_z = state.scene_aabb.max.z - state.scene_aabb.min.z;
-        let scene_size_max = Math.max(scene_size_x, scene_size_y, scene_size_z);
-        scene_size_max = scene_size_max || 1;
-        logd('set_active_scene', `maximum original scene scale in one dimension: ${scene_size_max}`)
-        logd('set_active_scene', `computed virtual scene's scale: ${1 / scene_size_max}`)
-        state.active_scene.scale.setScalar(1 / scene_size_max)
-
-        state.scene_aabb.setFromObject(scene);
-        console.log('spawning scene...')
-        console.log(scene, state.scene_aabb)
-
-        stage.add(scene);
-        update_title()
-        frame_object()
-
-        //**contact shadows */
-        set_contact_shadow_height(state.scene_aabb.min.z)
-
-    }
-
-    notify_render(1000);
-    set_loader(false)
 }
 
 
@@ -217,6 +189,5 @@ export {
     load_scene,
     load_sample,
     launch,
-    state,
-    set_active_scene
+    state
 }
