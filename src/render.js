@@ -37,7 +37,7 @@ import { loaders } from './loaders.js';
 import { lerp, clamp, round_to, logd, extend_gui } from './util.js';
 import { refresh_gui, update_title, panes } from './gui.js';
 import { init_contact_shadows, render_contact_shadows, contact_shadow_state } from './contact_shadows.js';
-import { frame_object } from './controls.js';
+import { frame_object, watch_controls } from './controls.js';
 
 ShaderChunk.alphatest_fragment = ASSETS.texts.dither_alphatest_glsl
 
@@ -408,6 +408,12 @@ function init_postfx() {
 function init_render() {
     init_animation_player()
     init_camera_helper()
+
+    watch_controls(() => {
+        if (render_state.override_camera) {
+            pilot_camera(null)
+        }
+    })
     /** */
 }
 

@@ -126,7 +126,6 @@ async function handle_drag_and_drop(event) {
 
 function watch_controls(handle_change) {
     controls.addEventListener('change', handle_change); // use if there is no animation loop
-
 }
 
 
