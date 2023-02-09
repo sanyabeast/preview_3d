@@ -4,15 +4,7 @@ const directory_tree = require('directory-tree')
 const path = require('path')
 const jsonfile = require('jsonfile')
 const fs = require('fs')
-
 const EXTENSIONS = require('./extensions.js')
-
-const assets_data = {
-    matcap: parse_asset(directory_tree('./assets/matcap'), {}),
-    samples: parse_asset(directory_tree('./assets/samples'), { keep_extname: true, only_supported_extensions: true }),
-    hdr: parse_asset(directory_tree('./assets/hdr'), {}),
-    texts: preload_texts(directory_tree('./assets/texts')),
-}
 
 function parse_asset(data, { keep_extname, only_supported_extensions }) {
     let r = {}
@@ -48,5 +40,25 @@ function preload_texts(data) {
     return r
 }
 
+function generate_assets() {
+    try {
+        let assets_data = {
+            matcap: parse_asset(directory_tree('./assets/matcap'), {}),
+            samples: parse_asset(directory_tree('./assets/samples'), { keep_extname: true, only_supported_extensions: true }),
+            hdr: parse_asset(directory_tree('./assets/hdr'), {}),
+            texts: preload_texts(directory_tree('./assets/texts')),
+        }
 
-jsonfile.writeFileSync('./assets.json', assets_data, { spaces: 4 })
+        jsonfile.writeFileSync('./assets.json', assets_data, { spaces: 4 })
+        console.log('[generate_assets] [i]', 'success');
+        return assets_data
+    } catch (err) {
+        console.error(err)
+    }
+}
+
+generate_assets()
+
+module.exports = {
+    generate_assets
+}

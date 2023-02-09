@@ -27,7 +27,9 @@ import {
     Mesh,
     Vector3,
     Sphere,
-    LOD
+    LOD,
+    Euler,
+    Quaternion
 } from 'three';
 import { RoomEnvironment } from 'three/addons/environments/RoomEnvironment.js';
 import { EffectComposer } from 'three/addons/postprocessing/EffectComposer.js';
@@ -57,6 +59,7 @@ if (state.scene_metrics === null) {
 const SUN_HEIGHT_MULTIPLIER = 0.666
 const SUN_AZIMUTH_OFFSET = Math.PI / 1.9
 const USE_LOGDEPTHBUF = false
+const DISABLE_SCENE_ALIGN = false
 // const USE_LOGDEPTHBUF = !IS_MACOS
 
 let camera, world, renderer, composer, main_stage, second_stage
@@ -273,21 +276,23 @@ function set_scene(scene, animations = []) {
     logd('set_scene', `maximum original scene scale in one dimension: ${scene_metrics.radius}`)
     logd('set_scene', `computed virtual scene's scale: ${1 / scene_metrics.radius}`)
 
-    scene_state.unit_scale = 1 / scene_metrics.radius
-    state.active_scene.scale.setScalar(scene_state.unit_scale)
-    /**updaing metrics after transformation! */
-    scene_metrics = state.scene_metrics = get_object_metrics(scene)
-    logd(`set_scene`, `computed xz-offset: [${scene_metrics.center.x}:${scene_metrics.center.z}]`)
-    logd('set_scene', `computed vertical nudge ratio: ${scene_metrics.nudge.y}`)
-    state.active_scene.position.y = Math.abs(scene_metrics.nudge.y) > 0.25 ? -scene_metrics.box.min.y : 0;
-    if (scene_metrics.box.min.y > 0) {
-        state.active_scene.position.y = -scene_metrics.box.min.y
-    }
-    state.active_scene.position.x = -scene_metrics.center.x;
-    state.active_scene.position.z = -scene_metrics.center.z;
+    if (DISABLE_SCENE_ALIGN !== true) {
+        scene_state.unit_scale = 1 / scene_metrics.radius
+        state.active_scene.scale.setScalar(scene_state.unit_scale)
+        /**updaing metrics after transformation! */
+        scene_metrics = state.scene_metrics = get_object_metrics(scene)
+        logd(`set_scene`, `computed xz-offset: [${scene_metrics.center.x}:${scene_metrics.center.z}]`)
+        logd('set_scene', `computed vertical nudge ratio: ${scene_metrics.nudge.y}`)
+        state.active_scene.position.y = Math.abs(scene_metrics.nudge.y) > 0.25 ? -scene_metrics.box.min.y : 0;
+        if (scene_metrics.box.min.y > 0) {
+            state.active_scene.position.y = -scene_metrics.box.min.y
+        }
+        state.active_scene.position.x = -scene_metrics.center.x;
+        state.active_scene.position.z = -scene_metrics.center.z;
 
-    /**updaing metrics after transformation! */
-    scene_metrics = state.scene_metrics = get_object_metrics(scene)
+        /**updaing metrics after transformation! */
+        scene_metrics = state.scene_metrics = get_object_metrics(scene)
+    }
 
     console.log('spawning scene...')
     console.log(scene, scene_metrics.box)
@@ -301,6 +306,7 @@ function set_scene(scene, animations = []) {
 
     main_stage.visible = true
     notify_render(1000);
+    
 }
 
 
@@ -350,6 +356,7 @@ function init_scene() {
         action.enabled = true;
         action.play()
     })
+
 
     /**traverse */
     let camera_index = 0

@@ -1,12 +1,16 @@
 /** Created by @sanyabeast | 28 Jan 2023 | Kyiv, Ukraine */
+const IS_DEVELOPMENT = process.env.NODE_ENV === 'development'
+
+if (IS_DEVELOPMENT) {
+    const generate_assets = require('./prebuild.js')
+}
 
 const directory_tree = require('directory-tree')
 const jsonfile = require('jsonfile')
-
 const path = require('path')
 const fs = require('fs')
 const ipcRenderer = window.require('electron').ipcRenderer;
-const IS_DEVELOPMENT = process.env.NODE_ENV === 'development'
+
 const PACKAGE_INFO = require('./package.json')
 const ASSETS = require('./assets.json')
 const EXTENSIONS = require('./extensions.js')

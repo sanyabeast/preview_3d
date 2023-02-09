@@ -32,7 +32,8 @@
         "mesh_party.obj": "mesh_party.obj",
         "Parrot.glb": "Parrot.glb",
         "Soldier.glb": "Soldier.glb",
-        "Teapot.glb": "Teapot.glb"
+        "Teapot.glb": "Teapot.glb",
+        "transparency.glb": "transparency.glb"
     },
     "hdr": {
         "atelier": "atelier.hdr",
