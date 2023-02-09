@@ -110,6 +110,7 @@ function frame_object() {
     controls.object.position.set(0, 1, 2)
     controls.saveState()
     controls.reset()
+    pilot_camera(null)
 }
 
 async function handle_drag_and_drop(event) {
