@@ -19,7 +19,15 @@ import {
     VSMShadowMap,
     Group,
     Box3,
-    AnimationMixer
+    AnimationMixer,
+    SphereGeometry,
+    BoxGeometry,
+    MeshBasicMaterial,
+    MeshLambertMaterial,
+    Mesh,
+    Vector3,
+    Sphere,
+    LOD
 } from 'three';
 import { RoomEnvironment } from 'three/addons/environments/RoomEnvironment.js';
 import { EffectComposer } from 'three/addons/postprocessing/EffectComposer.js';
@@ -31,7 +39,6 @@ import { RGBShiftShader } from 'three/addons/shaders/RGBShiftShader.js';
 import { UnrealBloomPass } from 'three/addons/postprocessing/UnrealBloomPass.js';
 import { RenderPass } from 'three/addons/postprocessing/RenderPass.js';
 
-
 import { state } from './state.js'
 import { loaders } from './loaders.js';
 import { lerp, clamp, round_to, logd, extend_gui } from './util.js';
@@ -40,6 +47,12 @@ import { init_contact_shadows, render_contact_shadows, contact_shadow_state } fr
 import { frame_object, watch_controls } from './controls.js';
 
 ShaderChunk.alphatest_fragment = ASSETS.texts.dither_alphatest_glsl
+
+/**initializing state.scene_metrics object */
+if (state.scene_metrics === null) {
+    state.scene_metrics = get_object_metrics(new Group())
+    console.log(state.scene_metrics)
+}
 
 const SUN_HEIGHT_MULTIPLIER = 0.666
 const SUN_AZIMUTH_OFFSET = Math.PI / 1.9
@@ -86,6 +99,18 @@ let scene_state = {
 }
 
 let animation_mixer
+
+/** lod test */
+let empty_lod = new Group()
+empty_lod.visible = false
+let sphere_lod = new Mesh(
+    new SphereGeometry(1),
+    new MeshLambertMaterial({ color: 0x000000 })
+)
+let box_lod = new Mesh(
+    new BoxGeometry(1, 1, 1),
+    new MeshLambertMaterial({ color: 0x000000 })
+)
 
 
 document.addEventListener('visibilitychange', (event) => {
@@ -137,6 +162,8 @@ function preinit_render() {
     handle_window_resized()
 }
 
+
+
 function init_world() {
     const environment = new RoomEnvironment();
     const pmremGenerator = new PMREMGenerator(renderer);
@@ -182,8 +209,39 @@ function init_world() {
     second_stage.add(amb)
 
     window.world = world
+    window.main_stage = main_stage
+    window.second_stage = second_stage
+
     state.env_default_background = world.background
     state.env_default_texture = world.environment
+}
+
+function get_object_metrics(object) {
+    let bounding_box = new Box3();
+    let bounding_sphere = new Sphere()
+    let object_center = new Vector3()
+    let object_size = new Vector3()
+    let nudge = new Vector3()
+
+    bounding_box.setFromObject(object);
+    bounding_box.getBoundingSphere(bounding_sphere)
+    bounding_box.getCenter(object_center)
+    bounding_box.getSize(object_size)
+
+    nudge.set(
+        (object_center.x / object_size.x) || 0,
+        (object_center.y / object_size.y) || 0,
+        (object_center.z / object_size.z) || 0,
+    )
+
+    return {
+        center: object_center,
+        size: object_size,
+        box: bounding_box,
+        sphere: bounding_sphere,
+        radius: bounding_sphere.radius,
+        nudge
+    }
 }
 
 function set_scene(scene, animations = []) {
@@ -208,36 +266,31 @@ function set_scene(scene, animations = []) {
     }
 
     state.active_scene = scene
-    state.scene_aabb = new Box3();
+    let scene_metrics = state.scene_metrics = get_object_metrics(scene)
 
-    state.scene_aabb.setFromObject(scene);
-    let scene_size_x = state.scene_aabb.max.x - state.scene_aabb.min.x;
-    let scene_size_y = state.scene_aabb.max.y - state.scene_aabb.min.y;
-    let scene_size_z = state.scene_aabb.max.z - state.scene_aabb.min.z;
-    let scene_size_max = Math.max(scene_size_x, scene_size_y, scene_size_z);
-    scene_size_max = scene_size_max || 1;
-    logd('set_scene', `maximum original scene scale in one dimension: ${scene_size_max}`)
-    logd('set_scene', `computed virtual scene's scale: ${1 / scene_size_max}`)
+    console.log(scene_metrics)
 
-    scene_state.unit_scale = 1 / scene_size_max
+    logd('set_scene', `maximum original scene scale in one dimension: ${scene_metrics.radius}`)
+    logd('set_scene', `computed virtual scene's scale: ${1 / scene_metrics.radius}`)
+
+    scene_state.unit_scale = 1 / scene_metrics.radius
     state.active_scene.scale.setScalar(scene_state.unit_scale)
-    state.scene_aabb.setFromObject(scene);
-
-    let vertical_nudge_ratio = Math.abs(state.scene_aabb.min.y) / Math.abs(state.scene_aabb.max.y)
-    let offset_x = (state.scene_aabb.max.x + state.scene_aabb.min.x) / 2
-    let offset_z = (state.scene_aabb.max.z + state.scene_aabb.min.z) / 2
-
-    logd(`set_scene`, `computed xz-offset: [${offset_x}:${offset_z}]`)
-    logd('set_scene', `computed vertical nudge ration: ${vertical_nudge_ratio}`)
-    state.active_scene.position.y = vertical_nudge_ratio > 0.25 ? -state.scene_aabb.min.y : 0;
-    if (state.scene_aabb.min.y > 0) {
-        state.active_scene.position.y = -state.scene_aabb.min.y
+    /**updaing metrics after transformation! */
+    scene_metrics = state.scene_metrics = get_object_metrics(scene)
+    logd(`set_scene`, `computed xz-offset: [${scene_metrics.center.x}:${scene_metrics.center.z}]`)
+    logd('set_scene', `computed vertical nudge ratio: ${scene_metrics.nudge.y}`)
+    state.active_scene.position.y = Math.abs(scene_metrics.nudge.y) > 0.25 ? -scene_metrics.box.min.y : 0;
+    if (scene_metrics.box.min.y > 0) {
+        state.active_scene.position.y = -scene_metrics.box.min.y
     }
-    state.active_scene.position.x = -offset_x;
-    state.active_scene.position.z = -offset_z;
-    state.scene_aabb.setFromObject(scene);
+    state.active_scene.position.x = -scene_metrics.center.x;
+    state.active_scene.position.z = -scene_metrics.center.z;
+
+    /**updaing metrics after transformation! */
+    scene_metrics = state.scene_metrics = get_object_metrics(scene)
+
     console.log('spawning scene...')
-    console.log(scene, state.scene_aabb)
+    console.log(scene, scene_metrics.box)
 
     main_stage.add(scene);
 
@@ -303,13 +356,9 @@ function init_scene() {
     main_stage.traverse((object) => {
         logd('init_scene', `found ${object.type} "${object.name}"`)
         if (object.isMesh) {
-            // let box = new Box3()
-            // console.log(box)
-
             if (!object.material) return;
             let materials = Array.isArray(object.material) ? object.material : [object.material];
             let object_has_transparency = false
-
             for (let i = 0; i < materials.length; i++) {
                 let material = materials[i]
                 // console.log(material)
@@ -338,6 +387,7 @@ function init_scene() {
             } else {
                 object.has_transparency = true
             }
+
         }
         if (object.isCamera) {
             scene_state.cameras.push(object)
@@ -361,6 +411,9 @@ function init_scene() {
             scene_state.lights.push(object)
             console.log(object.intensity)
             object.intensity *= scene_state.unit_scale / 1000
+        }
+        if (object.isMesh || object.isGroup || object.isLight) {
+            object.metrics = get_object_metrics(object)
         }
     });
 

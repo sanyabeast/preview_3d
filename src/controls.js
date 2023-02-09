@@ -102,23 +102,11 @@ function panic_escape() {
 }
 
 function frame_object() {
-    let max_value = Math.max(
-        Math.abs(state.scene_aabb.min.x),
-        Math.abs(state.scene_aabb.min.y),
-        Math.abs(state.scene_aabb.min.z),
-        Math.abs(state.scene_aabb.max.x),
-        Math.abs(state.scene_aabb.max.y),
-        Math.abs(state.scene_aabb.max.z)
-    )
-
     controls.target.set(
-        (state.scene_aabb.min.x + state.scene_aabb.max.x) / 2,
-        (state.scene_aabb.min.y + state.scene_aabb.max.y) / 2,
-        (state.scene_aabb.min.z + state.scene_aabb.max.z) / 2
+        state.scene_metrics.center.x,
+        state.scene_metrics.center.y,
+        state.scene_metrics.center.z,
     );
-    // grid_helper.scale.setScalar(max_value / 2)
-    console.log(max_value)
-    // controls.target.set(0, 0.1, 0)
     controls.object.position.set(0, 1, 2)
     controls.saveState()
     controls.reset()
