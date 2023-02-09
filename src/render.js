@@ -194,7 +194,7 @@ function init_world() {
 
 function set_scene(scene, animations = []) {
     console.log(scene, animations)
-
+    main_stage.visible = false
     /** resetting some things to defaults */
     set_daytime(0.5)
 
@@ -251,6 +251,8 @@ function set_scene(scene, animations = []) {
     update_shadows()
     update_title()
     frame_object()
+
+    main_stage.visible = true
     notify_render(1000);
 }
 

@@ -27,12 +27,12 @@
         "ClearcoatTest.glb": "ClearcoatTest.glb",
         "DamagedHelmet.gltf": "DamagedHelmet.gltf",
         "IridescentDishWithOlives.glb": "IridescentDishWithOlives.glb",
-        "mesh_party.fbx": "mesh_party.fbx",
-        "mesh_party.glb": "mesh_party.glb",
-        "mesh_party.obj": "mesh_party.obj",
         "Parrot.glb": "Parrot.glb",
         "Soldier.glb": "Soldier.glb",
-        "Teapot.glb": "Teapot.glb"
+        "Teapot.glb": "Teapot.glb",
+        "mesh_party.fbx": "mesh_party.fbx",
+        "mesh_party.glb": "mesh_party.glb",
+        "mesh_party.obj": "mesh_party.obj"
     },
     "hdr": {
         "atelier": "atelier.hdr",
