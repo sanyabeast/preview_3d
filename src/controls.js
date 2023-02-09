@@ -85,7 +85,8 @@ function init_controls(params) {
     controls = new OrbitControls(camera, renderer.domElement);
     watch_controls(notify_render)
     controls.minDistance = 0;
-    controls.maxDistance = Infinity;
+    controls.maxDistance = 8;
+
     controls.target.set(0, 0, 0);
     controls.object.position.set(0, 1, 2)
     controls.update();

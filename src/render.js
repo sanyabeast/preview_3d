@@ -82,6 +82,7 @@ let scene_state = {
     cameras: [],
     actions: [],
     current_position: 0,
+    lights: []
 }
 let animation_state = {
     disable_animations: false,
@@ -119,6 +120,7 @@ function preinit_render() {
     renderer.gammaFactor = 1
     renderer.shadowMap.enabled = state.render_shadows_enabled;
     renderer.shadowMap.autoUpdate = false
+    renderer.physicallyCorrectLights = true
     // renderer.shadowMap.type = VSMShadowMap
 
     console.log(renderer.capabilities.isWebGL2)
@@ -159,8 +161,8 @@ function init_world() {
 
     environment.dispose();
 
-    sun = new DirectionalLight()
-    amb = new AmbientLight()
+    sun = new DirectionalLight(0xffdeae)
+    amb = new AmbientLight(0x889aff)
     amb.intensity = 0.2;
     sun.position.set(1000, 1000, 1000)
     sun.intensity = 1
@@ -201,12 +203,14 @@ function set_scene(scene, animations = []) {
     scene_state.current_position = 0
     scene_state.actions = []
     scene_state.cameras = []
+    scene_state.lights = []
 
     kill_animations()
 
     if (state.active_scene) {
         console.log('removing scene...')
         main_stage.remove(state.active_scene)
+        _destroy_scene(state.active_scene)
     }
 
     state.active_scene = scene
@@ -221,8 +225,8 @@ function set_scene(scene, animations = []) {
     logd('set_scene', `maximum original scene scale in one dimension: ${scene_size_max}`)
     logd('set_scene', `computed virtual scene's scale: ${1 / scene_size_max}`)
 
-    state.active_scene.scale.setScalar(1 / scene_size_max)
-
+    scene_state.unit_scale = 1 / scene_size_max
+    state.active_scene.scale.setScalar(scene_state.unit_scale)
     state.scene_aabb.setFromObject(scene);
 
     let vertical_nudge_ratio = Math.abs(state.scene_aabb.min.y) / Math.abs(state.scene_aabb.max.y)
@@ -257,7 +261,6 @@ function init_scene() {
     animation_folder_gui.actions.children.forEach((child, index) => {
         child.hidden = index >= scene_state.animations.length
     })
-
 
     if (scene_state.animations.length > 0) {
         animation_mixer = new AnimationMixer(state.active_scene);
@@ -358,6 +361,11 @@ function init_scene() {
 
             camera_index++
         }
+        if (object.isLight) {
+            scene_state.lights.push(object)
+            console.log(object.intensity)
+            object.intensity *= scene_state.unit_scale / 1000
+        }
     });
 
     handle_window_resized()
@@ -368,6 +376,28 @@ function init_scene() {
         child.hidden = index >= scene_state.cameras.length
     })
 }
+
+function _destroy_scene(scene) {
+    let things_diposed = 0
+    scene.traverse((object) => {
+        if (object.isMesh) {
+            let materials = _.isArray(object.material) ? object.material : [object.material]
+            materials.forEach((mat) => {
+                if (mat) {
+                    mat.dispose()
+                    things_diposed++
+                }
+            })
+            if (object.geometry) {
+                object.geometry.dispose()
+                things_diposed++
+            }
+        }
+    })
+
+    logd('_destroy_scene', `things disposed: ${things_diposed}`)
+}
+
 
 function init_postfx() {
     composer = new EffectComposer(renderer);
@@ -569,14 +599,14 @@ function set_sun_azimuth(value) {
 function set_sun_height(value) {
     state.render_sun_height = value
     sun.position.y = lerp(0, sun_state.distance * SUN_HEIGHT_MULTIPLIER, value)
-    sun.intensity = value
+    sun.intensity = value * 2
     update_shadows()
     notify_render()
 }
 
 function set_ambient_intentsity(value) {
     state.render_ambient_intensity = value
-    amb.intensity = lerp(0, sun.intensity * 0.75, value)
+    amb.intensity = lerp(0, 1, value)
     notify_render()
 }
 
@@ -601,7 +631,7 @@ function set_daytime(value) {
     set_environment_power(lerp(5, 1, curved_value))
     set_sun_height(lerp(0.02, 1, curved_value))
     set_sun_azimuth(lerp(0, 1, value))
-    set_ambient_intentsity(lerp(0, 0.9, curved_value))
+    set_ambient_intentsity(lerp(0.125, 0.9, curved_value))
     notify_render()
     refresh_gui();
 }

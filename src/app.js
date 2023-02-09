@@ -25,16 +25,20 @@ async function load_scene(scene_src) {
     /** file existing check */
     let file_exists = OS_TOOLS.fs.existsSync(scene_src)
     
-    if (file_exists === false){
-        notifications.open({
-            type: 'error',
-            message: `file "${scene_src} does not exist"`,
-        })
-        return;
-    }
+    
 
     if (_.isString(scene_src) && scene_src.length > 0) {
         set_loader(true)
+
+        if (file_exists === false){
+            notifications.open({
+                type: 'error',
+                message: `file "${scene_src} does not exist"`,
+            })
+            set_loader(false)
+            return;
+        }
+
         state.scene_src = scene_src;
         let scene_data = null
         write_url('file_parameter', scene_src)

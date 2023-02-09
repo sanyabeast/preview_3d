@@ -122,6 +122,7 @@ function create_main_pane() {
                         'environment': {
                             type: 'folder',
                             title: '🏝 Environment settings',
+                            expanded: true,
                             children: {
                                 'env_enabled': {
                                     type: 'input',
@@ -475,7 +476,7 @@ function check_updates() {
 function update_title() {
     let prefix = IS_MAIN_WINDOW ? '[*] ' : ''
     let sep = state.scene_src && state.scene_src.length ? '|' : ''
-    document.querySelector('head title').innerHTML = `${prefix} preview_3d ${PACKAGE_INFO.version} ${sep} ${state.scene_src}`
+    document.querySelector('head title').innerHTML = `${prefix} preview_3d ${PACKAGE_INFO.version} ${sep} ${state.scene_src} | renderer: three.js`
 }
 function set_loader(visible, progress) {
     let loader = document.getElementById("loader")

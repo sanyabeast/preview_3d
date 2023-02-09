@@ -25,10 +25,11 @@
     },
     "samples": {
         "ClearcoatTest.glb": "ClearcoatTest.glb",
-        "Coke Fridge.glb": "Coke Fridge.glb",
         "DamagedHelmet.gltf": "DamagedHelmet.gltf",
         "IridescentDishWithOlives.glb": "IridescentDishWithOlives.glb",
-        "Nurbs.fbx": "Nurbs.fbx",
+        "mesh_party.fbx": "mesh_party.fbx",
+        "mesh_party.glb": "mesh_party.glb",
+        "mesh_party.obj": "mesh_party.obj",
         "Parrot.glb": "Parrot.glb",
         "Soldier.glb": "Soldier.glb",
         "Teapot.glb": "Teapot.glb"
