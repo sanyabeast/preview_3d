@@ -11,8 +11,8 @@ const state = {
     env_default_background: null,
     env_default_texture: null,
     env_texture: null,
-    env_intensity: 1,
-    env_power: 1,
+    env_brightness: 1,
+    env_influence: 1,
     postfx_bloom_exposure: 1,
     postfx_bloom_strength: 0.3,
     postfx_bloom_treshold: 0.9,
@@ -36,6 +36,8 @@ const state = {
     render_shadows_enabled: true,
     postfx_enabled: false,
     render_camera_fov: 45,
+    render_disable_animations: false,
+    render_global_timescale: 1
 }
 
 window.state = state

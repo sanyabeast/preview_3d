@@ -2,9 +2,10 @@
 /** Created by @sanyabeast | 28 Jan 2023 | Kyiv, Ukraine */
 
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
-import { camera, renderer, notify_render } from './render.js';
+import { camera, renderer, notify_render, pilot_camera } from './render.js';
 import { state } from './state.js';
 import { collapse_gui } from './gui.js';
+import { set_inspection_mode } from './inspect.js';
 
 let controls
 let file_input = document.body.querySelector('#file_input')
@@ -56,7 +57,7 @@ function init_controls(params) {
             }
             case 27: {
                 event.preventDefault()
-                collapse_gui()
+                panic_escape()
                 break;
             }
             case 78: {
@@ -92,6 +93,12 @@ function init_controls(params) {
     controls.update();
 
     // renderer.domElement.addEventListener("mousedown", collapse_gui)
+}
+
+function panic_escape() {
+    pilot_camera(null)
+    set_inspection_mode(null)
+    collapse_gui()
 }
 
 function frame_object() {

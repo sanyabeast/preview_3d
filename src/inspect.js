@@ -147,12 +147,14 @@ function set_matcap(alias) {
 }
 
 function set_inspection_mode(mode) {
+    if (!_.isString(mode)) {
+        mode = 'None (PBR)'
+    }
     state.inspect_mode = mode
     if (mode !== "None (PBR)") {
         state.postfx_enabled = false
         refresh_gui()
     }
-
 
     world.overrideMaterial = inspect_modes[mode]?.get_material() || null
     world.inspect_feature_cloned_override_material = mode !== "None (PBR)"

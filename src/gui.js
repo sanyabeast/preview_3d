@@ -9,8 +9,6 @@ import { set_inspection_mode, set_matcap, inspect_modes, torch_light, gizmo } fr
 import {
     world,
     camera,
-    renderer,
-    composer,
     notify_render,
     set_environment,
     set_fps_limit,
@@ -21,8 +19,9 @@ import {
     set_ambient_intentsity,
     set_environment_power,
     set_resolution_scale,
-    update_shadows,
-    set_shadows_enabled
+    set_shadows_enabled,
+    pilot_camera,
+    set_animations_scale
 } from './render.js';
 import { state } from './state.js';
 import { load_sample } from './app.js'
@@ -58,7 +57,7 @@ const notifications = new Notyf({
     ]
 });
 
-let main_pane, file_pane, help_pane
+let main_pane, file_pane
 let panes = {}
 
 function init_gui(params) {
@@ -67,7 +66,6 @@ function init_gui(params) {
     }
     panes.file = create_file_pane()
     panes.main = create_main_pane()
-    panes.help = create_help_pane()
 }
 function create_main_pane() {
     main_pane = build_gui(
@@ -77,7 +75,7 @@ function create_main_pane() {
             children: {
                 'viewport_settings_folder': {
                     type: 'folder',
-                    title: "👁️‍🗨️ Viewport",
+                    title: "👁️‍🗨️ View",
                     children: {
                         'postfx_enabled': {
                             type: 'input',
@@ -85,14 +83,6 @@ function create_main_pane() {
                             label: '✨ Postfx',
                             hidden: true,
                             on_change: 'on_postfx_changed'
-                        },
-                        'shadows_enabled': {
-                            type: 'input',
-                            bind: [state, 'render_shadows_enabled'],
-                            label: '🌚 Shadows',
-                            on_change: ({ value }) => {
-                                set_shadows_enabled(value)
-                            }
                         },
                         'dynamic_resoltuion': {
                             type: 'input',
@@ -110,126 +100,111 @@ function create_main_pane() {
                             label: "🧇 Resolution",
                             on_change: ({ value }) => set_resolution_scale(value)
                         },
-                        'render_camera_fov': {
+                        'shadows_enabled': {
                             type: 'input',
-                            bind: [state, 'render_camera_fov'],
-                            label: "📽 Camera FOV",
-                            min: 1,
-                            max: 120,
-                            step: 1,
-                            on_change: 'on_render_camera_fov_changed'
-                        },
-                        'environment': {
-                            type: 'folder',
-                            title: '🏝 Environment settings',
-                            expanded: true,
-                            children: {
-                                'env_enabled': {
-                                    type: 'input',
-                                    bind: [state, 'env_enabled'],
-                                    label: '🎚 Enabled',
-                                    on_change: 'on_env_enabled_changed'
-                                },
-                                'env_blur': {
-                                    type: 'input',
-                                    bind: [world, 'backgroundBlurriness'],
-                                    label: "💧 Blurriness",
-                                    min: 0,
-                                    max: 1,
-                                    step: 0.01,
-                                    on_change: notify_render
-                                },
-                                'daytime': {
-                                    type: 'input',
-                                    bind: [state, 'render_daytime'],
-                                    label: "🔆 Daytime",
-                                    min: 0,
-                                    max: 1,
-                                    step: 0.01,
-                                    on_change: ({ value }) => set_daytime(value)
-                                },
-                                'env_map_select_folder': {
-                                    type: 'folder',
-                                    title: '🖼 Texture',
-                                    children: {
-                                        'env_map_select_blade': {
-                                            type: 'blade',
-                                            view: 'buttongrid',
-                                            size: [1, Object.keys(ASSETS.hdr).length],
-                                            cells: (x, y) => ({
-                                                title: _.map(Object.keys(ASSETS.hdr), item => [item])[y][x],
-                                            }),
-                                            label: '',
-                                            on_click: ({ cell }) => {
-                                                console.log(cell)
-                                                set_environment(cell.title)
-                                            }
-                                        },
-                                    }
-                                },
-                                'env_settings_folder': {
-                                    type: 'folder',
-                                    title: '🔧 More settings...',
-                                    children: {
-                                        'env_intensity': {
-                                            type: 'input',
-                                            bind: [state, 'env_intensity'],
-                                            label: "env. intensity",
-                                            min: 0,
-                                            max: 1,
-                                            step: 0.01,
-                                            on_change: ({ value }) => set_environment_intensity(value)
-                                        },
-                                        'env_power': {
-                                            type: 'input',
-                                            bind: [state, 'env_power'],
-                                            label: "env. power",
-                                            min: 0,
-                                            max: 5,
-                                            step: 0.1,
-                                            on_change: ({ value }) => set_environment_power(value)
-                                        },
-                                        'ambient_intensity': {
-                                            type: 'input',
-                                            bind: [state, 'render_ambient_intensity'],
-                                            label: "Ambient light",
-                                            min: 0,
-                                            max: 1,
-                                            step: 0.01,
-                                            on_change: ({ value }) => set_ambient_intentsity(value)
-                                        },
-                                        'sun_height': {
-                                            type: 'input',
-                                            bind: [state, 'render_sun_height'],
-                                            label: "Sun height",
-                                            min: 0,
-                                            max: 1,
-                                            step: 0.01,
-                                            on_change: ({ value }) => set_sun_height(value)
-                                        },
-                                        'sun_azimuth': {
-                                            type: 'input',
-                                            bind: [state, 'render_sun_azimuth'],
-                                            label: "Sun azimuth",
-                                            min: 0,
-                                            max: 1,
-                                            step: 0.01,
-                                            on_change: ({ value }) => set_sun_azimuth(value)
-                                        },
-
-                                    }
-                                },
-
+                            bind: [state, 'render_shadows_enabled'],
+                            label: '🌚 Shadows',
+                            on_change: ({ value }) => {
+                                set_shadows_enabled(value)
                             }
                         },
-                        'rendering_settings_extra_folder': {
+                        'env_enabled': {
+                            type: 'input',
+                            bind: [state, 'env_enabled'],
+                            label: '🎚 Environment',
+                            on_change: 'on_env_enabled_changed'
+                        },
+                        'env_blur': {
+                            type: 'input',
+                            bind: [world, 'backgroundBlurriness'],
+                            label: "💧 Env. Blur",
+                            min: 0,
+                            max: 1,
+                            step: 0.01,
+                            on_change: notify_render
+                        },
+                        'daytime': {
+                            type: 'input',
+                            bind: [state, 'render_daytime'],
+                            label: "🔆 Daytime",
+                            min: 0,
+                            max: 1,
+                            step: 0.01,
+                            on_change: ({ value }) => set_daytime(value)
+                        },
+                        'env_map_select_folder': {
                             type: 'folder',
-                            title: '🎛 Extra settings',
+                            title: '🖼 Texture',
+                            expanded: true,
                             children: {
+                                'env_map_select_blade': {
+                                    type: 'blade',
+                                    view: 'buttongrid',
+                                    size: [1, Object.keys(ASSETS.hdr).length],
+                                    cells: (x, y) => ({
+                                        title: _.map(Object.keys(ASSETS.hdr), item => [item])[y][x],
+                                    }),
+                                    label: '',
+                                    on_click: ({ cell }) => {
+                                        console.log(cell)
+                                        set_environment(cell.title)
+                                    }
+                                },
+                            }
+                        },
+                        'env_settings_folder': {
+                            type: 'folder',
+                            title: '🔧 More settings...',
+                            children: {
+                                'env_brightness': {
+                                    type: 'input',
+                                    bind: [state, 'env_brightness'],
+                                    label: "env. brightness",
+                                    min: 0,
+                                    max: 1,
+                                    step: 0.01,
+                                    on_change: ({ value }) => set_environment_intensity(value)
+                                },
+                                'env_influence': {
+                                    type: 'input',
+                                    bind: [state, 'env_influence'],
+                                    label: "env. influence",
+                                    min: 0,
+                                    max: 5,
+                                    step: 0.1,
+                                    on_change: ({ value }) => set_environment_power(value)
+                                },
+                                'ambient_intensity': {
+                                    type: 'input',
+                                    bind: [state, 'render_ambient_intensity'],
+                                    label: "Amb. intensity",
+                                    min: 0,
+                                    max: 1,
+                                    step: 0.01,
+                                    on_change: ({ value }) => set_ambient_intentsity(value)
+                                },
+                                'sun_height': {
+                                    type: 'input',
+                                    bind: [state, 'render_sun_height'],
+                                    label: "sun elevation",
+                                    min: 0,
+                                    max: 1,
+                                    step: 0.01,
+                                    on_change: ({ value }) => set_sun_height(value)
+                                },
+                                'sun_azimuth': {
+                                    type: 'input',
+                                    bind: [state, 'render_sun_azimuth'],
+                                    label: "Sun azimuth",
+                                    min: 0,
+                                    max: 1,
+                                    step: 0.01,
+                                    on_change: ({ value }) => set_sun_azimuth(value)
+                                },
                                 'torchlight': {
                                     type: 'input',
                                     bind: [state, 'torch_light'],
-                                    label: "💡 Torchlight",
+                                    label: "💡 flashlight",
                                     on_change: 'on_torchlight_changed'
                                 },
                                 'fps_limit': {
@@ -242,10 +217,63 @@ function create_main_pane() {
                                             [60, Infinity]
                                         ][y][x],
                                     }),
-                                    label: 'FPS Limit',
+                                    label: 'FPS Cap',
                                     on_click: ({ cell }) => set_fps_limit(cell.title)
                                 },
+
                             }
+                        },
+                    }
+                },
+                'camera_settings_folder': {
+                    type: 'folder',
+                    title: '📽 Camera',
+                    children: {
+                        'render_camera_fov': {
+                            type: 'input',
+                            bind: [state, 'render_camera_fov'],
+                            label: "fov",
+                            min: 5,
+                            max: 120,
+                            step: 1,
+                            on_change: ({ value }) => {
+                                camera.fov = value
+                                camera.updateProjectionMatrix()
+                                pilot_camera(null)
+                            },
+                        },
+                        'scene_cameras_list': {
+                            type: 'folder',
+                            title: 'stage cameras',
+                            expanded: true
+                        }
+                    }
+                },
+                'animations_folder': {
+                    type: 'folder',
+                    title: '🤹‍♀️ Animations',
+                    hidden: true,
+                    children: {
+                        'disable_animations': {
+                            type: 'input',
+                            bind: [state, 'render_disable_animations'],
+                            label: "⛔️ Pause all",
+                            on_change: ({ value }) => {
+                                console.log(value, scene_state)
+                            }
+                        },
+                        'global_timescale': {
+                            type: 'input',
+                            bind: [state, 'render_global_timescale'],
+                            label: "🕑 Timescale",
+                            min: 0,
+                            max: 10,
+                            step: 0.1,
+                            on_change: ({ value }) => set_animations_scale(value)
+                        },
+                        'animation_tracks_list': {
+                            type: 'folder',
+                            title: '🎛 Actions weight'
                         }
                     }
                 },
@@ -293,11 +321,6 @@ function create_main_pane() {
                 }
                 notify_render()
             },
-            on_render_camera_fov_changed: ({ value }) => {
-                camera.fov = value
-                camera.updateProjectionMatrix()
-                notify_render()
-            },
             on_resolution_scale_changed: ({ value }) => {
                 handle_window_resized()
                 notify_render()
@@ -316,6 +339,7 @@ function create_main_pane() {
                 set_inspection_mode(value)
             },
             on_inspect_matcap_mode_changed: ({ value }) => {
+                set_inspection_mode('Matcap')
                 set_matcap(value)
             },
         }
@@ -329,7 +353,7 @@ function create_file_pane() {
         children: {
             file_folder: {
                 type: 'folder',
-                title: "📝 File",
+                title: "📝 file",
                 children: {
                     open_button: {
                         type: 'button',
@@ -338,22 +362,7 @@ function create_file_pane() {
                         title: "Open",
                         on_click: () => file_input.click()
                     },
-                    samples_folder: {
-                        type: 'folder',
-                        title: "🗃 Load sample",
-                        children: {
-                            samples_selector: {
-                                type: 'blade',
-                                view: 'buttongrid',
-                                size: [1, Object.keys(ASSETS.samples).length],
-                                cells: (x, y) => ({
-                                    title: _.map(Object.keys(ASSETS.samples), item => [item])[y][x],
-                                }),
-                                label: 'Samples',
-                                on_click: ({ cell }) => load_sample(cell.title)
-                            }
-                        }
-                    },
+
                     app_control: {
                         type: 'blade',
                         view: 'buttongrid',
@@ -377,22 +386,28 @@ function create_file_pane() {
                             }
                             console.log(cell)
                         }
-                    }
+                    },
+                    samples_folder: {
+                        type: 'folder',
+                        title: "🗃 Load sample",
+                        children: {
+                            samples_selector: {
+                                type: 'blade',
+                                view: 'buttongrid',
+                                size: [1, Object.keys(ASSETS.samples).length],
+                                cells: (x, y) => ({
+                                    title: _.map(Object.keys(ASSETS.samples), item => [item])[y][x],
+                                }),
+                                label: 'Samples',
+                                on_click: ({ cell }) => load_sample(cell.title)
+                            }
+                        }
+                    },
                 }
-            }
-        }
-    })
-    return file_pane
-
-}
-function create_help_pane() {
-    help_pane = build_gui({
-        type: 'pane',
-        class_list: ['about'],
-        children: {
+            },
             'help_folder': {
                 type: 'folder',
-                title: "☂️ Help",
+                title: "☂️ help",
                 children: {
                     'update_available_banner': {
                         type: 'button',
@@ -405,7 +420,6 @@ function create_help_pane() {
                     'info_folder': {
                         type: 'folder',
                         title: "📃 Info",
-                        on_click: () => help_pane.credits_folder.expanded = false,
                         children: {
                             info_text: {
                                 type: 'blade',
@@ -420,7 +434,6 @@ function create_help_pane() {
                     'credits_folder': {
                         type: 'folder',
                         title: "🕴 About",
-                        on_click: () => help_pane.info_folder.expanded = false,
                         children: {
                             about_text: {
                                 type: 'blade',
@@ -436,7 +449,9 @@ function create_help_pane() {
             }
         }
     })
-    return help_pane
+
+    return file_pane
+
 }
 function _collapse_gui_item(item_data, skip_item) {
     _.forEach(item_data, (item, alias) => {
@@ -450,9 +465,7 @@ function _collapse_gui_item(item_data, skip_item) {
     })
 }
 function collapse_gui() {
-    console.log(main_pane, help_pane, file_pane)
     _collapse_gui_item(main_pane, true)
-    _collapse_gui_item(help_pane, true)
     _collapse_gui_item(file_pane, true)
 }
 function check_updates() {
@@ -464,10 +477,10 @@ function check_updates() {
 
         if (window.PACKAGE_INFO.version !== remote_package.version) {
             state.application_has_updates = remote_package.version
-            help_pane.update_available_banner.title = `Update: ${remote_package.version}`
-            help_pane.update_available_banner.hidden = false
+            file_pane.update_available_banner.title = `Update: ${remote_package.version}`
+            file_pane.update_available_banner.hidden = false
         } else {
-            help_pane.update_available_banner.hidden = true
+            file_pane.update_available_banner.hidden = true
         }
     } catch (err) {
         loge('gui/check_updates', err.message)
@@ -496,7 +509,6 @@ function _generate_list_keys(data, mode = 0) {
 }
 const refresh_gui = _.throttle(() => {
     main_pane.item.refresh();
-    help_pane.item.refresh();
     file_pane.item.refresh();
 }, 1000 / 2)
 

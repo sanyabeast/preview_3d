@@ -84,15 +84,9 @@ let scene_state = {
     current_position: 0,
     lights: []
 }
-let animation_state = {
-    disable_animations: false,
-    global_timescale: 1
-}
 
-let animation_folder_gui
 let animation_mixer
 
-let camera_helper_gui
 
 document.addEventListener('visibilitychange', (event) => {
     console.log(`document visibility: ${document.visibilityState}`)
@@ -259,8 +253,8 @@ function set_scene(scene, animations = []) {
 
 function init_scene() {
     /** animations */
-    animation_folder_gui.item.hidden = scene_state.animations.length === 0;
-    animation_folder_gui.actions.children.forEach((child, index) => {
+    panes.main.animations_folder.hidden = scene_state.animations.length === 0;
+    panes.main.animation_tracks_list.children.forEach((child, index) => {
         child.hidden = index >= scene_state.animations.length
     })
 
@@ -268,9 +262,9 @@ function init_scene() {
         animation_mixer = new AnimationMixer(state.active_scene);
         scene_state.animations.forEach((animation_clip, index) => {
             scene_state.actions[index] = animation_mixer.clipAction(animation_clip)
-            if (!animation_folder_gui.actions.children[index]) {
+            if (!panes.main.animation_tracks_list.children[index]) {
                 let slider_data = { weight: 1 }
-                let slider = animation_folder_gui.actions.addInput(slider_data, 'weight', {
+                let slider = panes.main.animation_tracks_list.addInput(slider_data, 'weight', {
                     label: animation_clip.name,
                     min: 0,
                     max: 1,
@@ -282,14 +276,14 @@ function init_scene() {
                 })
                 slider.slider_data = slider_data;
             } else {
-                let slider = animation_folder_gui.actions.children[index]
+                let slider = panes.main.animation_tracks_list.children[index]
                 slider.label = animation_clip.name
                 slider.slider_data.weight = 1
                 slider.refresh()
             }
         })
         loop_tasks.update_animation_mixer = (d, td) => {
-            if (animation_state.disable_animations !== true) {
+            if (state.render_disable_animations !== true) {
                 animation_mixer.update(td)
                 update_shadows()
                 update_matrix()
@@ -347,9 +341,9 @@ function init_scene() {
         }
         if (object.isCamera) {
             scene_state.cameras.push(object)
-            if (!camera_helper_gui.cameras.children[camera_index]) {
+            if (!panes.main.scene_cameras_list.children[camera_index]) {
                 let bound_camera_index = camera_index
-                let button = camera_helper_gui.cameras.addButton({
+                let button = panes.main.scene_cameras_list.addButton({
                     label: '',
                     title: object.name,
                     min: 0,
@@ -357,7 +351,7 @@ function init_scene() {
                     step: 0.1
                 }).on('click', (ev) => pilot_camera(bound_camera_index))
             } else {
-                let button = camera_helper_gui.cameras.children[camera_index]
+                let button = panes.main.scene_cameras_list.children[camera_index]
                 button.label = object.name
             }
 
@@ -373,8 +367,8 @@ function init_scene() {
     handle_window_resized()
 
     /**reset camera helper gui */
-    camera_helper_gui.item.hidden = scene_state.cameras.length === 0;
-    camera_helper_gui.cameras.children.forEach((child, index) => {
+    panes.main.scene_cameras_list.hidden = scene_state.cameras.length === 0;
+    panes.main.scene_cameras_list.children.forEach((child, index) => {
         child.hidden = index >= scene_state.cameras.length
     })
 }
@@ -450,36 +444,7 @@ function init_render() {
 }
 
 function init_animation_player() {
-    animation_folder_gui = extend_gui(panes.main.item, {
-        type: 'folder',
-        title: '🤹‍♀️ Animations',
-        hidden: true,
-        children: {
-            'disable_animations': {
-                type: 'input',
-                bind: [animation_state, 'disable_animations'],
-                label: "⛔️ Pause all",
-                on_change: ({ value }) => {
-                    console.log(value, scene_state)
-                }
-            },
-            'global_timescale': {
-                type: 'input',
-                bind: [animation_state, 'global_timescale'],
-                label: "🕑 Timescale",
-                min: 0,
-                max: 10,
-                step: 0.1,
-                on_change: ({ value }) => {
-                    animation_mixer.timeScale = value
-                }
-            },
-            'actions': {
-                type: 'folder',
-                title: '🎛 Actions weight'
-            }
-        }
-    })
+    // panes.main.animations_folder = extend_gui(panes.main.item, )
 }
 
 
@@ -491,26 +456,7 @@ function kill_animations() {
 }
 
 function init_camera_helper() {
-    camera_helper_gui = extend_gui(panes.main.item, {
-        type: 'folder',
-        title: '📽 Cameras',
-        hidden: true,
-        children: {
-            'reset': {
-                type: 'button',
-                label: "",
-                title: 'Reset',
-                on_click: ({ value }) => {
-                    pilot_camera(null)
-                }
-            },
-            'cameras': {
-                type: 'folder',
-                title: 'Cameras on the scene',
-                expanded: true
-            }
-        }
-    })
+
 }
 
 
@@ -613,15 +559,15 @@ function set_ambient_intentsity(value) {
 }
 
 function set_environment_intensity(value) {
-    state.env_intensity = value
-    world.backgroundIntensity = state.env_intensity
+    state.env_brightness = value
+    world.backgroundIntensity = state.env_brightness
     notify_render()
 }
 
 function set_environment_power(value) {
-    state.env_power = value
+    state.env_influence = value
     /** USED MODIFIED JS API */
-    world.environment_power = state.env_power
+    world.environment_power = state.env_influence
     notify_render()
 }
 
@@ -649,8 +595,17 @@ function handle_window_resized() {
     camera.updateProjectionMatrix();
 
     scene_state.cameras.forEach((scene_camera) => {
-        scene_camera.aspect = width / height;
-        scene_camera.updateProjectionMatrix();
+        if (scene_camera.isOrthographicCamera) {
+            let ortho_height = Math.abs(scene_camera.bottom - scene_camera.top)
+            let aspect = width / height
+            scene_camera.left = -(ortho_height * aspect) / 2;
+            scene_camera.right = (ortho_height * aspect) / 2;
+            scene_camera.updateProjectionMatrix();
+        } else {
+            scene_camera.aspect = width / height;
+            scene_camera.updateProjectionMatrix();
+        }
+
     })
 
     renderer.setSize(width, height);
@@ -713,6 +668,13 @@ function pilot_camera(index) {
     notify_render()
 }
 
+function set_animations_scale(value) {
+    state.render_global_timescale = value
+    if (animation_mixer) {
+        animation_mixer.timeScale = value
+    }
+}
+
 preinit_render()
 
 window.scene_state = scene_state
@@ -744,5 +706,6 @@ export {
     set_resolution_scale,
     set_shadows_enabled,
     set_scene,
-    pilot_camera
+    pilot_camera,
+    set_animations_scale
 }
