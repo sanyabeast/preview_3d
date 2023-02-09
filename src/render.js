@@ -412,9 +412,9 @@ function init_scene() {
             console.log(object.intensity)
             object.intensity *= scene_state.unit_scale / 1000
         }
-        if (object.isMesh || object.isGroup || object.isLight) {
-            object.metrics = get_object_metrics(object)
-        }
+        // if (object.isMesh || object.isGroup || object.isLight) {
+        //     object.metrics = get_object_metrics(object)
+        // }
     });
 
     handle_window_resized()
