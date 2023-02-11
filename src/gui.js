@@ -21,7 +21,8 @@ import {
     set_resolution_scale,
     set_shadows_enabled,
     pilot_camera,
-    set_animations_scale
+    set_animations_scale,
+    set_environment_rotation
 } from './render.js';
 import { state } from './state.js';
 import { load_sample } from './app.js'
@@ -211,6 +212,15 @@ function create_main_pane() {
                                     max: 1,
                                     step: 0.01,
                                     on_change: notify_render
+                                },
+                                'env_rotation': {
+                                    type: 'input',
+                                    bind: [state, 'render_environment_rotation'],
+                                    label: "🌗 env. rotation",
+                                    min: 0,
+                                    max: 1,
+                                    step: 0.001,
+                                    on_change: ({ value }) => set_environment_rotation(value)
                                 },
                                 'env_map_select_folder': {
                                     type: 'folder',

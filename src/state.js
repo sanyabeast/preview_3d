@@ -7,7 +7,7 @@ const STARTUP_SCENE = read_url('file_parameter') !== null ? read_url('file_param
 
 const state = {
     env_enabled: true,
-    env_texture_src: 'assets/hdr/gdansk.hdr',
+    env_texture_src: 'assets/hdr/atelier.hdr',
     env_default_background: null,
     env_default_texture: null,
     env_texture: null,
@@ -38,7 +38,8 @@ const state = {
     render_disable_animations: false,
     render_global_timescale: 1,
     render_disable_all_scenic_lights: false,
-    render_scenic_light_intensity_scale: 1
+    render_scenic_light_intensity_scale: 1,
+    render_environment_rotation: 0
 }
 
 window.state = state

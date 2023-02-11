@@ -29,7 +29,8 @@ import {
     Sphere,
     LOD,
     Euler,
-    Quaternion
+    Quaternion,
+    ShaderLib
 } from 'three';
 import { RoomEnvironment } from 'three/addons/environments/RoomEnvironment.js';
 import { EffectComposer } from 'three/addons/postprocessing/EffectComposer.js';
@@ -62,9 +63,10 @@ const USE_LOGDEPTHBUF = false
 const DISABLE_SCENE_ALIGN = false
 const SCENIC_LIGHTS_INTENSITY_SCALE = 0.001
 const RENDER_LIGHT_NORMALIZED_INTENSITY_SCALE = 3
+const RENDER_ENVIRONMENT_ROTATION_OFFSET = 1;
 // const USE_LOGDEPTHBUF = !IS_MACOS
 
-let camera, world, renderer, composer, main_stage, second_stage
+let camera, world, world_transformed, renderer, composer, main_stage, second_stage
 let render_needs_update = true
 let render_loop_id
 let render_timeout = +new Date()
@@ -153,11 +155,12 @@ function init_world() {
     const environment = new RoomEnvironment();
     const pmremGenerator = new PMREMGenerator(renderer);
 
+
     world = new Scene();
+    world_transformed = new Group()
     main_stage = new Group();
     second_stage = new Group();
-    world.add(main_stage)
-    world.add(second_stage)
+
     world.background = new Color(0xbbbbbb);
     world.environment = pmremGenerator.fromScene(environment).texture;
     world.matrixWorldAutoUpdate = false
@@ -177,11 +180,11 @@ function init_world() {
     // shadows
     sun.shadow.mapSize.width = 2048
     sun.shadow.mapSize.height = 2048
-    sun.shadow.camera.left = -0.5
-    sun.shadow.camera.right = 0.5
-    sun.shadow.camera.left = -0.5
-    sun.shadow.camera.top = -0.5
-    sun.shadow.camera.bottom = 0.5
+    sun.shadow.camera.left = -2
+    sun.shadow.camera.right = 2
+    sun.shadow.camera.left = -2
+    sun.shadow.camera.top = -2
+    sun.shadow.camera.bottom = 2
     sun.shadow.camera.near = 0.00001
     sun.shadow.radius = 8
     sun.shadow.blurSamples = 8
@@ -190,10 +193,16 @@ function init_world() {
     set_sun_azimuth(0.5)
     set_sun_height(1)
 
+    world.add(world_transformed)
+    world_transformed.add(camera)
+    world_transformed.add(main_stage)
+    world_transformed.add(second_stage)
+
     second_stage.add(sun)
     second_stage.add(amb)
 
     window.world = world
+    window.world_transformed = world_transformed
     window.main_stage = main_stage
     window.second_stage = second_stage
 
@@ -327,7 +336,7 @@ function init_scene() {
     })
 
     /** lights */
-    let max_light_intensity = scene_state.max_light_intensity = Math.max(..._.map(scene_state.assets.light, l=>l.intensity))
+    let max_light_intensity = scene_state.max_light_intensity = Math.max(..._.map(scene_state.assets.light, l => l.intensity))
     logd('init_scene', `max found light intensity: ${max_light_intensity}`)
 
     scene_state.assets.light.forEach((light, light_index) => {
@@ -598,11 +607,13 @@ function set_daytime(value) {
     set_sun_height(lerp(0.02, 1, curved_value))
     set_sun_azimuth(lerp(0, 1, value))
     set_ambient_intentsity(lerp(0.125, 0.9, curved_value))
+    set_environment_rotation(value)
     notify_render()
     refresh_gui();
 }
 function update_matrix() {
     world.updateMatrixWorld()
+    notify_render()
 }
 function handle_window_resized() {
     const width = Math.floor(window.innerWidth * state.resolution_scale);
@@ -685,6 +696,11 @@ function set_animations_scale(value) {
         animation_mixer.timeScale = value
     }
 }
+function set_environment_rotation(value) {
+    state.render_environment_rotation = value
+    world_transformed.rotation.y = (2 * Math.PI) * ((value + RENDER_ENVIRONMENT_ROTATION_OFFSET) % 1)
+    update_matrix()
+}
 
 preinit_render()
 
@@ -694,6 +710,7 @@ window.render_state = render_state
 export {
     camera,
     world,
+    world_transformed,
     main_stage,
     second_stage,
     renderer,
@@ -720,5 +737,6 @@ export {
     pilot_camera,
     set_animations_scale,
     collect_scene_assets,
-    scene_state
+    scene_state,
+    set_environment_rotation
 }
