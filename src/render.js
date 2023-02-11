@@ -174,6 +174,12 @@ function init_world() {
     world.backgroundBlurriness = 1
     world.backgroundIntensity = 1
 
+    Object.defineProperty(world, 'render_flares', {
+        get() {
+            return state.render_flares_enabled && state.render_flares_global_intensity > 0.01
+        }
+    })
+
     environment.dispose();
 
     sun = new DirectionalLight(0xffdeae)
@@ -182,6 +188,9 @@ function init_world() {
     sun.position.set(1000, 1000, 1000)
     sun.intensity = 1
     sun.castShadow = true
+
+    /**sun flare */
+    let sun_lensflare = _add_lens_flare(sun, 4, 4)
 
     // shadows
     sun.shadow.mapSize.width = 2048
@@ -388,13 +397,8 @@ function init_scene() {
             button.label = light.name
         }
         /** flares */
-        const lensflare = new Lensflare(light);
-        lensflare.addElement(new LensflareElement(texture_flare_0, 700, 0, light.color));
-        lensflare.addElement(new LensflareElement(texture_flare_3, 60, 0.6));
-        lensflare.addElement(new LensflareElement(texture_flare_3, 70, 0.7));
-        lensflare.addElement(new LensflareElement(texture_flare_3, 120, 0.9));
-        lensflare.addElement(new LensflareElement(texture_flare_3, 70, 1));
-        light.add(lensflare);
+        const lensflare = _add_lens_flare(light, 0, 1)
+        scene_state.assets.object_disposable.push(lensflare)
     })
 
     panes.main.scenic_lights_folder.hidden = scene_state.assets.light.length === 0;
@@ -403,6 +407,23 @@ function init_scene() {
     })
 
     handle_window_resized()
+}
+let secondary_flares_map = [
+    [60, 0.6],
+    [70, 0.7],
+    [120, 0.9],
+    [70, 0.1]
+]
+function _add_lens_flare(light, secondary_flares = 4, intensity_scale = 1) {
+    const lensflare = new Lensflare(light);
+    lensflare.get_global_flares_intensity = () => state.render_flares_global_intensity
+    lensflare.addElement(new LensflareElement(texture_flare_0, 700 * intensity_scale, 0, light.color));
+    for (let i = 0; i < secondary_flares; i++) {
+        let flare_data = secondary_flares_map[i % secondary_flares_map.length]
+        lensflare.addElement(new LensflareElement(texture_flare_3, flare_data[0] * intensity_scale, flare_data[1]));
+    }
+    light.add(lensflare)
+    return lensflare
 }
 function _init_scene_animations() {
     panes.main.animations_folder.hidden = scene_state.assets.animation.length === 0;
@@ -458,22 +479,7 @@ function _destroy_scene(scene) {
     scene_state.assets.material.forEach(item => item.dispose())
     scene_state.assets.geometry.forEach(item => item.dispose())
     scene_state.assets.texture.forEach(item => item.dispose())
-
-    scene.traverse((object) => {
-        if (object.isMesh) {
-            let materials = _.isArray(object.material) ? object.material : [object.material]
-            materials.forEach((mat) => {
-                if (mat) {
-                    mat.dispose()
-                    things_diposed++
-                }
-            })
-            if (object.geometry) {
-                object.geometry.dispose()
-                things_diposed++
-            }
-        }
-    })
+    scene_state.assets.object_disposable.forEach(item => item.dispose())
 
     logd('_destroy_scene', `things disposed: ${things_diposed}`)
 }

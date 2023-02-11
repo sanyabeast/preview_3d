@@ -128,6 +128,7 @@ function round_to(num, div) {
 }
 function collect_scene_assets(scene, extension) {
     let scene_assets = {
+        object_disposable: [],
         geometry: [],
         material: [],
         material_transparent: [],

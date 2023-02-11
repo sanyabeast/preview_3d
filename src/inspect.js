@@ -161,6 +161,7 @@ function set_inspection_mode(mode) {
     window.RENDER_ONLY_MAIN = mode !== "None (PBR)"
     window.RENDER_SKIP_BACKGROUND_RENDERING = mode !== "None (PBR)"
     window.RENDER_SKIP_SHADOWMAP_RENDERING = mode !== "None (PBR)"
+    state.render_flares_enabled = mode === "None (PBR)"
     notify_render(1000)
 }
 

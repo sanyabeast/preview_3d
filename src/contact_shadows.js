@@ -34,7 +34,7 @@ const contact_shadow_state = {
     showWireframe: false,
 };
 
-let shadow_group, renderTarget, renderTargetBlur, shadowCamera, depthMaterial, horizontalBlurMaterial, verticalBlurMaterial;
+let shadow_group, renderTarget, renderTargetBlur, shadow_camera, depthMaterial, horizontalBlurMaterial, verticalBlurMaterial;
 
 let plane, blur_plane, fill_plane;
 
@@ -93,9 +93,10 @@ function init_contact_shadows(_scene, _stage, _renderer, _camera) {
     fill_plane.receiveShadow = true
 
     // the camera to render the depth material from
-    shadowCamera = new OrthographicCamera(- PLANE_WIDTH / 2, PLANE_WIDTH / 2, PLANE_HEIGHT / 2, - PLANE_HEIGHT / 2, 0, CAMERA_HEIGHT);
-    shadowCamera.rotation.x = Math.PI / 2; // get the camera to look up
-    shadow_group.add(shadowCamera);
+    shadow_camera = new OrthographicCamera(- PLANE_WIDTH / 2, PLANE_WIDTH / 2, PLANE_HEIGHT / 2, - PLANE_HEIGHT / 2, 0, CAMERA_HEIGHT);
+    shadow_camera.render_flares = false
+    shadow_camera.rotation.x = Math.PI / 2; // get the camera to look up
+    shadow_group.add(shadow_camera);
     depthMaterial = new MeshDepthMaterial();
     depthMaterial.userData.darkness = { value: contact_shadow_state.shadow.darkness };
 
@@ -133,7 +134,7 @@ function render_contact_shadows() {
 
     // render to the render target to get the depths
     renderer.setRenderTarget(renderTarget);
-    renderer.render(scene, shadowCamera);
+    renderer.render(scene, shadow_camera);
 
     // and reset the override material
     scene.overrideMaterial = null;
@@ -163,7 +164,7 @@ function _render_contact_shadow_blur(amount) {
     horizontalBlurMaterial.uniforms.h.value = amount * 1 / 256;
 
     renderer.setRenderTarget(renderTargetBlur);
-    renderer.render(blur_plane, shadowCamera);
+    renderer.render(blur_plane, shadow_camera);
 
     // blur vertically and draw in the main renderTarget
     blur_plane.material = verticalBlurMaterial;
@@ -171,7 +172,7 @@ function _render_contact_shadow_blur(amount) {
     verticalBlurMaterial.uniforms.v.value = amount * 1 / 256;
 
     renderer.setRenderTarget(renderTarget);
-    renderer.render(blur_plane, shadowCamera);
+    renderer.render(blur_plane, shadow_camera);
 
     blur_plane.visible = false;
 }

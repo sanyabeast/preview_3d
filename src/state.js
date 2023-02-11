@@ -40,7 +40,9 @@ const state = {
     render_disable_all_scenic_lights: false,
     render_scenic_light_intensity_scale: 1,
     render_environment_rotation: 0,
-    render_emission_scale: 1
+    render_emission_scale: 1,
+    render_flares_global_intensity: 1,
+    render_flares_enabled: true
 }
 
 window.state = state

@@ -97,7 +97,7 @@ function create_main_pane() {
                         'resolution_scale': {
                             type: 'input',
                             bind: [state, 'resolution_scale'],
-                            min: 0.5, max: 1, step: 0.1,
+                            min: 0.5, max: 2, step: 0.1,
                             label: "🧇 Resolution",
                             on_change: ({ value }) => set_resolution_scale(value)
                         },
@@ -166,6 +166,15 @@ function create_main_pane() {
                             max: 1,
                             step: 0.01,
                             on_change: ({ value }) => set_daytime(value)
+                        },
+                        'flares': {
+                            type: 'input',
+                            bind: [state, 'render_flares_global_intensity'],
+                            label: "🔆 flares",
+                            min: 0,
+                            max: 10,
+                            step: 0.001,
+                            on_change: notify_render
                         },
                         'scenic_lights_folder': {
                             type: 'folder',
