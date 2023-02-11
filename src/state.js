@@ -19,7 +19,6 @@ const state = {
     postfx_bloom_radius: 1,
     scene_src: STARTUP_SCENE || '',
     resolution_scale: IS_MACOS ? 0.5 : 1,
-    active_scene: null,
     torch_light: false,
     application_has_updates: '',
     check_updates: true,
@@ -37,8 +36,7 @@ const state = {
     postfx_enabled: false,
     render_camera_fov: 45,
     render_disable_animations: false,
-    render_global_timescale: 1,
-    scene_metrics: null
+    render_global_timescale: 1
 }
 
 window.state = state

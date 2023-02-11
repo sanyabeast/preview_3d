@@ -43,18 +43,18 @@ import { RenderPass } from 'three/addons/postprocessing/RenderPass.js';
 
 import { state } from './state.js'
 import { loaders } from './loaders.js';
-import { lerp, clamp, round_to, logd, extend_gui } from './util.js';
+import { lerp, clamp, round_to, logd, extend_gui, collect_scene_assets } from './util.js';
 import { refresh_gui, update_title, panes } from './gui.js';
 import { init_contact_shadows, render_contact_shadows, contact_shadow_state } from './contact_shadows.js';
 import { frame_object, watch_controls } from './controls.js';
 
+/** overriding alpha test code with custom alpha dithering implementation */
 ShaderChunk.alphatest_fragment = ASSETS.texts.dither_alphatest_glsl
 
-/**initializing state.scene_metrics object */
-if (state.scene_metrics === null) {
-    state.scene_metrics = get_object_metrics(new Group())
-    console.log(state.scene_metrics)
-}
+const WIREFRAME_MAT = new MeshBasicMaterial({ wireframe: true });
+const EMPTY_OBJECT = new Group()
+const SPHERE_R1M = new Mesh(new SphereGeometry(1, 32, 16), WIREFRAME_MAT)
+const BOX_1M = new Mesh(new BoxGeometry(1, 1, 1), WIREFRAME_MAT)
 
 const SUN_HEIGHT_MULTIPLIER = 0.666
 const SUN_AZIMUTH_OFFSET = Math.PI / 1.9
@@ -70,13 +70,17 @@ let loop_tasks = {}
 let last_render_date = +new Date()
 let last_tick_date = +new Date()
 let sun, amb
+let is_document_visible = document.visibilityState === 'visible'
+let bloom_pass, ssao_pass, render_pass, fxaa_pass
+let contact_shadows_needs_update = true
+let animation_mixer = null;
+
 let sun_state = {
     distance: 10,
     height: 1,
     azimuth: 0.5,
     environment_multiplier: 1
 }
-
 let render_state = {
     tick_rates: [],
     avg_tick_rate_period: 8,
@@ -87,41 +91,20 @@ let render_state = {
     },
     override_camera: null,
 }
-
-let is_document_visible = document.visibilityState === 'visible'
-let bloom_pass, ssao_pass, render_pass, fxaa_pass
-
-let contact_shadows_needs_update = true
-
 let scene_state = {
-    animations: [],
-    cameras: [],
-    actions: [],
-    current_position: 0,
-    lights: []
+    /**initializing with values from empty object as defaults */
+    scene: null,
+    assets: collect_scene_assets(EMPTY_OBJECT),
+    metric: get_object_metric(EMPTY_OBJECT),
+    unit_scale: 1
 }
 
-let animation_mixer
-
-/** lod test */
-let empty_lod = new Group()
-empty_lod.visible = false
-let sphere_lod = new Mesh(
-    new SphereGeometry(1),
-    new MeshLambertMaterial({ color: 0x000000 })
-)
-let box_lod = new Mesh(
-    new BoxGeometry(1, 1, 1),
-    new MeshLambertMaterial({ color: 0x000000 })
-)
-
-
-document.addEventListener('visibilitychange', (event) => {
-    console.log(`document visibility: ${document.visibilityState}`)
-    is_document_visible = document.visibilityState === 'visible'
-})
-
+/** procedures */
 function preinit_render() {
+    document.addEventListener('visibilitychange', (event) => {
+        console.log(`document visibility: ${document.visibilityState}`)
+        is_document_visible = document.visibilityState === 'visible'
+    })
     /** main renderer */
     const container = document.createElement('div');
     document.body.appendChild(container);
@@ -164,9 +147,6 @@ function preinit_render() {
     window.addEventListener('resize', handle_window_resized);
     handle_window_resized()
 }
-
-
-
 function init_world() {
     const environment = new RoomEnvironment();
     const pmremGenerator = new PMREMGenerator(renderer);
@@ -218,8 +198,7 @@ function init_world() {
     state.env_default_background = world.background
     state.env_default_texture = world.environment
 }
-
-function get_object_metrics(object) {
+function get_object_metric(object) {
     let bounding_box = new Box3();
     let bounding_sphere = new Sphere()
     let object_center = new Vector3()
@@ -246,56 +225,31 @@ function get_object_metrics(object) {
         nudge
     }
 }
-
 function set_scene(scene, animations = []) {
     console.log(scene, animations)
     main_stage.visible = false
     /** resetting some things to defaults */
     set_daytime(0.5)
 
-    scene_state.scene = scene
-    scene_state.animations = animations
-    scene_state.current_position = 0
-    scene_state.actions = []
-    scene_state.cameras = []
-    scene_state.lights = []
-
-    kill_animations()
-
-    if (state.active_scene) {
-        console.log('removing scene...')
-        main_stage.remove(state.active_scene)
-        _destroy_scene(state.active_scene)
+    if (scene_state.scene) {
+        console.log('removing existing scene...')
+        main_stage.remove(scene_state.scene)
+        _destroy_scene(scene_state.scene)
     }
 
-    state.active_scene = scene
-    let scene_metrics = state.scene_metrics = get_object_metrics(scene)
+    scene_state.scene = scene
+    let scene_assets = scene_state.assets = collect_scene_assets(scene, {
+        animation: animations
+    })
 
-    console.log(scene_metrics)
+    let scene_metric = scene_state.metric = get_object_metric(scene)
 
-    logd('set_scene', `maximum original scene scale in one dimension: ${scene_metrics.radius}`)
-    logd('set_scene', `computed virtual scene's scale: ${1 / scene_metrics.radius}`)
+    logd('set_scene', 'scene assets: ', scene_assets)
+    logd('set_scene', 'scene metric: ', scene_metric)
 
     if (DISABLE_SCENE_ALIGN !== true) {
-        scene_state.unit_scale = 1 / scene_metrics.radius
-        state.active_scene.scale.setScalar(scene_state.unit_scale)
-        /**updaing metrics after transformation! */
-        scene_metrics = state.scene_metrics = get_object_metrics(scene)
-        logd(`set_scene`, `computed xz-offset: [${scene_metrics.center.x}:${scene_metrics.center.z}]`)
-        logd('set_scene', `computed vertical nudge ratio: ${scene_metrics.nudge.y}`)
-        state.active_scene.position.y = Math.abs(scene_metrics.nudge.y) > 0.25 ? -scene_metrics.box.min.y : 0;
-        if (scene_metrics.box.min.y > 0) {
-            state.active_scene.position.y = -scene_metrics.box.min.y
-        }
-        state.active_scene.position.x = -scene_metrics.center.x;
-        state.active_scene.position.z = -scene_metrics.center.z;
-
-        /**updaing metrics after transformation! */
-        scene_metrics = state.scene_metrics = get_object_metrics(scene)
+        _align_scene()
     }
-
-    console.log('spawning scene...')
-    console.log(scene, scene_metrics.box)
 
     main_stage.add(scene);
 
@@ -306,21 +260,107 @@ function set_scene(scene, animations = []) {
 
     main_stage.visible = true
     notify_render(1000);
-    
+
 }
+function _align_scene() {
+    logd('_align_scene', 'begin aligning scene')
 
+    let scene = scene_state.scene
+    let scene_metric = scene_state.metric = get_object_metric(scene)
 
+    scene_state.unit_scale = 1 / scene_metric.radius
+    scene_state.scene.scale.setScalar(scene_state.unit_scale)
+    /**updaing metrics after transformation! */
+    scene_metric = scene_state.metric = get_object_metric(scene)
+
+    scene_state.scene.position.y = Math.abs(scene_metric.nudge.y) > 0.25 ? -scene_metric.box.min.y : 0;
+    if (scene_metric.box.min.y > 0) {
+        scene_state.scene.position.y = -scene_metric.box.min.y
+    }
+    scene_state.scene.position.x = -scene_metric.center.x;
+    scene_state.scene.position.z = -scene_metric.center.z;
+
+    /**updaing metrics after transformation! */
+    scene_metric = scene_state.metric = get_object_metric(scene)
+
+    logd('set_scene', `maximum original scene scale in one dimension: ${scene_metric.radius}`)
+    logd('set_scene', `computed virtual scene's scale: ${1 / scene_metric.radius}`)
+    logd(`set_scene`, `computed xz-offset: [${scene_metric.center.x}:${scene_metric.center.z}]`)
+    logd('set_scene', `computed vertical nudge ratio: ${scene_metric.nudge.y}`)
+}
 function init_scene() {
     /** animations */
-    panes.main.animations_folder.hidden = scene_state.animations.length === 0;
-    panes.main.animation_tracks_list.children.forEach((child, index) => {
-        child.hidden = index >= scene_state.animations.length
+    _init_scene_animations()
+
+    /** materials */
+    scene_state.assets.material.forEach((material) => {
+        // console.log(material)
+        if (!material._original_material_settings) {
+            material._original_material_settings = {
+                transparent: material.transparent,
+                alphaTest: material.alphaTest,
+                depthWrite: material.depthWrite
+            }
+        }
+
+        if (material.transparent) {
+            material._original_mesh.has_transparency = true
+            material.transparent = false
+            material.depthWrite = true
+            material.alphaTest = 0.5;
+            material.blending = NormalBlending
+            //logd('init_scene', `found transparent material "${material.name}". Material is set up for dithered transparency rendering`,)
+        } else {
+            //logd('init_scene', `found opaque material "${material.name}"`)
+        }
     })
 
-    if (scene_state.animations.length > 0) {
-        animation_mixer = new AnimationMixer(state.active_scene);
-        scene_state.animations.forEach((animation_clip, index) => {
-            scene_state.actions[index] = animation_mixer.clipAction(animation_clip)
+    /** meshes */
+    scene_state.assets.mesh_all.forEach((mesh) => {
+        if (mesh.has_transparency !== true) {
+            mesh.castShadow = true
+            mesh.receiveShadow = true
+        }
+    })
+
+    /** cameras */
+    scene_state.assets.camera.forEach((camera, camera_index) => {
+        if (!panes.main.scene_cameras_list.children[camera_index]) {
+            panes.main.scene_cameras_list.addButton({
+                label: '',
+                title: camera.name,
+                min: 0,
+                max: 1,
+                step: 0.1
+            }).on('click', (ev) => pilot_camera(camera_index))
+        } else {
+            let button = panes.main.scene_cameras_list.children[camera_index]
+            button.label = camera.name
+        }
+    })
+
+    panes.main.scene_cameras_list.hidden = scene_state.assets.camera.length === 0;
+    panes.main.scene_cameras_list.children.forEach((child, index) => {
+        child.hidden = index >= scene_state.assets.camera.length
+    })
+
+    /** lights */
+    scene_state.assets.light.forEach((light, light_index) => {
+        light.intensity *= scene_state.unit_scale / 1000
+    })
+
+    handle_window_resized()
+}
+function _init_scene_animations() {
+    panes.main.animations_folder.hidden = scene_state.assets.animation.length === 0;
+    panes.main.animation_tracks_list.children.forEach((child, index) => {
+        child.hidden = index >= scene_state.assets.animation.length
+    })
+
+    if (scene_state.assets.animation.length > 0) {
+        animation_mixer = new AnimationMixer(scene_state.scene);
+        scene_state.assets.animation.forEach((animation_clip, index) => {
+            scene_state.assets.action[index] = animation_mixer.clipAction(animation_clip)
             if (!panes.main.animation_tracks_list.children[index]) {
                 let slider_data = { weight: 1 }
                 let slider = panes.main.animation_tracks_list.addInput(slider_data, 'weight', {
@@ -329,9 +369,9 @@ function init_scene() {
                     max: 1,
                     step: 0.1
                 }).on('change', ({ value }) => {
-                    scene_state.actions[index].enabled = value > 0
-                    scene_state.actions[index].setEffectiveTimeScale(1);
-                    scene_state.actions[index].setEffectiveWeight(value);
+                    scene_state.assets.action[index].enabled = value > 0
+                    scene_state.assets.action[index].setEffectiveTimeScale(1);
+                    scene_state.assets.action[index].setEffectiveWeight(value);
                 })
                 slider.slider_data = slider_data;
             } else {
@@ -352,89 +392,20 @@ function init_scene() {
     } else {
         loop_tasks.update_animation_mixer = () => { }
     }
-    scene_state.actions.forEach((action) => {
+    scene_state.assets.action.forEach((action) => {
         action.enabled = true;
         action.play()
     })
-
-
-    /**traverse */
-    let camera_index = 0
-    main_stage.traverse((object) => {
-        logd('init_scene', `found ${object.type} "${object.name}"`)
-        if (object.isMesh) {
-            if (!object.material) return;
-            let materials = Array.isArray(object.material) ? object.material : [object.material];
-            let object_has_transparency = false
-            for (let i = 0; i < materials.length; i++) {
-                let material = materials[i]
-                // console.log(material)
-                if (!material._original_material_settings) {
-                    material._original_material_settings = {
-                        transparent: material.transparent,
-                        alphaTest: material.alphaTest,
-                        depthWrite: material.depthWrite
-                    }
-                }
-
-                if (material.transparent) {
-                    object_has_transparency = true
-                    material.transparent = false
-                    material.depthWrite = true
-                    material.alphaTest = 0.5;
-                    material.blending = NormalBlending
-                    //logd('init_scene', `found transparent material "${material.name}". Material is set up for dithered transparency rendering`,)
-                } else {
-                    //logd('init_scene', `found opaque material "${material.name}"`)
-                }
-            }
-            if (!object_has_transparency) {
-                object.castShadow = true
-                object.receiveShadow = true
-            } else {
-                object.has_transparency = true
-            }
-
-        }
-        if (object.isCamera) {
-            scene_state.cameras.push(object)
-            if (!panes.main.scene_cameras_list.children[camera_index]) {
-                let bound_camera_index = camera_index
-                let button = panes.main.scene_cameras_list.addButton({
-                    label: '',
-                    title: object.name,
-                    min: 0,
-                    max: 1,
-                    step: 0.1
-                }).on('click', (ev) => pilot_camera(bound_camera_index))
-            } else {
-                let button = panes.main.scene_cameras_list.children[camera_index]
-                button.label = object.name
-            }
-
-            camera_index++
-        }
-        if (object.isLight) {
-            scene_state.lights.push(object)
-            console.log(object.intensity)
-            object.intensity *= scene_state.unit_scale / 1000
-        }
-        // if (object.isMesh || object.isGroup || object.isLight) {
-        //     object.metrics = get_object_metrics(object)
-        // }
-    });
-
-    handle_window_resized()
-
-    /**reset camera helper gui */
-    panes.main.scene_cameras_list.hidden = scene_state.cameras.length === 0;
-    panes.main.scene_cameras_list.children.forEach((child, index) => {
-        child.hidden = index >= scene_state.cameras.length
-    })
 }
-
 function _destroy_scene(scene) {
-    let things_diposed = 0
+    kill_animations()
+
+    let things_diposed = scene_state.assets.material.length + scene_state.assets.geometry.length + scene_state.assets.texture.length
+
+    scene_state.assets.material.forEach(item => item.dispose())
+    scene_state.assets.geometry.forEach(item => item.dispose())
+    scene_state.assets.texture.forEach(item => item.dispose())
+
     scene.traverse((object) => {
         if (object.isMesh) {
             let materials = _.isArray(object.material) ? object.material : [object.material]
@@ -453,8 +424,6 @@ function _destroy_scene(scene) {
 
     logd('_destroy_scene', `things disposed: ${things_diposed}`)
 }
-
-
 function init_postfx() {
     composer = new EffectComposer(renderer);
 
@@ -490,11 +459,7 @@ function init_postfx() {
 
     //bloom_pass.renderToScreen = true
 }
-
 function init_render() {
-    init_animation_player()
-    init_camera_helper()
-
     watch_controls(() => {
         if (render_state.override_camera) {
             pilot_camera(null)
@@ -502,24 +467,12 @@ function init_render() {
     })
     /** */
 }
-
-function init_animation_player() {
-    // panes.main.animations_folder = extend_gui(panes.main.item, )
-}
-
-
 function kill_animations() {
-    scene_state.actions.forEach(action => {
+    scene_state.assets.action.forEach(action => {
         action.enabled = false
         action.stop()
     })
 }
-
-function init_camera_helper() {
-
-}
-
-
 function set_environment_texture(texture) {
     state.env_texture = texture
     texture.mapping = EquirectangularReflectionMapping;
@@ -527,22 +480,18 @@ function set_environment_texture(texture) {
     world.environment = texture;
     notify_render();
 }
-
 function set_environment(alias) {
     loaders['hdr'](`${__dirname}/assets/hdr/${ASSETS.hdr[alias]}`)
 }
-
 function notify_render(duration = 0) {
     render_timeout = +new Date() + duration
     render_needs_update = true
 }
-
 function update_shadows() {
     contact_shadows_needs_update = true
     renderer.shadowMap.needsUpdate = true
     notify_render()
 }
-
 function render() {
     render_loop_id = requestAnimationFrame(render)
     if (!is_document_visible || !IS_WINDOW_FOCUSED) {
@@ -582,19 +531,15 @@ function render() {
         render_needs_update = false
     }
 }
-
 function start_render() {
     render_loop_id = requestAnimationFrame(render)
 }
-
 function stop_render() {
     cancelAnimationFrame(render_loop_id)
 }
-
 function set_fps_limit(value) {
     state.render_fps_limit = Math.floor(value)
 }
-
 function set_sun_azimuth(value) {
     value += SUN_AZIMUTH_OFFSET
     state.render_sun_azimuth = value
@@ -603,7 +548,6 @@ function set_sun_azimuth(value) {
     update_shadows()
     notify_render()
 }
-
 function set_sun_height(value) {
     state.render_sun_height = value
     sun.position.y = lerp(0, sun_state.distance * SUN_HEIGHT_MULTIPLIER, value)
@@ -611,26 +555,22 @@ function set_sun_height(value) {
     update_shadows()
     notify_render()
 }
-
 function set_ambient_intentsity(value) {
     state.render_ambient_intensity = value
     amb.intensity = lerp(0, 1, value)
     notify_render()
 }
-
 function set_environment_intensity(value) {
     state.env_brightness = value
     world.backgroundIntensity = state.env_brightness
     notify_render()
 }
-
 function set_environment_power(value) {
     state.env_influence = value
     /** USED MODIFIED JS API */
     world.environment_power = state.env_influence
     notify_render()
 }
-
 function set_daytime(value) {
     state.render_daytime = value
     let curved_value = Math.sin(value * Math.PI)
@@ -643,30 +583,29 @@ function set_daytime(value) {
     notify_render()
     refresh_gui();
 }
-
 function update_matrix() {
     world.updateMatrixWorld()
 }
-
 function handle_window_resized() {
     const width = Math.floor(window.innerWidth * state.resolution_scale);
     const height = Math.floor(window.innerHeight * state.resolution_scale);
     camera.aspect = width / height;
     camera.updateProjectionMatrix();
 
-    scene_state.cameras.forEach((scene_camera) => {
-        if (scene_camera.isOrthographicCamera) {
-            let ortho_height = Math.abs(scene_camera.bottom - scene_camera.top)
-            let aspect = width / height
-            scene_camera.left = -(ortho_height * aspect) / 2;
-            scene_camera.right = (ortho_height * aspect) / 2;
-            scene_camera.updateProjectionMatrix();
-        } else {
-            scene_camera.aspect = width / height;
-            scene_camera.updateProjectionMatrix();
-        }
-
-    })
+    if (_.isArray(scene_state.assets.camera)) {
+        scene_state.assets.camera.forEach((scene_camera) => {
+            if (scene_camera.isOrthographicCamera) {
+                let ortho_height = Math.abs(scene_camera.bottom - scene_camera.top)
+                let aspect = width / height
+                scene_camera.left = -(ortho_height * aspect) / 2;
+                scene_camera.right = (ortho_height * aspect) / 2;
+                scene_camera.updateProjectionMatrix();
+            } else {
+                scene_camera.aspect = width / height;
+                scene_camera.updateProjectionMatrix();
+            }
+        })
+    }
 
     renderer.setSize(width, height);
     if (composer) {
@@ -675,7 +614,6 @@ function handle_window_resized() {
 
     notify_render()
 }
-
 const _dynamic_resolution_check = _.throttle(() => {
     let avg_tick_rate = 0
     for (let i = 0; i < render_state.tick_rates.length; i++) {
@@ -696,7 +634,6 @@ const _dynamic_resolution_check = _.throttle(() => {
         }
     }
 }, 1000 / 4)
-
 function update_dynamic_resolution() {
     if (render_needs_update === true || last_tick_date < render_timeout) {
         let tick_time = (+new Date() - last_tick_date)
@@ -707,13 +644,11 @@ function update_dynamic_resolution() {
         _dynamic_resolution_check()
     }
 }
-
 function set_resolution_scale(value) {
     state.resolution_scale = value
     refresh_gui()
     handle_window_resized()
 }
-
 function set_shadows_enabled(enabled) {
     contact_shadow_state.shadow.group.visible = enabled
     state.render_shadows_enabled = enabled;
@@ -721,13 +656,11 @@ function set_shadows_enabled(enabled) {
     renderer.render(world, camera);
     notify_render()
 }
-
 function pilot_camera(index) {
     logd('pilot_camera', `new piloted camera index: ${index}`)
-    render_state.override_camera = _.isNumber(index) ? scene_state.cameras[index] : null
+    render_state.override_camera = _.isNumber(index) ? scene_state.assets.camera[index] : null
     notify_render()
 }
-
 function set_animations_scale(value) {
     state.render_global_timescale = value
     if (animation_mixer) {
@@ -767,5 +700,7 @@ export {
     set_shadows_enabled,
     set_scene,
     pilot_camera,
-    set_animations_scale
+    set_animations_scale,
+    collect_scene_assets,
+    scene_state
 }

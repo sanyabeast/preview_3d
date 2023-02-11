@@ -103,9 +103,9 @@ function panic_escape() {
 
 function frame_object() {
     controls.target.set(
-        state.scene_metrics.center.x,
-        state.scene_metrics.center.y,
-        state.scene_metrics.center.z,
+        scene_state.metric.center.x,
+        scene_state.metric.center.y,
+        scene_state.metric.center.z,
     );
     controls.object.position.set(0, 1, 2)
     controls.saveState()

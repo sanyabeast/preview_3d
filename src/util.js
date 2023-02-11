@@ -2,7 +2,6 @@ let _original_window_open = window.location.open
 window.location.open = function () {
     console.log(_original_window_open)
 }
-
 function random_choice(data) {
     if (_.isArray(data)) {
         return data[Math.floor(Math.random() * data.length)]
@@ -101,30 +100,83 @@ function build_gui(layout, props, item_data) {
 
     return item_data
 }
-
 function extend_gui(parent, layout, props) {
     return build_gui(layout, props, {
         item: parent
     })
 }
-
 function loge(topic, ...args) {
     console.log(`%c[preview_3d] %c[!] %c[${topic}]: `, 'color: #4caf50', 'color: #f44336;', 'color: #cddc39', ...args)
 }
-
 function logd(topic, ...args) {
     console.log(`%c[preview_3d] %c[i] %c[${topic}]: `, 'color: #4caf50', 'color: #8bc34a;', 'color: #cddc39', ...args)
 }
 function lerp(start, end, amt) {
     return (1 - amt) * start + amt * end
 }
-
 function clamp(start, min, max) {
     return Math.max(Math.min(start, max), min)
 }
-
 function round_to(num, div) {
     return div * Math.ceil(num / div)
+}
+function collect_scene_assets(scene, extension) {
+    let scene_assets = {
+        geometry: [],
+        material: [],
+        texture: [],
+        camera: [],
+        animation: [],
+        action: [],
+        mesh: [],
+        group: [],
+        bone: [],
+        light: []
+    }
+    scene.traverse((object) => {
+        let category_name = object.type.toLowerCase();
+        scene_assets[category_name] = scene_assets[category_name] || []
+        scene_assets[category_name].push(object)
+        if (object.isMesh) {
+            let mats = _.isArray(object.material) ? object.material : [object.material]
+            mats.forEach((mat) => {
+                if (!_.find(scene_assets.material, _mat => _mat.uuid === mat.uuid)) {
+                    mat._original_mesh = object
+                    scene_assets.material.push(mat)
+                }
+            })
+            if (_.isObject(object.geometry)) {
+                object.geometry._original_mesh = object
+                scene_assets.geometry.push(object.geometry)
+            }
+        }
+    })
+
+    scene_assets.material.forEach((mat) => {
+        for (let k in mat) {
+            if (_.isObject(mat[k]) && mat[k].isTexture === true) {
+                if (!_.find(scene_assets.texture, t => t.uuid === mat[k].uuid)) {
+                    scene_assets.texture.push(mat[k])
+                }
+            }
+        }
+    })
+
+    scene_assets.light = scene_assets.light.concat(scene_assets.pointlight || [])
+    scene_assets.light = scene_assets.light.concat(scene_assets.spotlight || [])
+    scene_assets.camera = scene_assets.camera.concat(scene_assets.perspectivecamera || [])
+    scene_assets.camera = scene_assets.camera.concat(scene_assets.orthographiccamera || [])
+    scene_assets.mesh_all = (scene_assets.mesh || []).concat(scene_assets.skinnedmesh || [])
+
+    if (_.isObject(extension)) {
+        scene_assets = {
+            ...scene_assets,
+            ...extension
+        }
+
+    }
+
+    return scene_assets;
 }
 
 export {
@@ -137,5 +189,6 @@ export {
     logd,
     lerp,
     round_to,
-    clamp
+    clamp,
+    collect_scene_assets
 }

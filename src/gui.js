@@ -257,10 +257,7 @@ function create_main_pane() {
                         'disable_animations': {
                             type: 'input',
                             bind: [state, 'render_disable_animations'],
-                            label: "⛔️ Pause all",
-                            on_change: ({ value }) => {
-                                console.log(value, scene_state)
-                            }
+                            label: "⛔️ Pause all"
                         },
                         'global_timescale': {
                             type: 'input',
