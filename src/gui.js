@@ -170,7 +170,7 @@ function create_main_pane() {
                         'scenic_lights_folder': {
                             type: 'folder',
                             title: '💡 Scenic Lights',
-                            expanded: true,
+                            expanded: false,
                             children: {
                                 'disable_lights': {
                                     type: 'input',

@@ -41,9 +41,10 @@ import { FXAAShader } from 'three/addons/shaders/FXAAShader.js';
 import { RGBShiftShader } from 'three/addons/shaders/RGBShiftShader.js';
 import { UnrealBloomPass } from 'three/addons/postprocessing/UnrealBloomPass.js';
 import { RenderPass } from 'three/addons/postprocessing/RenderPass.js';
+import { Lensflare, LensflareElement } from 'three/addons/objects/Lensflare.js';
 
 import { state } from './state.js'
-import { loaders } from './loaders.js';
+import { loaders, texture_loader } from './loaders.js';
 import { lerp, clamp, round_to, logd, extend_gui, collect_scene_assets, get_object_metric } from './util.js';
 import { refresh_gui, update_title, panes } from './gui.js';
 import { init_contact_shadows, render_contact_shadows, contact_shadow_state } from './contact_shadows.js';
@@ -63,7 +64,7 @@ const USE_LOGDEPTHBUF = false
 const DISABLE_SCENE_ALIGN = false
 const SCENIC_LIGHTS_INTENSITY_SCALE = 0.001
 const RENDER_LIGHT_NORMALIZED_INTENSITY_SCALE = 2
-const RENDER_ENVIRONMENT_ROTATION_OFFSET = 1;
+const RENDER_ENVIRONMENT_ROTATION_OFFSET = 0.1;
 // const USE_LOGDEPTHBUF = !IS_MACOS
 
 let camera, world, world_transformed, renderer, composer, main_stage, second_stage
@@ -78,6 +79,11 @@ let is_document_visible = document.visibilityState === 'visible'
 let bloom_pass, ssao_pass, render_pass, fxaa_pass
 let contact_shadows_needs_update = true
 let animation_mixer = null;
+
+/** lens flare textures */
+const texture_flare_0 = texture_loader.load('./assets/texture/lensflare0.png');
+const texture_flare_3 = texture_loader.load('./assets/texture/lensflare3.png');
+
 
 let sun_state = {
     distance: 10,
@@ -381,6 +387,14 @@ function init_scene() {
             let button = panes.main.scenic_lights_list.children[light_index]
             button.label = light.name
         }
+        /** flares */
+        const lensflare = new Lensflare(light);
+        lensflare.addElement(new LensflareElement(texture_flare_0, 700, 0, light.color));
+        lensflare.addElement(new LensflareElement(texture_flare_3, 60, 0.6));
+        lensflare.addElement(new LensflareElement(texture_flare_3, 70, 0.7));
+        lensflare.addElement(new LensflareElement(texture_flare_3, 120, 0.9));
+        lensflare.addElement(new LensflareElement(texture_flare_3, 70, 1));
+        light.add(lensflare);
     })
 
     panes.main.scenic_lights_folder.hidden = scene_state.assets.light.length === 0;
