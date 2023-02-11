@@ -164,7 +164,7 @@ function create_main_pane() {
                             label: "🔆 Daytime",
                             min: 0,
                             max: 1,
-                            step: 0.01,
+                            step: 0.001,
                             on_change: ({ value }) => set_daytime(value)
                         },
                         'flares': {
@@ -219,7 +219,7 @@ function create_main_pane() {
                                     label: "💧 Env. Blur",
                                     min: 0,
                                     max: 1,
-                                    step: 0.01,
+                                    step: 0.001,
                                     on_change: notify_render
                                 },
                                 'env_rotation': {
@@ -261,7 +261,7 @@ function create_main_pane() {
                                             label: "env. brightness",
                                             min: 0,
                                             max: 1,
-                                            step: 0.01,
+                                            step: 0.001,
                                             on_change: ({ value }) => set_environment_intensity(value)
                                         },
                                         'env_influence': {
@@ -279,7 +279,7 @@ function create_main_pane() {
                                             label: "Amb. intensity",
                                             min: 0,
                                             max: 1,
-                                            step: 0.01,
+                                            step: 0.001,
                                             on_change: ({ value }) => set_ambient_intentsity(value)
                                         },
                                         'sun_height': {
@@ -288,7 +288,7 @@ function create_main_pane() {
                                             label: "sun elevation",
                                             min: 0,
                                             max: 1,
-                                            step: 0.01,
+                                            step: 0.001,
                                             on_change: ({ value }) => set_sun_height(value)
                                         },
                                         'sun_azimuth': {
@@ -297,7 +297,7 @@ function create_main_pane() {
                                             label: "Sun azimuth",
                                             min: 0,
                                             max: 1,
-                                            step: 0.01,
+                                            step: 0.001,
                                             on_change: ({ value }) => set_sun_azimuth(value)
                                         },
                                         'emission_scale': {
@@ -306,7 +306,7 @@ function create_main_pane() {
                                             label: "Emission boost",
                                             min: 0,
                                             max: 10,
-                                            step: 0.01,
+                                            step: 0.001,
                                             on_change: ({ value }) => notify_render
                                         },
                                         'torchlight': {

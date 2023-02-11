@@ -391,6 +391,7 @@ function init_scene() {
                 step: 0.01
             }).on('change', ({ value }) => {
                 scene_state.assets.light[light_index]._intensity_scale = value
+                notify_render()
             })
         } else {
             let button = panes.main.scenic_lights_list.children[light_index]
@@ -441,7 +442,7 @@ function _init_scene_animations() {
                     label: animation_clip.name,
                     min: 0,
                     max: 1,
-                    step: 0.1
+                    step: 0.1,
                 }).on('change', ({ value }) => {
                     scene_state.assets.action[index].enabled = value > 0
                     scene_state.assets.action[index].setEffectiveTimeScale(1);
