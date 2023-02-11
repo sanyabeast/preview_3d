@@ -60,7 +60,7 @@ const SUN_HEIGHT_SCALE = 0.666
 const SUN_AZIMUTH_OFFSET = Math.PI / 1.9
 const USE_LOGDEPTHBUF = false
 const DISABLE_SCENE_ALIGN = false
-const SCENIC_LIGHTS_INTENSITY_SCALE = 0.01
+const SCENIC_LIGHTS_INTENSITY_SCALE = 0.001
 // const USE_LOGDEPTHBUF = !IS_MACOS
 
 let camera, world, renderer, composer, main_stage, second_stage
@@ -349,12 +349,16 @@ function init_scene() {
     scene_state.assets.light.forEach((light, light_index) => {
 
         light._intensity = light.intensity
+        light._intensity_scale = 1
         Object.defineProperty(light, 'intensity', {
             get: () => {
                 if (state.render_disable_all_scenic_lights) {
                     return 0
                 } else {
-                    return SCENIC_LIGHTS_INTENSITY_SCALE * light._intensity * state.render_scenic_light_intensity_scale * scene_state.unit_scale;
+                    return SCENIC_LIGHTS_INTENSITY_SCALE *
+                        light._intensity * light._intensity_scale *
+                        state.render_scenic_light_intensity_scale *
+                        scene_state.unit_scale;
                 }
             },
             set: (value) => {
@@ -363,13 +367,13 @@ function init_scene() {
         })
 
         if (!panes.main.scenic_lights_list.children[light_index]) {
-            let slider_data = { intensity: light._intensity }
+            let slider_data = { intensity: light._intensity_scale }
             panes.main.scenic_lights_list.addInput(slider_data, 'intensity', {
                 label: light.name,
                 min: 0,
-                max: 10,
+                max: 2,
                 step: 0.01
-            }).on('change', ({ value }) => light._intensity = value)
+            }).on('change', ({ value }) => light._intensity_scale = value)
         } else {
             let button = panes.main.scenic_lights_list.children[light_index]
             button.label = light.name
