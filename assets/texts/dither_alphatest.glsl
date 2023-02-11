@@ -8,9 +8,9 @@ float alpha_inverted = 1. - ad_orig_alpha;
 // float ad_x_fract = fract(gl_FragCoord.x / (alpha_inverted) + 1.);
 // float ad_y_fract = fract(gl_FragCoord.y / (alpha_inverted) + 1.);
 float ad_x_cosine_a = sin((gl_FragCoord.x) * ad_pi);
-float ad_y_cosine_a = cos((gl_FragCoord.y) * ad_pi);
-float ad_x_cosine_b = sin((gl_FragCoord.x + gl_FragCoord.y) * ad_half_pi);
-float ad_y_cosine_b = cos((gl_FragCoord.y * 2.) * ad_half_pi);
+float ad_y_cosine_a = cos((gl_FragCoord.y + gl_FragCoord.x) * ad_pi);
+float ad_x_cosine_b = sin((gl_FragCoord.x) * ad_half_pi);
+float ad_y_cosine_b = cos((gl_FragCoord.y + gl_FragCoord.x) * ad_half_pi);
 float ad_pat_a = (ad_x_cosine_a + ad_y_cosine_a);
 float ad_pat_b = (ad_x_cosine_b + ad_y_cosine_b);
 

@@ -46,8 +46,8 @@ function create_window() {
     }
 
     let win = new BrowserWindow({
-        width: Math.floor(Math.min(width, height)),
-        height: Math.floor(Math.min(width, height) / 4 * 3),
+        width: Math.floor(width * 0.8),
+        height: Math.floor(Math.floor(width * 0.75) / 16 * 10),
         // width,
         // height,
         webPreferences: {

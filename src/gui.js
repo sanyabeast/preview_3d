@@ -75,7 +75,7 @@ function create_main_pane() {
             children: {
                 'viewport_settings_folder': {
                     type: 'folder',
-                    title: "👁️‍🗨️ View",
+                    title: "👁️‍🗨️ Rendering",
                     children: {
                         'postfx_enabled': {
                             type: 'input',
@@ -96,7 +96,7 @@ function create_main_pane() {
                         'resolution_scale': {
                             type: 'input',
                             bind: [state, 'resolution_scale'],
-                            min: 0.5, max: 1, step: 0.05,
+                            min: 0.5, max: 1, step: 0.1,
                             label: "🧇 Resolution",
                             on_change: ({ value }) => set_resolution_scale(value)
                         },
@@ -108,105 +108,10 @@ function create_main_pane() {
                                 set_shadows_enabled(value)
                             }
                         },
-                        'env_enabled': {
-                            type: 'input',
-                            bind: [state, 'env_enabled'],
-                            label: '🎚 Environment',
-                            on_change: 'on_env_enabled_changed'
-                        },
-                        'env_blur': {
-                            type: 'input',
-                            bind: [world, 'backgroundBlurriness'],
-                            label: "💧 Env. Blur",
-                            min: 0,
-                            max: 1,
-                            step: 0.01,
-                            on_change: notify_render
-                        },
-                        'daytime': {
-                            type: 'input',
-                            bind: [state, 'render_daytime'],
-                            label: "🔆 Daytime",
-                            min: 0,
-                            max: 1,
-                            step: 0.01,
-                            on_change: ({ value }) => set_daytime(value)
-                        },
-                        'env_map_select_folder': {
+                        'viewport_extra_settings': {
                             type: 'folder',
-                            title: '🖼 Texture',
-                            expanded: true,
+                            title: 'more settings',
                             children: {
-                                'env_map_select_blade': {
-                                    type: 'blade',
-                                    view: 'buttongrid',
-                                    size: [1, Object.keys(ASSETS.hdr).length],
-                                    cells: (x, y) => ({
-                                        title: _.map(Object.keys(ASSETS.hdr), item => [item])[y][x],
-                                    }),
-                                    label: '',
-                                    on_click: ({ cell }) => {
-                                        console.log(cell)
-                                        set_environment(cell.title)
-                                    }
-                                },
-                            }
-                        },
-                        'env_settings_folder': {
-                            type: 'folder',
-                            title: '🔧 More settings...',
-                            children: {
-                                'env_brightness': {
-                                    type: 'input',
-                                    bind: [state, 'env_brightness'],
-                                    label: "env. brightness",
-                                    min: 0,
-                                    max: 1,
-                                    step: 0.01,
-                                    on_change: ({ value }) => set_environment_intensity(value)
-                                },
-                                'env_influence': {
-                                    type: 'input',
-                                    bind: [state, 'env_influence'],
-                                    label: "env. influence",
-                                    min: 0,
-                                    max: 5,
-                                    step: 0.1,
-                                    on_change: ({ value }) => set_environment_power(value)
-                                },
-                                'ambient_intensity': {
-                                    type: 'input',
-                                    bind: [state, 'render_ambient_intensity'],
-                                    label: "Amb. intensity",
-                                    min: 0,
-                                    max: 1,
-                                    step: 0.01,
-                                    on_change: ({ value }) => set_ambient_intentsity(value)
-                                },
-                                'sun_height': {
-                                    type: 'input',
-                                    bind: [state, 'render_sun_height'],
-                                    label: "sun elevation",
-                                    min: 0,
-                                    max: 1,
-                                    step: 0.01,
-                                    on_change: ({ value }) => set_sun_height(value)
-                                },
-                                'sun_azimuth': {
-                                    type: 'input',
-                                    bind: [state, 'render_sun_azimuth'],
-                                    label: "Sun azimuth",
-                                    min: 0,
-                                    max: 1,
-                                    step: 0.01,
-                                    on_change: ({ value }) => set_sun_azimuth(value)
-                                },
-                                'torchlight': {
-                                    type: 'input',
-                                    bind: [state, 'torch_light'],
-                                    label: "💡 flashlight",
-                                    on_change: 'on_torchlight_changed'
-                                },
                                 'fps_limit': {
                                     type: 'blade',
                                     view: 'buttongrid',
@@ -220,7 +125,6 @@ function create_main_pane() {
                                     label: 'FPS Cap',
                                     on_click: ({ cell }) => set_fps_limit(cell.title)
                                 },
-
                             }
                         },
                     }
@@ -244,9 +148,147 @@ function create_main_pane() {
                         },
                         'scene_cameras_list': {
                             type: 'folder',
-                            title: '📋 stage cameras',
+                            title: '📋 scenic cameras',
                             expanded: true
                         }
+                    }
+                },
+                'lights_folder': {
+                    type: 'folder',
+                    title: '☀️ Light',
+                    children: {
+                        'daytime': {
+                            type: 'input',
+                            bind: [state, 'render_daytime'],
+                            label: "🔆 Daytime",
+                            min: 0,
+                            max: 1,
+                            step: 0.01,
+                            on_change: ({ value }) => set_daytime(value)
+                        },
+                        'scenic_lights_folder': {
+                            type: 'folder',
+                            title: '💡 Scenic Lights',
+                            expanded: true,
+                            children: {
+                                'disable_lights': {
+                                    type: 'input',
+                                    bind: [state, 'render_disable_all_scenic_lights'],
+                                    label: "⛔️ disable all"
+                                },
+                                'scenic_lighst_intensity_scale': {
+                                    type: 'input',
+                                    bind: [state, 'render_scenic_light_intensity_scale'],
+                                    label: "🌟 overall intensity",
+                                    min: 0,
+                                    max: 5,
+                                    step: 0.01
+                                },
+                                'scenic_lights_list': {
+                                    type: 'folder',
+                                    title: 'lights list',
+                                    expanded: true
+                                }
+                            }
+                        },
+                        'environtment_settings_folder': {
+                            type: 'folder',
+                            title: '🌇 environment and more',
+                            children: {
+                                'env_enabled': {
+                                    type: 'input',
+                                    bind: [state, 'env_enabled'],
+                                    label: 'env. enabled',
+                                    on_change: 'on_env_enabled_changed'
+                                },
+                                'env_blur': {
+                                    type: 'input',
+                                    bind: [world, 'backgroundBlurriness'],
+                                    label: "💧 Env. Blur",
+                                    min: 0,
+                                    max: 1,
+                                    step: 0.01,
+                                    on_change: notify_render
+                                },
+                                'env_map_select_folder': {
+                                    type: 'folder',
+                                    title: '🖼 Texture',
+                                    expanded: true,
+                                    children: {
+                                        'env_map_select_blade': {
+                                            type: 'blade',
+                                            view: 'buttongrid',
+                                            size: [1, Object.keys(ASSETS.hdr).length],
+                                            cells: (x, y) => ({
+                                                title: _.map(Object.keys(ASSETS.hdr), item => [item])[y][x],
+                                            }),
+                                            label: '',
+                                            on_click: ({ cell }) => {
+                                                console.log(cell)
+                                                set_environment(cell.title)
+                                            }
+                                        },
+                                    }
+                                },
+                                'env_settings_folder': {
+                                    type: 'folder',
+                                    title: '🔧 More settings...',
+                                    children: {
+                                        'env_brightness': {
+                                            type: 'input',
+                                            bind: [state, 'env_brightness'],
+                                            label: "env. brightness",
+                                            min: 0,
+                                            max: 1,
+                                            step: 0.01,
+                                            on_change: ({ value }) => set_environment_intensity(value)
+                                        },
+                                        'env_influence': {
+                                            type: 'input',
+                                            bind: [state, 'env_influence'],
+                                            label: "env. influence",
+                                            min: 0,
+                                            max: 5,
+                                            step: 0.1,
+                                            on_change: ({ value }) => set_environment_power(value)
+                                        },
+                                        'ambient_intensity': {
+                                            type: 'input',
+                                            bind: [state, 'render_ambient_intensity'],
+                                            label: "Amb. intensity",
+                                            min: 0,
+                                            max: 1,
+                                            step: 0.01,
+                                            on_change: ({ value }) => set_ambient_intentsity(value)
+                                        },
+                                        'sun_height': {
+                                            type: 'input',
+                                            bind: [state, 'render_sun_height'],
+                                            label: "sun elevation",
+                                            min: 0,
+                                            max: 1,
+                                            step: 0.01,
+                                            on_change: ({ value }) => set_sun_height(value)
+                                        },
+                                        'sun_azimuth': {
+                                            type: 'input',
+                                            bind: [state, 'render_sun_azimuth'],
+                                            label: "Sun azimuth",
+                                            min: 0,
+                                            max: 1,
+                                            step: 0.01,
+                                            on_change: ({ value }) => set_sun_azimuth(value)
+                                        },
+                                        'torchlight': {
+                                            type: 'input',
+                                            bind: [state, 'torch_light'],
+                                            label: "💡 flashlight",
+                                            on_change: 'on_torchlight_changed'
+                                        },
+                                    }
+                                },
+                            }
+                        },
                     }
                 },
                 'animations_folder': {
@@ -259,7 +301,7 @@ function create_main_pane() {
                             bind: [state, 'render_disable_animations'],
                             label: "⛔️ Pause all"
                         },
-                        'global_timescale': {
+                        'render_global_timescale_input': {
                             type: 'input',
                             bind: [state, 'render_global_timescale'],
                             label: "🕑 Timescale",
@@ -270,30 +312,7 @@ function create_main_pane() {
                         },
                         'animation_tracks_list': {
                             type: 'folder',
-                            title: '📋 Actions weight'
-                        }
-                    }
-                },
-                'lights_folder': {
-                    type: 'folder',
-                    title: '💡 scenic light',
-                    children: {
-                        'disable_lights': {
-                            type: 'input',
-                            bind: [state, 'render_disable_all_scenic_lights'],
-                            label: "⛔️ disable all"
-                        },
-                        'global_timescale': {
-                            type: 'input',
-                            bind: [state, 'render_scenic_light_intensity_scale'],
-                            label: "🌟 overall intensity",
-                            min: 0,
-                            max: 5,
-                            step: 0.01
-                        },
-                        'scenic_lights_list': {
-                            type: 'folder',
-                            title: '📋 lights list',
+                            title: '📋 Actions weight',
                             expanded: true
                         }
                     }
@@ -324,10 +343,6 @@ function create_main_pane() {
                         },
                     }
                 },
-                // 'extra_settings_folder': {
-                //     title: '🎛 Extra settings',
-                //     type: 'folder'
-                // }
             }
         },
         {

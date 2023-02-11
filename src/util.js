@@ -1,3 +1,9 @@
+import {
+    Box3,
+    Sphere,
+    Vector3
+} from 'three'
+
 let _original_window_open = window.location.open
 window.location.open = function () {
     console.log(_original_window_open)
@@ -124,6 +130,10 @@ function collect_scene_assets(scene, extension) {
     let scene_assets = {
         geometry: [],
         material: [],
+        material_transparent: [],
+        material_transmissive: [],
+        material_opaque: [],
+        material_non_opaque: [],
         texture: [],
         camera: [],
         animation: [],
@@ -160,6 +170,18 @@ function collect_scene_assets(scene, extension) {
                 }
             }
         }
+
+        if (mat.transmission > 0) {
+            scene_assets.material_transmissive.push(mat)
+            scene_assets.material_non_opaque.push(mat)
+            mat._original_mesh.has_transparency = true
+        } else if (mat.transparent) {
+            scene_assets.material_transparent.push(mat)
+            scene_assets.material_non_opaque.push(mat)
+            mat._original_mesh.has_transparency = true
+        } else {
+            scene_assets.material_opaque.push(mat)
+        }
     })
 
     scene_assets.light = scene_assets.light.concat(scene_assets.pointlight || [])
@@ -173,10 +195,36 @@ function collect_scene_assets(scene, extension) {
             ...scene_assets,
             ...extension
         }
-
     }
 
     return scene_assets;
+}
+function get_object_metric(object) {
+    let bounding_box = new Box3();
+    let bounding_sphere = new Sphere()
+    let object_center = new Vector3()
+    let object_size = new Vector3()
+    let nudge = new Vector3()
+
+    bounding_box.setFromObject(object);
+    bounding_box.getBoundingSphere(bounding_sphere)
+    bounding_box.getCenter(object_center)
+    bounding_box.getSize(object_size)
+
+    nudge.set(
+        (object_center.x / object_size.x) || 0,
+        (object_center.y / object_size.y) || 0,
+        (object_center.z / object_size.z) || 0,
+    )
+
+    return {
+        center: object_center,
+        size: object_size,
+        box: bounding_box,
+        sphere: bounding_sphere,
+        radius: bounding_sphere.radius,
+        nudge
+    }
 }
 
 export {
@@ -190,5 +238,6 @@ export {
     lerp,
     round_to,
     clamp,
-    collect_scene_assets
+    collect_scene_assets,
+    get_object_metric
 }

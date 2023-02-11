@@ -43,7 +43,7 @@ import { RenderPass } from 'three/addons/postprocessing/RenderPass.js';
 
 import { state } from './state.js'
 import { loaders } from './loaders.js';
-import { lerp, clamp, round_to, logd, extend_gui, collect_scene_assets } from './util.js';
+import { lerp, clamp, round_to, logd, extend_gui, collect_scene_assets, get_object_metric } from './util.js';
 import { refresh_gui, update_title, panes } from './gui.js';
 import { init_contact_shadows, render_contact_shadows, contact_shadow_state } from './contact_shadows.js';
 import { frame_object, watch_controls } from './controls.js';
@@ -199,33 +199,7 @@ function init_world() {
     state.env_default_background = world.background
     state.env_default_texture = world.environment
 }
-function get_object_metric(object) {
-    let bounding_box = new Box3();
-    let bounding_sphere = new Sphere()
-    let object_center = new Vector3()
-    let object_size = new Vector3()
-    let nudge = new Vector3()
 
-    bounding_box.setFromObject(object);
-    bounding_box.getBoundingSphere(bounding_sphere)
-    bounding_box.getCenter(object_center)
-    bounding_box.getSize(object_size)
-
-    nudge.set(
-        (object_center.x / object_size.x) || 0,
-        (object_center.y / object_size.y) || 0,
-        (object_center.z / object_size.z) || 0,
-    )
-
-    return {
-        center: object_center,
-        size: object_size,
-        box: bounding_box,
-        sphere: bounding_sphere,
-        radius: bounding_sphere.radius,
-        nudge
-    }
-}
 function set_scene(scene, animations = []) {
     console.log(scene, animations)
     main_stage.visible = false
@@ -294,26 +268,31 @@ function init_scene() {
     _init_scene_animations()
 
     /** materials */
-    scene_state.assets.material.forEach((material) => {
-        // console.log(material)
-        if (!material._original_material_settings) {
-            material._original_material_settings = {
-                transparent: material.transparent,
-                alphaTest: material.alphaTest,
-                depthWrite: material.depthWrite
-            }
+    /** transaprent materials */
+    scene_state.assets.material_transparent.forEach((material) => {
+        material.transparent = false
+        material.depthWrite = true
+        material.alphaTest = 0.5;
+        material.blending = NormalBlending
+    })
+
+    scene_state.assets.material_transmissive.forEach((material) => {
+        material.transparent = false
+        material.depthWrite = true
+        material.alphaTest = 0.5;
+        material.blending = NormalBlending
+        if (_.isObject(material.transmissionMap)) {
+            material.opacity = 1;
+            material.alphaMap = material.transmissionMap
+            material.transmissionMap = null
+        } else {
+            material.opacity = 1 - (material.transmission * 0.5)
+            material.roughness = 1 - material.transmission
+            material.metalness = 1
+            material.env_map_intensity_scale = 0.25
         }
 
-        if (material.transparent) {
-            material._original_mesh.has_transparency = true
-            material.transparent = false
-            material.depthWrite = true
-            material.alphaTest = 0.5;
-            material.blending = NormalBlending
-            //logd('init_scene', `found transparent material "${material.name}". Material is set up for dithered transparency rendering`,)
-        } else {
-            //logd('init_scene', `found opaque material "${material.name}"`)
-        }
+        material.transmission = 0
     })
 
     /** meshes */
@@ -323,6 +302,7 @@ function init_scene() {
             mesh.receiveShadow = true
         }
     })
+
 
     /** cameras */
     scene_state.assets.camera.forEach((camera, camera_index) => {
@@ -373,14 +353,16 @@ function init_scene() {
                 min: 0,
                 max: 2,
                 step: 0.01
-            }).on('change', ({ value }) => light._intensity_scale = value)
+            }).on('change', ({ value }) => {
+                scene_state.assets.light[light_index]._intensity_scale = value
+            })
         } else {
             let button = panes.main.scenic_lights_list.children[light_index]
             button.label = light.name
         }
     })
 
-    panes.main.lights_folder.hidden = scene_state.assets.light.length === 0;
+    panes.main.scenic_lights_folder.hidden = scene_state.assets.light.length === 0;
     panes.main.scenic_lights_list.children.forEach((child, index) => {
         child.hidden = index >= scene_state.assets.light.length
     })
