@@ -39,7 +39,8 @@ const state = {
     render_global_timescale: 1,
     render_disable_all_scenic_lights: false,
     render_scenic_light_intensity_scale: 1,
-    render_environment_rotation: 0
+    render_environment_rotation: 0,
+    render_emission_scale: 1
 }
 
 window.state = state

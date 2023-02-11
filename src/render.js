@@ -62,7 +62,7 @@ const SUN_AZIMUTH_OFFSET = Math.PI / 1.9
 const USE_LOGDEPTHBUF = false
 const DISABLE_SCENE_ALIGN = false
 const SCENIC_LIGHTS_INTENSITY_SCALE = 0.001
-const RENDER_LIGHT_NORMALIZED_INTENSITY_SCALE = 3
+const RENDER_LIGHT_NORMALIZED_INTENSITY_SCALE = 2
 const RENDER_ENVIRONMENT_ROTATION_OFFSET = 1;
 // const USE_LOGDEPTHBUF = !IS_MACOS
 
@@ -303,6 +303,18 @@ function init_scene() {
         }
 
         material.transmission = 0
+    })
+
+    scene_state.assets.material_emissive.forEach((material) => {
+        material._emissiveIntensity = material.emissiveIntensity;
+        Object.defineProperty(material, 'emissiveIntensity', {
+            get() {
+                return material._emissiveIntensity * state.render_emission_scale
+            },
+            set(value) {
+                material._emissiveIntensity = value
+            }
+        })
     })
 
     /** meshes */
@@ -697,8 +709,10 @@ function set_animations_scale(value) {
     }
 }
 function set_environment_rotation(value) {
+    let delta = value - state.render_environment_rotation
     state.render_environment_rotation = value
     world_transformed.rotation.y = (2 * Math.PI) * ((value + RENDER_ENVIRONMENT_ROTATION_OFFSET) % 1)
+    //camera.position.applyAxisAngle(new Vector3(0, 1, 0), delta * Math.PI * 2 * 39)
     update_matrix()
 }
 

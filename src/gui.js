@@ -291,6 +291,15 @@ function create_main_pane() {
                                             step: 0.01,
                                             on_change: ({ value }) => set_sun_azimuth(value)
                                         },
+                                        'emission_scale': {
+                                            type: 'input',
+                                            bind: [state, 'render_emission_scale'],
+                                            label: "Emission boost",
+                                            min: 0,
+                                            max: 10,
+                                            step: 0.01,
+                                            on_change: ({ value }) => notify_render
+                                        },
                                         'torchlight': {
                                             type: 'input',
                                             bind: [state, 'torch_light'],

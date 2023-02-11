@@ -134,6 +134,7 @@ function collect_scene_assets(scene, extension) {
         material_transmissive: [],
         material_opaque: [],
         material_non_opaque: [],
+        material_emissive: [],
         texture: [],
         camera: [],
         animation: [],
@@ -182,6 +183,12 @@ function collect_scene_assets(scene, extension) {
         } else {
             scene_assets.material_opaque.push(mat)
         }
+
+        if (mat.emissiveIntensity > 0 && (mat.emissive.getHex() > 0 || mat.emissiveMap !== null)) {
+            scene_assets.material_emissive.push(mat)
+        }
+
+        console.log(mat)
     })
 
     scene_assets.light = scene_assets.light.concat(scene_assets.pointlight || [])

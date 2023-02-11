@@ -110,3 +110,12 @@ body:hover .pane:hover:after {
         display: none !important;
     }
 }
+
+/** overrides */
+.tp-lblv_l {
+    padding-right: 4px!important;
+}
+
+.tp-lblv_v {
+    width: 132px!important;
+}
