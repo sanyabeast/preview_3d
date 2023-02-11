@@ -188,8 +188,6 @@ function collect_scene_assets(scene, extension) {
         if (mat.emissiveIntensity > 0 && (mat.emissive.getHex() > 0 || mat.emissiveMap !== null)) {
             scene_assets.material_emissive.push(mat)
         }
-
-        console.log(mat)
     })
 
     scene_assets.light = scene_assets.light.concat(scene_assets.pointlight || [])

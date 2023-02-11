@@ -10,7 +10,7 @@ import {
 } from './render.js';
 import { loaders, init_loaders } from './loaders.js'
 import { init_gui, set_loader, notifications } from './gui.js'
-import { init_controls } from './controls.js'
+import { frame_object, init_controls } from './controls.js'
 import { state } from './state.js';
 import { init_inspect } from './inspect.js';
 import { write_url, loge, logd } from './util.js';
@@ -86,6 +86,7 @@ async function launch() {
     await load_scene()
     start_render()
     notify_render()
+    frame_object()
 }
 
 window.load_file = async function (file_path) {

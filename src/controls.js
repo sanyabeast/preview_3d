@@ -2,15 +2,17 @@
 /** Created by @sanyabeast | 28 Jan 2023 | Kyiv, Ukraine */
 
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
-import { camera, renderer, notify_render, pilot_camera } from './render.js';
+import { camera, renderer, notify_render, pilot_camera, world_transformed } from './render.js';
 import { state } from './state.js';
 import { collapse_gui } from './gui.js';
 import { set_inspection_mode } from './inspect.js';
+import { Group } from 'three'
 
 let controls
 let file_input = document.body.querySelector('#file_input')
 file_input.setAttribute("accept", EXTENSIONS.join(', '))
 let load_scene
+let controls_target_object = new Group()
 
 file_input.onchange = e => {
     load_scene(e.target.files[0].path)
@@ -84,7 +86,8 @@ function init_controls(params) {
     }, false)
 
     controls = new OrbitControls(camera, renderer.domElement);
-    controls.enablePan = false
+    world_transformed.add(controls.target_object)
+    // controls.enablePan = false
     watch_controls(notify_render)
     controls.minDistance = 0;
     controls.maxDistance = 8;
