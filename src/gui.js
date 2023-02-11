@@ -244,7 +244,7 @@ function create_main_pane() {
                         },
                         'scene_cameras_list': {
                             type: 'folder',
-                            title: 'stage cameras',
+                            title: '📋 stage cameras',
                             expanded: true
                         }
                     }
@@ -270,7 +270,31 @@ function create_main_pane() {
                         },
                         'animation_tracks_list': {
                             type: 'folder',
-                            title: '🎛 Actions weight'
+                            title: '📋 Actions weight'
+                        }
+                    }
+                },
+                'lights_folder': {
+                    type: 'folder',
+                    title: '💡 scenic light',
+                    children: {
+                        'disable_lights': {
+                            type: 'input',
+                            bind: [state, 'render_disable_all_scenic_lights'],
+                            label: "⛔️ disable all"
+                        },
+                        'global_timescale': {
+                            type: 'input',
+                            bind: [state, 'render_scenic_light_intensity_scale'],
+                            label: "🌟 overall intensity",
+                            min: 0,
+                            max: 5,
+                            step: 0.01
+                        },
+                        'scenic_lights_list': {
+                            type: 'folder',
+                            title: '📋 lights list',
+                            expanded: true
                         }
                     }
                 },

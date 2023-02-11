@@ -56,10 +56,11 @@ const EMPTY_OBJECT = new Group()
 const SPHERE_R1M = new Mesh(new SphereGeometry(1, 32, 16), WIREFRAME_MAT)
 const BOX_1M = new Mesh(new BoxGeometry(1, 1, 1), WIREFRAME_MAT)
 
-const SUN_HEIGHT_MULTIPLIER = 0.666
+const SUN_HEIGHT_SCALE = 0.666
 const SUN_AZIMUTH_OFFSET = Math.PI / 1.9
 const USE_LOGDEPTHBUF = false
 const DISABLE_SCENE_ALIGN = false
+const SCENIC_LIGHTS_INTENSITY_SCALE = 0.01
 // const USE_LOGDEPTHBUF = !IS_MACOS
 
 let camera, world, renderer, composer, main_stage, second_stage
@@ -346,7 +347,38 @@ function init_scene() {
 
     /** lights */
     scene_state.assets.light.forEach((light, light_index) => {
-        light.intensity *= scene_state.unit_scale / 1000
+
+        light._intensity = light.intensity
+        Object.defineProperty(light, 'intensity', {
+            get: () => {
+                if (state.render_disable_all_scenic_lights) {
+                    return 0
+                } else {
+                    return SCENIC_LIGHTS_INTENSITY_SCALE * light._intensity * state.render_scenic_light_intensity_scale * scene_state.unit_scale;
+                }
+            },
+            set: (value) => {
+                light._intensity = value
+            }
+        })
+
+        if (!panes.main.scenic_lights_list.children[light_index]) {
+            let slider_data = { intensity: light._intensity }
+            panes.main.scenic_lights_list.addInput(slider_data, 'intensity', {
+                label: light.name,
+                min: 0,
+                max: 10,
+                step: 0.01
+            }).on('change', ({ value }) => light._intensity = value)
+        } else {
+            let button = panes.main.scenic_lights_list.children[light_index]
+            button.label = light.name
+        }
+    })
+
+    panes.main.lights_folder.hidden = scene_state.assets.light.length === 0;
+    panes.main.scenic_lights_list.children.forEach((child, index) => {
+        child.hidden = index >= scene_state.assets.light.length
     })
 
     handle_window_resized()
@@ -550,7 +582,7 @@ function set_sun_azimuth(value) {
 }
 function set_sun_height(value) {
     state.render_sun_height = value
-    sun.position.y = lerp(0, sun_state.distance * SUN_HEIGHT_MULTIPLIER, value)
+    sun.position.y = lerp(0, sun_state.distance * SUN_HEIGHT_SCALE, value)
     sun.intensity = value * 2
     update_shadows()
     notify_render()

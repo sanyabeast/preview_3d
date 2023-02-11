@@ -36,7 +36,9 @@ const state = {
     postfx_enabled: false,
     render_camera_fov: 45,
     render_disable_animations: false,
-    render_global_timescale: 1
+    render_global_timescale: 1,
+    render_disable_all_scenic_lights: false,
+    render_scenic_light_intensity_scale: 1
 }
 
 window.state = state
