@@ -204,18 +204,14 @@ function get_object_metric(object) {
     let bounding_sphere = new Sphere()
     let object_center = new Vector3()
     let object_size = new Vector3()
-    let nudge = new Vector3()
+    let nudge = 0
 
     bounding_box.setFromObject(object);
     bounding_box.getBoundingSphere(bounding_sphere)
     bounding_box.getCenter(object_center)
     bounding_box.getSize(object_size)
 
-    nudge.set(
-        (object_center.x / object_size.x) || 0,
-        (object_center.y / object_size.y) || 0,
-        (object_center.z / object_size.z) || 0,
-    )
+    nudge = bounding_box.min.y / object_size.y;
 
     return {
         center: object_center,
@@ -225,6 +221,10 @@ function get_object_metric(object) {
         radius: bounding_sphere.radius,
         nudge
     }
+}
+
+function blender_watts_to_lumens(watt) {
+    return (683 * watt) / (4 * Math.PI);
 }
 
 export {
@@ -239,5 +239,6 @@ export {
     round_to,
     clamp,
     collect_scene_assets,
-    get_object_metric
+    get_object_metric,
+    blender_watts_to_lumens
 }

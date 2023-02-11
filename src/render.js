@@ -61,6 +61,7 @@ const SUN_AZIMUTH_OFFSET = Math.PI / 1.9
 const USE_LOGDEPTHBUF = false
 const DISABLE_SCENE_ALIGN = false
 const SCENIC_LIGHTS_INTENSITY_SCALE = 0.001
+const RENDER_LIGHT_NORMALIZED_INTENSITY_SCALE = 3
 // const USE_LOGDEPTHBUF = !IS_MACOS
 
 let camera, world, renderer, composer, main_stage, second_stage
@@ -248,7 +249,7 @@ function _align_scene() {
     /**updaing metrics after transformation! */
     scene_metric = scene_state.metric = get_object_metric(scene)
 
-    scene_state.scene.position.y = Math.abs(scene_metric.nudge.y) > 0.25 ? -scene_metric.box.min.y : 0;
+    scene_state.scene.position.y = Math.abs(scene_metric.nudge) > 0.25 ? -scene_metric.box.min.y : 0;
     if (scene_metric.box.min.y > 0) {
         scene_state.scene.position.y = -scene_metric.box.min.y
     }
@@ -261,7 +262,7 @@ function _align_scene() {
     logd('set_scene', `maximum original scene scale in one dimension: ${scene_metric.radius}`)
     logd('set_scene', `computed virtual scene's scale: ${1 / scene_metric.radius}`)
     logd(`set_scene`, `computed xz-offset: [${scene_metric.center.x}:${scene_metric.center.z}]`)
-    logd('set_scene', `computed vertical nudge ratio: ${scene_metric.nudge.y}`)
+    logd('set_scene', `computed vertical nudge ratio: ${scene_metric.nudge}`)
 }
 function init_scene() {
     /** animations */
@@ -326,19 +327,18 @@ function init_scene() {
     })
 
     /** lights */
-    scene_state.assets.light.forEach((light, light_index) => {
+    let max_light_intensity = scene_state.max_light_intensity = Math.max(..._.map(scene_state.assets.light, l=>l.intensity))
+    logd('init_scene', `max found light intensity: ${max_light_intensity}`)
 
-        light._intensity = light.intensity
+    scene_state.assets.light.forEach((light, light_index) => {
+        light._intensity = (light.intensity / max_light_intensity) * RENDER_LIGHT_NORMALIZED_INTENSITY_SCALE
         light._intensity_scale = 1
         Object.defineProperty(light, 'intensity', {
             get: () => {
                 if (state.render_disable_all_scenic_lights) {
                     return 0
                 } else {
-                    return SCENIC_LIGHTS_INTENSITY_SCALE *
-                        light._intensity * light._intensity_scale *
-                        state.render_scenic_light_intensity_scale *
-                        scene_state.unit_scale;
+                    return light._intensity * light._intensity_scale * state.render_scenic_light_intensity_scale;
                 }
             },
             set: (value) => {

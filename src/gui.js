@@ -174,15 +174,17 @@ function create_main_pane() {
                                 'disable_lights': {
                                     type: 'input',
                                     bind: [state, 'render_disable_all_scenic_lights'],
-                                    label: "⛔️ disable all"
+                                    label: "⛔️ disable all",
+                                    on_change: notify_render
                                 },
                                 'scenic_lighst_intensity_scale': {
                                     type: 'input',
                                     bind: [state, 'render_scenic_light_intensity_scale'],
                                     label: "🌟 overall intensity",
                                     min: 0,
-                                    max: 5,
-                                    step: 0.01
+                                    max: 10,
+                                    step: 0.001,
+                                    on_change: notify_render
                                 },
                                 'scenic_lights_list': {
                                     type: 'folder',
