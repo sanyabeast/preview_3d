@@ -308,7 +308,7 @@ function create_main_pane() {
                                             min: 0,
                                             max: 10,
                                             step: 0.001,
-                                            on_change: ({ value }) => notify_render
+                                            on_change: notify_render
                                         },
                                         'torchlight': {
                                             type: 'input',
@@ -377,7 +377,7 @@ function create_main_pane() {
             }
         },
         {
-            on_postfx_changed: ({ value }) => notify_render(),
+            on_postfx_changed: notify_render,
             on_env_enabled_changed: ({ value }) => {
                 if (value) {
                     world.background = state.env_texture;
@@ -566,7 +566,7 @@ function set_loader(visible, progress) {
         loader.classList.remove('active')
     }
 }
-function get_loader_state(){ return is_loading }
+function get_loader_state() { return is_loading }
 
 function _generate_list_keys(data, mode = 0) {
     let result = {}

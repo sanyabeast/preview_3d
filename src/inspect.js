@@ -121,6 +121,7 @@ function init_inspect() {
     grid_helper.material.depthWrite = false;
     grid_helper.material.transparent = true;
     second_stage.add(grid_helper);
+    axes_helper.visible = false
 
     gizmo.axes_helper = axes_helper
     gizmo.grid_helper = grid_helper
