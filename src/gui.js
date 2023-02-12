@@ -5,7 +5,7 @@
 import { Notyf } from 'notyf';
 
 import { release_page_url, update_check_url } from './data.js'
-import { set_inspection_mode, set_matcap, inspect_modes, torch_light, gizmo } from './inspect.js'
+import { set_inspection_mode, set_matcap, inspect_modes, torch_light } from './inspect.js'
 import {
     world,
     camera,
@@ -60,6 +60,7 @@ const notifications = new Notyf({
 
 let main_pane, file_pane
 let panes = {}
+let is_loading = false
 
 function init_gui(params) {
     if (state.check_updates === true) {
@@ -161,7 +162,7 @@ function create_main_pane() {
                         'daytime': {
                             type: 'input',
                             bind: [state, 'render_daytime'],
-                            label: "🔆 Daytime",
+                            label: "🌗 Daytime",
                             min: 0,
                             max: 1,
                             step: 0.001,
@@ -170,7 +171,7 @@ function create_main_pane() {
                         'flares': {
                             type: 'input',
                             bind: [state, 'render_flares_global_intensity'],
-                            label: "🔆 flares",
+                            label: "✨ flares",
                             min: 0,
                             max: 10,
                             step: 0.001,
@@ -190,7 +191,7 @@ function create_main_pane() {
                                 'scenic_lighst_intensity_scale': {
                                     type: 'input',
                                     bind: [state, 'render_scenic_light_intensity_scale'],
-                                    label: "🌟 overall intensity",
+                                    label: "🔆 overall intensity",
                                     min: 0,
                                     max: 10,
                                     step: 0.001,
@@ -205,7 +206,7 @@ function create_main_pane() {
                         },
                         'environtment_settings_folder': {
                             type: 'folder',
-                            title: '🌇 environment and more',
+                            title: '🏜 environment and more',
                             children: {
                                 'env_enabled': {
                                     type: 'input',
@@ -225,7 +226,7 @@ function create_main_pane() {
                                 'env_rotation': {
                                     type: 'input',
                                     bind: [state, 'render_environment_rotation'],
-                                    label: "🌗 env. rotation",
+                                    label: "💫 env. rotation",
                                     min: 0,
                                     max: 1,
                                     step: 0.001,
@@ -312,7 +313,7 @@ function create_main_pane() {
                                         'torchlight': {
                                             type: 'input',
                                             bind: [state, 'torch_light'],
-                                            label: "💡 flashlight",
+                                            label: "🔦 flashlight",
                                             on_change: 'on_torchlight_changed'
                                         },
                                     }
@@ -396,8 +397,7 @@ function create_main_pane() {
                 notify_render()
             },
             on_inspect_show_gizmo_changed: ({ value }) => {
-                gizmo.axes_helper.visible = value
-                gizmo.grid_helper.visible = value
+                world.render_gizmo = value
                 notify_render()
             },
             on_inspect_mode_changed: ({ value }) => {
@@ -558,6 +558,7 @@ function update_title() {
     document.querySelector('head title').innerHTML = `${prefix} preview_3d ${PACKAGE_INFO.version} ${sep} ${state.scene_src} | renderer: three.js`
 }
 function set_loader(visible, progress) {
+    is_loading = visible
     let loader = document.getElementById("loader")
     if (visible) {
         loader.classList.add('active')
@@ -565,6 +566,7 @@ function set_loader(visible, progress) {
         loader.classList.remove('active')
     }
 }
+function get_loader_state(){ return is_loading }
 
 function _generate_list_keys(data, mode = 0) {
     let result = {}
@@ -580,6 +582,7 @@ const refresh_gui = _.throttle(() => {
 
 window.handle_secondary_window_mode = update_title
 window.handle_main_window_mode = update_title
+window.set_loader = set_loader
 
 update_title()
 
@@ -591,5 +594,6 @@ export {
     set_loader,
     panes,
     refresh_gui,
-    notifications
+    notifications,
+    get_loader_state
 }

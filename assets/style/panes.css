@@ -87,6 +87,7 @@ body:hover .pane:hover:after {
 .pane.inspect {
     right: auto;
     left: 8px;
+    z-index: 9;
 }
 
 .pane.about {

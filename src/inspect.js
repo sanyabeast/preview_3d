@@ -114,14 +114,12 @@ function init_inspect() {
 
     axes_helper = new AxesHelper(0.1);
     axes_helper.position.set(0.5, 0, 0.5)
-    axes_helper.visible = state.inspect_show_gizmo
     second_stage.add(axes_helper)
 
     grid_helper = new GridHelper(1, 10, 0xffffff, 0xffffff);
     grid_helper.material.opacity = 0.1;
     grid_helper.material.depthWrite = false;
     grid_helper.material.transparent = true;
-    grid_helper.visible = state.inspect_show_gizmo
     second_stage.add(grid_helper);
 
     gizmo.axes_helper = axes_helper

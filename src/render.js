@@ -30,7 +30,9 @@ import {
     LOD,
     Euler,
     Quaternion,
-    ShaderLib
+    ShaderLib,
+    PointLightHelper,
+    SpotLightHelper,
 } from 'three';
 import { RoomEnvironment } from 'three/addons/environments/RoomEnvironment.js';
 import { EffectComposer } from 'three/addons/postprocessing/EffectComposer.js';
@@ -363,11 +365,11 @@ function init_scene() {
     })
 
     /** lights */
-    let max_light_intensity = scene_state.max_light_intensity = Math.max(..._.map(scene_state.assets.light, l => l.intensity))
-    logd('init_scene', `max found light intensity: ${max_light_intensity}`)
+    let normal_light_intensity = scene_state.normal_light_intensity = Math.max(..._.map(scene_state.assets.light, l => l.intensity))
+    logd('init_scene', `max found light intensity: ${normal_light_intensity}`)
 
     scene_state.assets.light.forEach((light, light_index) => {
-        light._intensity = (light.intensity / max_light_intensity) * RENDER_LIGHT_NORMALIZED_INTENSITY_SCALE
+        light._intensity = (light.intensity / normal_light_intensity) * RENDER_LIGHT_NORMALIZED_INTENSITY_SCALE
         light._intensity_scale = 1
         Object.defineProperty(light, 'intensity', {
             get: () => {
@@ -400,6 +402,8 @@ function init_scene() {
         /** flares */
         const lensflare = _add_lens_flare(light, 0, 1)
         scene_state.assets.object_disposable.push(lensflare)
+
+
     })
 
     panes.main.scenic_lights_folder.hidden = scene_state.assets.light.length === 0;
