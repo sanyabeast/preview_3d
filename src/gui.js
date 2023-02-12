@@ -374,6 +374,11 @@ function create_main_pane() {
                         },
                     }
                 },
+                'experiments_folder': {
+                    type: 'folder',
+                    title: "🥼 Experiments",
+                    children: {}
+                },
             }
         },
         {

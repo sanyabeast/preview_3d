@@ -229,11 +229,11 @@ function init_world() {
     state.env_default_texture = world.environment
 }
 
-function reset_things(){
-    
+function reset_things() {
+
     user_sun_azimuth_offset = Math.PI / 1.9
     user_environment_azimuth_offset = 0.1;
-    
+
     state.render_flares_global_intensity = 1
     state.render_emission_scale = 1
     state.render_global_timescale = 1
@@ -252,7 +252,7 @@ function set_scene(scene, animations = []) {
     console.log(scene, animations)
     main_stage.visible = false
     /** resetting some things to defaults */
-    
+
     reset_things()
 
     if (scene_state.scene) {
@@ -525,10 +525,10 @@ function init_postfx() {
 
     ssao_pass = new SSAOPass(world, camera, window.innerWidth / 2, window.innerHeight / 2);
     ssao_pass.kernelSize = 8;
-    ssao_pass.kernelRadius = 0.1;
-    ssao_pass.minDistance = 0.0000001;
-    ssao_pass.maxDistance = 0.001;
-    ssao_pass.output = SSAOPass.OUTPUT.Default
+    ssao_pass.kernelRadius = 0.01;
+    ssao_pass.minDistance = 0.000001;
+    ssao_pass.maxDistance = 0.0001;
+    ssao_pass.output = SSAOPass.OUTPUT.SSAO
 
     let copy_pass = new ShaderPass(CopyShader); /* LinearEncoding */
     copy_pass.enabled = true;
@@ -538,9 +538,9 @@ function init_postfx() {
 
 
     composer.addPass(render_pass);
-    // composer.addPass(ssao_pass)
+    composer.addPass(ssao_pass)
     composer.addPass(fxaa_pass);
-    // composer.addPass(rgb_shift);
+    composer.addPass(rgb_shift);
     composer.addPass(bloom_pass);
 
     //bloom_pass.renderToScreen = true
@@ -552,6 +552,46 @@ function init_render() {
         }
     })
     /** */
+    /** experiments */
+    extend_gui(panes.main.experiments_folder, {
+        type: 'folder',
+        title: 'postprocessing',
+        children: {
+            'posfx_enabled': {
+                type: 'input',
+                bind: [state, 'postfx_enabled'],
+                label: "enabled",
+                on_change: notify_render
+            },
+            'postfx_ssao_min_distance': {
+                type: 'input',
+                min: 0.0000001,
+                max: 0.00001,
+                step: 0.0000001,
+                bind: [ssao_pass, 'minDistance'],
+                label: "ssao min distance",
+                on_change: notify_render
+            },
+            'postfx_ssao_max_distance': {
+                type: 'input',
+                min: 0.00001,
+                max: 0.001,
+                step: 0.00001,
+                bind: [ssao_pass, 'maxDistance'],
+                label: "ssao max distance",
+                on_change: notify_render
+            },
+            'postfx_ssao_kernel_radius': {
+                type: 'input',
+                min: 0.001,
+                max: 0.1,
+                step: 0.0001,
+                bind: [ssao_pass, 'kernelRadius'],
+                label: "ssao kernel radius",
+                on_change: notify_render
+            },
+        }
+    })
 }
 function kill_animations() {
     scene_state.assets.action.forEach(action => {
@@ -693,6 +733,10 @@ function handle_window_resized() {
             }
         })
     }
+
+    /** postfx */
+    fxaa_pass.material.uniforms['resolution'].value.x = 1 / (window.innerWidth * window.devicePixelRatio);
+    fxaa_pass.material.uniforms['resolution'].value.y = 1 / (window.innerHeight * window.devicePixelRatio);
 
     renderer.setSize(width, height);
     if (composer) {
