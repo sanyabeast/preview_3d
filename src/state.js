@@ -23,7 +23,7 @@ const state = {
     application_has_updates: '',
     check_updates: true,
     inspect_mode: '',
-    inspect_show_gizmo: window.IS_DEVELOPMENT,
+    inspect_show_gizmo: true,
     inspect_matcap_file: '',
     inspect_matcap_mode: '',
     render_fps_limit: IS_MACOS ? Infinity : Infinity,
