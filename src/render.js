@@ -525,10 +525,10 @@ function init_postfx() {
 
     ssao_pass = new SSAOPass(world, camera, window.innerWidth / 2, window.innerHeight / 2);
     ssao_pass.kernelSize = 8;
-    ssao_pass.kernelRadius = 0.01;
-    ssao_pass.minDistance = 0.000001;
-    ssao_pass.maxDistance = 0.0001;
-    ssao_pass.output = SSAOPass.OUTPUT.SSAO
+    ssao_pass.kernelRadius = 0.007;
+    ssao_pass.minDistance = 0.00001;
+    ssao_pass.maxDistance = 0.01;
+    // ssao_pass.output = SSAOPass.OUTPUT.SSAO
 
     let copy_pass = new ShaderPass(CopyShader); /* LinearEncoding */
     copy_pass.enabled = true;
