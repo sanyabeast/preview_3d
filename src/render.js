@@ -61,12 +61,14 @@ const SPHERE_R1M = new Mesh(new SphereGeometry(1, 32, 16), WIREFRAME_MAT)
 const BOX_1M = new Mesh(new BoxGeometry(1, 1, 1), WIREFRAME_MAT)
 
 const SUN_HEIGHT_SCALE = 0.666
-const SUN_AZIMUTH_OFFSET = Math.PI / 1.9
+
 const USE_LOGDEPTHBUF = false
 const DISABLE_SCENE_ALIGN = false
 const SCENIC_LIGHTS_INTENSITY_SCALE = 0.001
 const RENDER_LIGHT_NORMALIZED_INTENSITY_SCALE = 2
-const RENDER_ENVIRONMENT_ROTATION_OFFSET = 0.1;
+
+let user_sun_azimuth_offset = Math.PI / 1.9
+let user_environment_azimuth_offset = 0.1;
 // const USE_LOGDEPTHBUF = !IS_MACOS
 
 let camera, world, world_transformed, renderer, composer, main_stage, second_stage
@@ -227,11 +229,31 @@ function init_world() {
     state.env_default_texture = world.environment
 }
 
+function reset_things(){
+    
+    user_sun_azimuth_offset = Math.PI / 1.9
+    user_environment_azimuth_offset = 0.1;
+    
+    state.render_flares_global_intensity = 1
+    state.render_emission_scale = 1
+    state.render_global_timescale = 1
+    state.render_disable_all_scenic_lights = false
+    state.render_scenic_light_intensity_scale = 1
+    state.render_environment_rotation = 0
+
+    set_sun_azimuth(state.render_sun_azimuth)
+    set_environment_rotation(state.render_environment_rotation)
+    set_daytime(0.5)
+
+    refresh_gui()
+}
+
 function set_scene(scene, animations = []) {
     console.log(scene, animations)
     main_stage.visible = false
     /** resetting some things to defaults */
-    set_daytime(0.5)
+    
+    reset_things()
 
     if (scene_state.scene) {
         console.log('removing existing scene...')
@@ -270,7 +292,7 @@ function _align_scene() {
     let scene = scene_state.scene
     let scene_metric = scene_state.metric = get_object_metric(scene)
 
-    scene_state.unit_scale = 1 / scene_metric.radius
+    scene_state.unit_scale = 1 / scene_metric.radius_b
     scene_state.scene.scale.setScalar(scene_state.unit_scale)
     /**updaing metrics after transformation! */
     scene_metric = scene_state.metric = get_object_metric(scene)
@@ -605,10 +627,9 @@ function set_fps_limit(value) {
     state.render_fps_limit = Math.floor(value)
 }
 function set_sun_azimuth(value) {
-    value += SUN_AZIMUTH_OFFSET
     state.render_sun_azimuth = value
-    sun.position.x = -Math.sin(value * Math.PI * 2) * sun_state.distance
-    sun.position.z = Math.cos(value * Math.PI * 2) * sun_state.distance
+    sun.position.x = -Math.sin((value + user_sun_azimuth_offset) * Math.PI * 2) * sun_state.distance
+    sun.position.z = Math.cos((value + user_sun_azimuth_offset) * Math.PI * 2) * sun_state.distance
     update_shadows()
     notify_render()
 }
@@ -625,14 +646,14 @@ function set_ambient_intentsity(value) {
     notify_render()
 }
 function set_environment_intensity(value) {
-    state.env_brightness = value
-    world.backgroundIntensity = state.env_brightness
+    state.render_environment_intensity = value
+    world.backgroundIntensity = state.render_environment_intensity
     notify_render()
 }
-function set_environment_power(value) {
-    state.env_influence = value
+function set_environment_influence(value) {
+    state.render_environment_influence = value
     /** USED MODIFIED JS API */
-    world.environment_power = state.env_influence
+    world.environment_power = state.render_environment_influence
     notify_render()
 }
 function set_daytime(value) {
@@ -640,7 +661,7 @@ function set_daytime(value) {
     let curved_value = Math.sin(value * Math.PI)
     curved_value = Math.pow(curved_value, 2)
     set_environment_intensity(lerp(0, 1, Math.pow(curved_value, 2)))
-    set_environment_power(lerp(5, 1, curved_value))
+    set_environment_influence(lerp(5, 1, curved_value))
     set_sun_height(lerp(0.02, 1, curved_value))
     set_sun_azimuth(lerp(0, 1, value))
     set_ambient_intentsity(lerp(0.125, 0.9, curved_value))
@@ -734,11 +755,22 @@ function set_animations_scale(value) {
     }
 }
 function set_environment_rotation(value) {
+    value = value % 1;
     let delta = value - state.render_environment_rotation
     state.render_environment_rotation = value
-    world_transformed.rotation.y = (2 * Math.PI) * ((value + RENDER_ENVIRONMENT_ROTATION_OFFSET) % 1)
+    world_transformed.rotation.y = (2 * Math.PI) * ((value + user_environment_azimuth_offset) % 1)
     //camera.position.applyAxisAngle(new Vector3(0, 1, 0), delta * Math.PI * 2 * 39)
     update_matrix()
+}
+
+function modify_environment_rotation(delta) {
+    user_environment_azimuth_offset = (user_environment_azimuth_offset + delta) % 1;
+    set_environment_rotation(state.render_environment_rotation)
+}
+
+function modify_sun_azimuth(delta) {
+    user_sun_azimuth_offset = (user_sun_azimuth_offset + delta) % 1;
+    set_sun_azimuth(state.render_sun_azimuth)
 }
 
 preinit_render()
@@ -766,7 +798,7 @@ export {
     set_sun_height,
     set_ambient_intentsity,
     set_environment_intensity,
-    set_environment_power,
+    set_environment_influence,
     set_daytime,
     update_matrix,
     update_shadows,
@@ -777,5 +809,7 @@ export {
     set_animations_scale,
     collect_scene_assets,
     scene_state,
-    set_environment_rotation
+    set_environment_rotation,
+    modify_environment_rotation,
+    modify_sun_azimuth
 }

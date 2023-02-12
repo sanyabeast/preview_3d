@@ -17,7 +17,7 @@ import {
     set_environment_intensity,
     set_daytime,
     set_ambient_intentsity,
-    set_environment_power,
+    set_environment_influence,
     set_resolution_scale,
     set_shadows_enabled,
     pilot_camera,
@@ -98,7 +98,7 @@ function create_main_pane() {
                         'resolution_scale': {
                             type: 'input',
                             bind: [state, 'resolution_scale'],
-                            min: 0.5, max: 2, step: 0.1,
+                            min: 0.5, max: 1, step: 0.1,
                             label: "🧇 Resolution",
                             on_change: ({ value }) => set_resolution_scale(value)
                         },
@@ -256,23 +256,23 @@ function create_main_pane() {
                                     type: 'folder',
                                     title: '🔧 More settings...',
                                     children: {
-                                        'env_brightness': {
+                                        'render_environment_intensity': {
                                             type: 'input',
-                                            bind: [state, 'env_brightness'],
+                                            bind: [state, 'render_environment_intensity'],
                                             label: "env. brightness",
                                             min: 0,
                                             max: 1,
                                             step: 0.001,
                                             on_change: ({ value }) => set_environment_intensity(value)
                                         },
-                                        'env_influence': {
+                                        'render_environment_influence': {
                                             type: 'input',
-                                            bind: [state, 'env_influence'],
+                                            bind: [state, 'render_environment_influence'],
                                             label: "env. influence",
                                             min: 0,
                                             max: 5,
                                             step: 0.1,
-                                            on_change: ({ value }) => set_environment_power(value)
+                                            on_change: ({ value }) => set_environment_influence(value)
                                         },
                                         'ambient_intensity': {
                                             type: 'input',

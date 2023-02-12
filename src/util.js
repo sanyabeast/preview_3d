@@ -120,8 +120,8 @@ function logd(topic, ...args) {
 function lerp(start, end, amt) {
     return (1 - amt) * start + amt * end
 }
-function clamp(start, min, max) {
-    return Math.max(Math.min(start, max), min)
+function clamp(num, min, max) {
+    return Math.min(Math.max(num, min), max)
 }
 function round_to(num, div) {
     return div * Math.ceil(num / div)
@@ -225,6 +225,7 @@ function get_object_metric(object) {
         box: bounding_box,
         sphere: bounding_sphere,
         radius: bounding_sphere.radius,
+        radius_b: bounding_sphere.radius * Math.sqrt(2),
         nudge
     }
 }
