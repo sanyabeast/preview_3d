@@ -443,7 +443,7 @@ let secondary_flares_map = [
 ]
 function _add_lens_flare(light, secondary_flares = 4, intensity_scale = 1) {
     const lensflare = new Lensflare(light);
-    lensflare.get_global_flares_intensity = () => state.render_flares_global_intensity
+    lensflare.get_global_flares_intensity = () => state.render_flares_global_intensity * state.resolution_scale
     lensflare.addElement(new LensflareElement(texture_flare_0, 700 * intensity_scale, 0, light.color));
     for (let i = 0; i < secondary_flares; i++) {
         let flare_data = secondary_flares_map[i % secondary_flares_map.length]
