@@ -419,7 +419,32 @@ function init_scene() {
         child.hidden = index >= scene_state.assets.light.length
     })
 
+    /**lods */
+    _init_lods()
+
     handle_window_resized()
+}
+
+function _init_lods() {
+    scene_state.assets.mesh.forEach((mesh) => {
+        let mesh_metric = get_object_metric(mesh)
+        let curve = clamp(
+            Math.pow(mesh_metric.radius, 2),
+            0.25,
+            1
+        )
+        console.log(mesh_metric.radius)
+        let lod = new LOD()
+        let parent = mesh.parent
+        lod.addLevel(mesh, 0)
+        lod.addLevel(EMPTY_OBJECT.clone(), 1000 * curve)
+        lod.position.clone(mesh.position)
+        
+        mesh.position.set(0, 0, 0)
+        parent.remove(mesh)
+        parent.add(lod)
+        console.log(mesh, lod)
+    })
 }
 
 function set_alpha_rendering_mode(mode, render_after = true) {
