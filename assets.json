@@ -32,7 +32,10 @@
         "mesh_party.obj": "mesh_party.obj",
         "Parrot.glb": "Parrot.glb",
         "Soldier.glb": "Soldier.glb",
+        "Soldier_t128.glb": "Soldier_t128.glb",
+        "Soldier_t32.glb": "Soldier_t32.glb",
         "Teapot.glb": "Teapot.glb",
+        "Teapot_t128.glb": "Teapot_t128.glb",
         "transparency.glb": "transparency.glb"
     },
     "hdr": {
