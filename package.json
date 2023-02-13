@@ -21,9 +21,15 @@
     "description": "Preview 3d Scenes",
     "author": "@sanyabeast",
     "dependencies": {
+        "@gltf-transform/extensions": "^2.5.1",
+        "@gltf-transform/functions": "^2.5.1",
         "directory-tree": "^3.5.1",
+        "draco3d": "^1.5.6",
         "file-saver": "^2.0.5",
         "jsonfile": "^6.1.0",
-        "lodash": "^4.17.21"
+        "lodash": "^4.17.21",
+        "meshoptimizer": "^0.18.1",
+        "sharp": "^0.31.3",
+        "webp-converter-browser": "^1.0.3"
     }
 }

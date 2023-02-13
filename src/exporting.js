@@ -97,7 +97,13 @@ function export_scene_as_gltf() {
                 async function (result) {
                     if (result instanceof ArrayBuffer) {
                         // saveArrayBuffer( result, 'scene.glb' );
-                        await OS_TOOLS.fs.createWriteStream(file_path).write(Buffer.from(result))
+                        let buffer = Buffer.from(result)
+                        try {
+                            buffer = await EXTRA_TOOLS.gltf_optimizer(buffer, {})
+                        } catch (err) {
+                            console.error(err)
+                        }
+                        await OS_TOOLS.fs.createWriteStream(file_path).write(buffer)
                         notifications.open({
                             type: 'info',
                             message: `Scene successfully exported as\n${file_path}`,
