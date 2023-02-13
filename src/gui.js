@@ -438,7 +438,6 @@ function create_file_pane() {
                         title: "Open",
                         on_click: () => file_input.click()
                     },
-
                     app_control: {
                         type: 'blade',
                         view: 'buttongrid',
@@ -484,6 +483,7 @@ function create_file_pane() {
             'exporting_folder': {
                 type: 'folder',
                 title: '🚚 export',
+                hidden: true,
                 children: {
                     export_as_image_folder: {
                         type: 'folder',

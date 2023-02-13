@@ -9,7 +9,7 @@ import {
     set_scene
 } from './render.js';
 import { loaders, init_loaders } from './loaders.js'
-import { init_gui, set_loader, notifications } from './gui.js'
+import { init_gui, set_loader, notifications, panes } from './gui.js'
 import { frame_object, init_controls } from './controls.js'
 import { state } from './state.js';
 import { init_inspect } from './inspect.js';
@@ -20,14 +20,13 @@ let OS_TOOLS = window.OS_TOOLS
 let is_running = false
 
 async function load_scene(scene_src) {
+    panes.file.exporting_folder.hidden = true
     scene_src = _.isString(scene_src) ? scene_src : state.scene_src
     logd(`load_scene`, scene_src)
 
     /** file existing check */
     let file_exists = OS_TOOLS.fs.existsSync(scene_src)
     
-    
-
     if (_.isString(scene_src) && scene_src.length > 0) {
         set_loader(true)
 
@@ -41,6 +40,7 @@ async function load_scene(scene_src) {
         }
 
         state.scene_src = scene_src;
+
         let scene_data = null
         write_url('file_parameter', scene_src)
         let model_format = get_mime(state.scene_src)
@@ -62,6 +62,7 @@ async function load_scene(scene_src) {
         }
         if (is_ok) {
             set_scene(scene_data.scene, scene_data.animations)
+            panes.file.exporting_folder.hidden = false
         }
     } else {
         console.log(`load_scene: attempt to load invalid src: ${scene_src}`)

@@ -100,7 +100,7 @@ const texture_flare_3 = texture_loader.load('./assets/texture/lensflare3.png');
 
 
 let sun_state = {
-    distance: 10,
+    distance: 8,
     height: 1,
     azimuth: 0.5,
     environment_multiplier: 1
@@ -600,9 +600,9 @@ function init_postfx() {
 
     ssao_pass = new SSAOPass(world, camera, window.innerWidth / 2, window.innerHeight / 2);
     ssao_pass.kernelSize = 8;
-    ssao_pass.kernelRadius = 0.007;
-    ssao_pass.minDistance = 0.00001;
-    ssao_pass.maxDistance = 0.01;
+    ssao_pass.kernelRadius = 0.0146;
+    ssao_pass.minDistance = 0.00020;
+    ssao_pass.maxDistance = 0.00100;
     // ssao_pass.output = SSAOPass.OUTPUT.SSAO
 
     let copy_pass = new ShaderPass(CopyShader); /* LinearEncoding */
@@ -640,8 +640,8 @@ function init_render() {
             },
             'postfx_ssao_min_distance': {
                 type: 'input',
-                min: 0.0000001,
-                max: 0.00001,
+                min: 0.00001,
+                max: 0.001,
                 step: 0.0000001,
                 bind: [ssao_pass, 'minDistance'],
                 label: "ssao min distance",
@@ -649,8 +649,8 @@ function init_render() {
             },
             'postfx_ssao_max_distance': {
                 type: 'input',
-                min: 0.00001,
-                max: 0.001,
+                min: 0.001,
+                max: 0.1,
                 step: 0.00001,
                 bind: [ssao_pass, 'maxDistance'],
                 label: "ssao max distance",
@@ -659,7 +659,7 @@ function init_render() {
             'postfx_ssao_kernel_radius': {
                 type: 'input',
                 min: 0.001,
-                max: 0.1,
+                max: 1,
                 step: 0.0001,
                 bind: [ssao_pass, 'kernelRadius'],
                 label: "ssao kernel radius",
