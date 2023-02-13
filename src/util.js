@@ -233,6 +233,9 @@ function get_object_metric(object) {
 function blender_watts_to_lumens(watt) {
     return (683 * watt) / (4 * Math.PI);
 }
+function get_mime(file_path){
+    return OS_TOOLS.path.extname(file_path).replace(".", '')
+}
 
 export {
     random_choice,
@@ -247,5 +250,6 @@ export {
     clamp,
     collect_scene_assets,
     get_object_metric,
-    blender_watts_to_lumens
+    blender_watts_to_lumens,
+    get_mime
 }

@@ -13,7 +13,8 @@ import { init_gui, set_loader, notifications } from './gui.js'
 import { frame_object, init_controls } from './controls.js'
 import { state } from './state.js';
 import { init_inspect } from './inspect.js';
-import { write_url, loge, logd } from './util.js';
+import { write_url, loge, logd, get_mime } from './util.js';
+import { init_exporting } from './exporting.js';
 
 let OS_TOOLS = window.OS_TOOLS
 let is_running = false
@@ -42,7 +43,7 @@ async function load_scene(scene_src) {
         state.scene_src = scene_src;
         let scene_data = null
         write_url('file_parameter', scene_src)
-        let model_format = OS_TOOLS.path.extname(state.scene_src).replace(".", '')
+        let model_format = get_mime(state.scene_src)
         let is_ok = false
         try {
             if (model_format in loaders) {
@@ -79,6 +80,7 @@ async function launch() {
     init_controls({ load_scene })
     init_loaders()
     init_inspect()
+    init_exporting()
     init_gui()
     init_render()
     /* loading assets */

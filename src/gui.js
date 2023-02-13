@@ -27,6 +27,7 @@ import {
 import { state } from './state.js';
 import { load_sample } from './app.js'
 import { build_gui, loge } from './util.js';
+import { exporting_settings, export_frame_as_image, export_scene_as_gltf, GltfExportMode } from './exporting.js';
 
 const notifications = new Notyf({
     position: {
@@ -68,6 +69,14 @@ function init_gui(params) {
     }
     panes.file = create_file_pane()
     panes.main = create_main_pane()
+
+    let empty_labels = document.querySelectorAll('.tp-lblv_l')
+    empty_labels.forEach((l) => {
+        l.classList.add('empty-label')
+        if (l.parentElement) {
+            l.parentElement.classList.add('has-empty-label')
+        }
+    })
 }
 function create_main_pane() {
     main_pane = build_gui(
@@ -474,6 +483,50 @@ function create_file_pane() {
                             }
                         }
                     },
+                }
+            },
+            'exporting_folder': {
+                type: 'folder',
+                title: '🚚 export',
+                children: {
+                    export_as_image_folder: {
+                        type: 'folder',
+                        title: 'png',
+                        children: {
+                            export_frame_as_image: {
+                                type: 'button',
+                                label: "",
+                                title: "export",
+                                on_click: export_frame_as_image
+                            },
+                        }
+                    },
+                    export_as_gltf_folder: {
+                        type: 'folder',
+                        title: 'gltf',
+                        children: {
+                            gltf_texture_size: {
+                                type: 'input',
+                                label: 'max texture size',
+                                bind: [exporting_settings.gltf, 'texture_size'],
+                                min: 32,
+                                max: 2048,
+                                step: 32
+                            },
+                            gltf_export_mode: {
+                                type: 'input',
+                                label: 'gltf/glb',
+                                bind: [exporting_settings.gltf, 'mode'],
+                                options: GltfExportMode
+                            },
+                            export_as_gltf: {
+                                type: 'button',
+                                label: "",
+                                title: "export",
+                                on_click: export_scene_as_gltf
+                            },
+                        }
+                    }
                 }
             },
             'help_folder': {

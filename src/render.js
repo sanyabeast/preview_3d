@@ -129,7 +129,7 @@ function preinit_render() {
         logarithmicDepthBuffer: USE_LOGDEPTHBUF,
         stencil: true,
         depth: true,
-        // preserveDrawingBuffer: true
+        preserveDrawingBuffer: true
     });
 
     renderer.setPixelRatio(window.devicePixelRatio * 1);
