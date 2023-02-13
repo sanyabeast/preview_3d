@@ -165,6 +165,25 @@ function collect_scene_assets(scene, extension) {
     })
 
     scene_assets.material.forEach((mat) => {
+        mat.original_material_params = {
+            alphaMap: mat.alphaMap,
+            alphaTest: mat.alphaTest,
+            opacity: mat.opacity,
+            depthWrite: mat.depthWrite,
+            depthTest: mat.depthTest,
+            blending: mat.blending,
+            side: mat.side,
+            map: mat.map,
+            emissiveMap: mat.emissiveMap,
+            roughnessMap: mat.roughnessMap,
+            normalMap: mat.normalMap,
+            transmissionMap: mat.transmissionMap,
+            transmission: mat.transmission,
+            roughness: mat.roughness,
+            metalness: mat.metalness,
+
+        }
+
         for (let k in mat) {
             if (_.isObject(mat[k]) && mat[k].isTexture === true) {
                 if (!_.find(scene_assets.texture, t => t.uuid === mat[k].uuid)) {
@@ -233,7 +252,7 @@ function get_object_metric(object) {
 function blender_watts_to_lumens(watt) {
     return (683 * watt) / (4 * Math.PI);
 }
-function get_mime(file_path){
+function get_mime(file_path) {
     return OS_TOOLS.path.extname(file_path).replace(".", '')
 }
 

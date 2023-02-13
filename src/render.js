@@ -33,6 +33,8 @@ import {
     ShaderLib,
     PointLightHelper,
     SpotLightHelper,
+    BackSide,
+    DoubleSide
 } from 'three';
 import { RoomEnvironment } from 'three/addons/environments/RoomEnvironment.js';
 import { EffectComposer } from 'three/addons/postprocessing/EffectComposer.js';
@@ -55,6 +57,7 @@ import { frame_object, watch_controls } from './controls.js';
 /** overriding alpha test code with custom alpha dithering implementation */
 ShaderChunk.alphatest_fragment = ASSETS.texts.dither_alphatest_glsl
 
+
 const WIREFRAME_MAT = new MeshBasicMaterial({ wireframe: true });
 const EMPTY_OBJECT = new Group()
 const SPHERE_R1M = new Mesh(new SphereGeometry(1, 32, 16), WIREFRAME_MAT)
@@ -66,6 +69,13 @@ const USE_LOGDEPTHBUF = false
 const DISABLE_SCENE_ALIGN = false
 const SCENIC_LIGHTS_INTENSITY_SCALE = 0.001
 const RENDER_LIGHT_NORMALIZED_INTENSITY_SCALE = 2
+
+
+const AlphaRenderingMode = {
+    Default: 0,
+    Dithered: 1,
+    DepthWrite: 2
+}
 
 let user_sun_azimuth_offset = Math.PI / 1.9
 let user_environment_azimuth_offset = 0.1;
@@ -318,31 +328,7 @@ function init_scene() {
 
     /** materials */
     /** transaprent materials */
-    scene_state.assets.material_transparent.forEach((material) => {
-        material.transparent = false
-        material.depthWrite = true
-        material.alphaTest = 0.5;
-        material.blending = NormalBlending
-    })
-
-    scene_state.assets.material_transmissive.forEach((material) => {
-        material.transparent = false
-        material.depthWrite = true
-        material.alphaTest = 0.5;
-        material.blending = NormalBlending
-        if (_.isObject(material.transmissionMap)) {
-            material.opacity = 1;
-            material.alphaMap = material.transmissionMap
-            material.transmissionMap = null
-        } else {
-            material.opacity = 1 - (material.transmission * 0.5)
-            material.roughness = 1 - material.transmission
-            material.metalness = 1
-            material.env_map_intensity_scale = 0.25
-        }
-
-        material.transmission = 0
-    })
+    set_alpha_rendering_mode(state.render_alpha_rendering_mode, false)
 
     scene_state.assets.material_emissive.forEach((material) => {
         material._emissiveIntensity = material.emissiveIntensity;
@@ -435,6 +421,95 @@ function init_scene() {
 
     handle_window_resized()
 }
+
+function set_alpha_rendering_mode(mode, render_after = true) {
+    state.render_alpha_rendering_mode = mode
+    scene_state.assets.material_transparent.forEach((material) => {
+        switch (state.render_alpha_rendering_mode) {
+            case AlphaRenderingMode.Default: {
+                material.transparent = material.original_material_params.transparent
+                material.depthWrite = material.original_material_params.depthWrite
+                material.alphaTest = material.original_material_params.alphaTest
+                material.blending = material.original_material_params.blending
+                material.side = material.original_material_params.side
+                break;
+            }
+            case AlphaRenderingMode.Dithered: {
+                material.transparent = false
+                material.depthWrite = true
+                material.alphaTest = 0.5;
+                material.blending = NormalBlending;
+                material.side = material.original_material_params.side
+                break;
+            }
+            case AlphaRenderingMode.DepthWrite: {
+                material.transparent = material.original_material_params.transparent
+                material.depthWrite = true
+                material.side = DoubleSide
+                material.alphaTest = material.original_material_params.alphaTest
+                material.blending = material.original_material_params.blending
+                break;
+            }
+        }
+    })
+
+    scene_state.assets.material_transmissive.forEach((material) => {
+        switch (state.render_alpha_rendering_mode) {
+            case AlphaRenderingMode.Default: {
+                material.alphaMap = material.original_material_params.alphaMap
+                material.transmissionMap = material.original_material_params.transmissionMap
+                material.opacity = material.original_material_params.opacity
+                material.transmission = material.original_material_params.transmission
+                material.transparent = material.original_material_params.transparent
+                material.roughness = material.original_material_params.roughness
+                material.metalness = material.original_material_params.metalness
+                material.depthWrite = material.original_material_params.depthWrite
+                material.alphaTest = material.original_material_params.alphaTest
+                material.blending = material.original_material_params.blending
+                break;
+            }
+            case AlphaRenderingMode.Dithered: {
+                material.transparent = false
+                material.depthWrite = true
+                material.alphaTest = 0.5;
+                material.blending = NormalBlending
+                if (_.isObject(material.transmissionMap)) {
+                    material.opacity = 1;
+                    material.alphaMap = material.transmissionMap
+                    material.transmissionMap = null
+                } else {
+                    material.opacity = 1 - (material.transmission * 0.5)
+                    material.roughness = 1 - material.transmission
+                    material.metalness = 1
+                    material.env_map_intensity_scale = 0.25
+                }
+
+                material.blending = NormalBlending
+                material.transmission = 0;
+                break;
+            }
+            case AlphaRenderingMode.DepthWrite: {
+                material.alphaMap = material.original_material_params.alphaMap
+                material.transmissionMap = material.original_material_params.transmissionMap
+                material.opacity = material.original_material_params.opacity
+                material.transmission = material.original_material_params.transmission
+                material.transparent = material.original_material_params.transparent
+                material.roughness = material.original_material_params.roughness
+                material.metalness = material.original_material_params.metalness
+                material.alphaTest = material.original_material_params.alphaTest
+                material.blending = material.original_material_params.blending
+                material.depthWrite = true
+                break;
+            }
+
+        }
+    })
+
+    if (render_after) {
+        notify_render()
+    }
+}
+
 let secondary_flares_map = [
     [60, 0.6],
     [70, 0.7],
@@ -855,5 +930,7 @@ export {
     scene_state,
     set_environment_rotation,
     modify_environment_rotation,
-    modify_sun_azimuth
+    modify_sun_azimuth,
+    AlphaRenderingMode,
+    set_alpha_rendering_mode
 }

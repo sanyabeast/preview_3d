@@ -83,13 +83,3 @@ if (!window.location.href.startsWith('file://')) {
     });
 
 }
-
-/** additional tools */
-const gltf_optimizer = require('./lib/gltf-optimizer').optimizer
-
-window.GLTF_OPTIMIZER_SIMPLIFY_RATIO = 1
-window.GLTF_OPTIMIZER_SIMPLIFY_ENABLED = false
-
-window.EXTRA_TOOLS = {
-    gltf_optimizer: gltf_optimizer.node
-}

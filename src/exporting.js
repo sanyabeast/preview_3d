@@ -98,11 +98,6 @@ function export_scene_as_gltf() {
                     if (result instanceof ArrayBuffer) {
                         // saveArrayBuffer( result, 'scene.glb' );
                         let buffer = Buffer.from(result)
-                        try {
-                            buffer = await EXTRA_TOOLS.gltf_optimizer(buffer, {})
-                        } catch (err) {
-                            console.error(err)
-                        }
                         await OS_TOOLS.fs.createWriteStream(file_path).write(buffer)
                         notifications.open({
                             type: 'info',

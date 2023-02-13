@@ -22,7 +22,9 @@ import {
     set_shadows_enabled,
     pilot_camera,
     set_animations_scale,
-    set_environment_rotation
+    set_environment_rotation,
+    AlphaRenderingMode,
+    set_alpha_rendering_mode
 } from './render.js';
 import { state } from './state.js';
 import { load_sample } from './app.js'
@@ -88,13 +90,6 @@ function create_main_pane() {
                     type: 'folder',
                     title: "👁️‍🗨️ Rendering",
                     children: {
-                        'postfx_enabled': {
-                            type: 'input',
-                            bind: [state, 'postfx_enabled'],
-                            label: '✨ Postfx',
-                            hidden: true,
-                            on_change: 'on_postfx_changed'
-                        },
                         'dynamic_resoltuion': {
                             type: 'input',
                             bind: [state, 'render_dynamic_resolution'],
@@ -108,35 +103,36 @@ function create_main_pane() {
                             type: 'input',
                             bind: [state, 'resolution_scale'],
                             min: 0.5, max: 1, step: 0.001,
-                            label: "🧇 Resolution",
+                            label: "Resolution",
                             on_change: ({ value }) => set_resolution_scale(value)
                         },
                         'shadows_enabled': {
                             type: 'input',
                             bind: [state, 'render_shadows_enabled'],
-                            label: '🌚 Shadows',
+                            label: 'Shadows',
                             on_change: ({ value }) => {
                                 set_shadows_enabled(value)
                             }
                         },
-                        'viewport_extra_settings': {
-                            type: 'folder',
-                            title: 'more settings',
-                            children: {
-                                'fps_limit': {
-                                    type: 'blade',
-                                    view: 'buttongrid',
-                                    size: [2, 2],
-                                    cells: (x, y) => ({
-                                        title: [
-                                            [15, 30],
-                                            [60, Infinity]
-                                        ][y][x],
-                                    }),
-                                    label: 'FPS Cap',
-                                    on_click: ({ cell }) => set_fps_limit(cell.title)
-                                },
-                            }
+                        'alpha_rendering_method': {
+                            type: 'input',
+                            bind: [state, 'render_alpha_rendering_mode'],
+                            label: 'Alpha rendering method',
+                            options: AlphaRenderingMode,
+                            on_change: ({ value }) => set_alpha_rendering_mode(value)
+                        },
+                        'fps_limit': {
+                            type: 'blade',
+                            view: 'buttongrid',
+                            size: [2, 2],
+                            cells: (x, y) => ({
+                                title: [
+                                    [15, 30],
+                                    [60, Infinity]
+                                ][y][x],
+                            }),
+                            label: 'FPS Cap',
+                            on_click: ({ cell }) => set_fps_limit(cell.title)
                         },
                     }
                 },
@@ -613,7 +609,7 @@ function check_updates() {
 function update_title() {
     let prefix = IS_MAIN_WINDOW ? '[*] ' : ''
     let sep = state.scene_src && state.scene_src.length ? '|' : ''
-    document.querySelector('head title').innerHTML = `${prefix} preview_3d ${PACKAGE_INFO.version} ${sep} ${state.scene_src} | renderer: three.js`
+    document.querySelector('head title').innerHTML = `${prefix} preview_3d ${PACKAGE_INFO.version} ${sep} ${state.scene_src} | renderer: three.js r149`
 }
 function set_loader(visible, progress) {
     is_loading = visible

@@ -42,7 +42,8 @@ const state = {
     render_environment_rotation: 0,
     render_emission_scale: 1,
     render_flares_global_intensity: 1,
-    render_flares_enabled: true
+    render_flares_enabled: true,
+    render_alpha_rendering_mode: 1
 }
 
 window.state = state
