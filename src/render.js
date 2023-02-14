@@ -53,6 +53,7 @@ import { lerp, clamp, round_to, logd, extend_gui, collect_scene_assets, get_obje
 import { refresh_gui, update_title, panes } from './gui.js';
 import { init_contact_shadows, render_contact_shadows, contact_shadow_state } from './contact_shadows.js';
 import { frame_object, watch_controls } from './controls.js';
+import { SimplifyModifier } from 'three/addons/modifiers/SimplifyModifier.js';
 
 /** overriding alpha test code with custom alpha dithering implementation */
 ShaderChunk.alphatest_fragment = ASSETS.texts.dither_alphatest_glsl
@@ -93,6 +94,9 @@ let is_document_visible = document.visibilityState === 'visible'
 let bloom_pass, ssao_pass, render_pass, fxaa_pass
 let contact_shadows_needs_update = true
 let animation_mixer = null;
+let scene_stats_gui
+
+const simplify_modifier = new SimplifyModifier();
 
 /** lens flare textures */
 const texture_flare_0 = texture_loader.load('./assets/texture/lensflare0.png');
@@ -121,6 +125,10 @@ let scene_state = {
     assets: collect_scene_assets(EMPTY_OBJECT),
     metric: get_object_metric(EMPTY_OBJECT),
     unit_scale: 1
+}
+
+scene_state.stats = {
+    ...scene_state.assets.stats
 }
 
 /** procedures */
@@ -174,7 +182,6 @@ function preinit_render() {
 function init_world() {
     const environment = new RoomEnvironment();
     const pmremGenerator = new PMREMGenerator(renderer);
-
 
     world = new Scene();
     world_transformed = new Group()
@@ -238,7 +245,6 @@ function init_world() {
     state.env_default_background = world.background
     state.env_default_texture = world.environment
 }
-
 function reset_things() {
 
     user_sun_azimuth_offset = Math.PI / 1.9
@@ -257,7 +263,6 @@ function reset_things() {
 
     refresh_gui()
 }
-
 function set_scene(scene, animations = []) {
     console.log(scene, animations)
     main_stage.visible = false
@@ -287,6 +292,7 @@ function set_scene(scene, animations = []) {
 
     main_stage.add(scene);
 
+    _update_scene_stats_gui()
     init_scene()
     update_shadows()
     update_title()
@@ -420,32 +426,77 @@ function init_scene() {
     })
 
     /**lods */
+
     _init_lods()
 
     handle_window_resized()
 }
-
 function _init_lods() {
     scene_state.assets.mesh.forEach((mesh) => {
-        let mesh_metric = get_object_metric(mesh)
-        let curve = clamp(
-            Math.pow(mesh_metric.radius, 2),
-            0.25,
-            1
-        )
-        console.log(mesh_metric.radius)
-        let lod = new LOD()
-        let parent = mesh.parent
-        lod.addLevel(mesh, 0)
-        lod.addLevel(EMPTY_OBJECT.clone(), 1000 * curve)
-        lod.position.clone(mesh.position)
-        
-        mesh.position.set(0, 0, 0)
-        parent.remove(mesh)
-        parent.add(lod)
-        console.log(mesh, lod)
+        if (!mesh.is_animated) {
+            if (_.isObject(mesh.geometry)) {
+                let mesh_metric = get_object_metric(mesh)
+                if (mesh_metric.radius < 0.175) {
+                    let curve = clamp(
+                        mesh_metric.radius,
+                        0.0075,
+                        1
+                    )
+                    console.log(mesh_metric.radius)
+                    let lod = new LOD()
+                    let parent = mesh.parent
+
+                    parent.remove(mesh)
+
+                    lod.position.clone(mesh.position)
+                    // mesh.position.set(0, 0, 0)
+
+                    lod.addLevel(mesh, 0)
+                    // lod.addLevel(_generate_lod(mesh, 0.5),5 + 5 * curve)
+                    lod.addLevel(_generate_lod2(mesh, 0.75) , 500 * Math.pow(curve, 1.5))
+                    lod.addLevel(_generate_lod2(mesh, 0.25) , 600 * Math.pow(curve, 1.5))
+                    lod.addLevel(EMPTY_OBJECT.clone()       , 700 * Math.pow(curve, 1.5))
+
+                    parent.add(lod)
+                }
+            } else {
+                console.log(`object does not have a geometry: ${mesh.name}`)
+            }
+        } else {
+            console.log(`skipping animated mesh from LOD generation: ${mesh.name}`)
+        }
+
     })
 }
+
+function _generate_lod(mesh, quality) {
+    let lod_mesh = mesh.clone();
+    let count = lod_mesh.geometry.attributes.position.count
+    lod_mesh.geometry = simplify_modifier.modify(lod_mesh.geometry, Math.floor(count * quality))
+    return lod_mesh;
+}
+
+function _generate_lod2(mesh, quality) {
+    let lod_mesh = mesh.clone();
+    let materials
+
+    if (_.isArray(lod_mesh.material)) {
+        lod_mesh.material.forEach((m, i) => {
+            lod_mesh.material[i] = m.clone()
+        })
+        materials = lod_mesh.material;
+    } else {
+        lod_mesh.material = lod_mesh.material.clone()
+        materials = [lod_mesh.material]
+    }
+    materials.forEach((m) => {
+        m.opacity = quality
+        m.alphaTest = 0.5
+    })
+    return lod_mesh
+}
+
+
 
 function set_alpha_rendering_mode(mode, render_after = true) {
     state.render_alpha_rendering_mode = mode
@@ -692,7 +743,28 @@ function init_render() {
             },
         }
     })
+
+    scene_stats_gui = extend_gui(panes.main.inspect_folder, {
+        type: 'folder',
+        title: 'scene stats',
+        children: {}
+    })
+
+    _.forEach(_.sortBy(Object.keys(scene_state.stats)), (name) => {
+        scene_stats_gui.item.addMonitor(scene_state.stats, name, {
+            interval: 1000
+        })
+    })
 }
+
+function _update_scene_stats_gui() {
+    scene_stats_gui.item.hidden = state.scene_src === ''
+    Object.assign(scene_state.stats, scene_state.assets.stats)
+    scene_stats_gui.item.children.forEach((item) => {
+        item.hidden = scene_state.stats[item.label] === 0
+    })
+}
+
 function kill_animations() {
     scene_state.assets.action.forEach(action => {
         action.enabled = false

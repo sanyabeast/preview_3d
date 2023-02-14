@@ -78,6 +78,20 @@ function build_gui(layout, props, item_data) {
 
             break;
         }
+        case 'monitor': {
+            item = item_data.item.addMonitor(layout.bind[0], layout.bind[1], {
+                label: layout.label,
+                view: layout.view,
+                multiline: layout.multiline,
+                lineCount: layout.lineCount,
+                interval: layout.interval,
+                min: layout.min,
+                max: layout.max,
+                bufferSize: layout.bufferSize,
+                hidden: layout.hidden
+            })
+            break;
+        }
         default: {
             console.log(`[panes] unknown item type: ${layout.type}`, layout)
         }
@@ -129,6 +143,7 @@ function round_to(num, div) {
 function collect_scene_assets(scene, extension) {
     let scene_assets = {
         object_disposable: [],
+        object_animated: [],
         geometry: [],
         material: [],
         material_transparent: [],
@@ -145,7 +160,12 @@ function collect_scene_assets(scene, extension) {
         bone: [],
         light: []
     }
+
+    let asset_stats = {}
+    let names = {}
+
     scene.traverse((object) => {
+        names[object.name] = object
         let category_name = object.type.toLowerCase();
         scene_assets[category_name] = scene_assets[category_name] || []
         scene_assets[category_name].push(object)
@@ -222,6 +242,28 @@ function collect_scene_assets(scene, extension) {
         }
     }
 
+    /** finding out animated objects */
+    if (scene_assets.animation) {
+        scene_assets.animation.forEach((anim_data) => {
+            anim_data.tracks.forEach((track) => {
+                let temp = track.name.split(".")
+                temp.pop()
+                let object_name = temp.join('.')
+                let object = names[object_name]
+                if (_.isObject(object)) {
+                    object.is_animated = true
+                    scene_assets.object_animated.push(object)
+                }
+            })
+        })
+    }
+
+    _.forEach(scene_assets, (category, name) => {
+        asset_stats[name] = category.length;
+    })
+
+    scene_assets.stats = asset_stats
+    scene_assets.names = names
     return scene_assets;
 }
 function get_object_metric(object) {

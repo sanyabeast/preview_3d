@@ -376,7 +376,7 @@ function create_main_pane() {
                             label: "🔮 Matcap",
                             options: _generate_list_keys(ASSETS.matcap),
                             on_change: 'on_inspect_matcap_mode_changed'
-                        },
+                        }
                     }
                 },
                 'experiments_folder': {
