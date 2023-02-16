@@ -26,11 +26,11 @@ async function load_scene(scene_src) {
 
     /** file existing check */
     let file_exists = OS_TOOLS.fs.existsSync(scene_src)
-    
+
     if (_.isString(scene_src) && scene_src.length > 0) {
         set_loader(true)
 
-        if (file_exists === false){
+        if (file_exists === false) {
             notifications.open({
                 type: 'error',
                 message: `file "${scene_src} does not exist"`,
@@ -71,6 +71,14 @@ async function load_scene(scene_src) {
     set_loader(false)
 }
 
+async function reload_scene(hard_reload = false) {
+    if (hard_reload) {
+        window.navigation.reload()
+    } else {
+        return await load_scene(state.scene_src)
+    }
+}
+
 function load_sample(sample_name) {
     load_scene(`${__dirname}/assets/samples/${ASSETS.samples[sample_name]}`)
 }
@@ -98,6 +106,7 @@ window.load_file = async function (file_path) {
 
 export {
     load_scene,
+    reload_scene,
     load_sample,
     launch,
     state

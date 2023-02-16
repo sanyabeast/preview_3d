@@ -54,6 +54,7 @@ import { refresh_gui, update_title, panes } from './gui.js';
 import { init_contact_shadows, render_contact_shadows, contact_shadow_state } from './contact_shadows.js';
 import { frame_object, watch_controls } from './controls.js';
 import { SimplifyModifier } from 'three/addons/modifiers/SimplifyModifier.js';
+import { reload_scene } from './app.js';
 
 /** overriding alpha test code with custom alpha dithering implementation */
 ShaderChunk.alphatest_fragment = ASSETS.texts.dither_alphatest_glsl
@@ -427,11 +428,13 @@ function init_scene() {
 
     /**lods */
 
-    _init_lods()
+    if (state.render_use_autolod) {
+        _init_auto_lod()
+    }
 
     handle_window_resized()
 }
-function _init_lods() {
+function _init_auto_lod() {
     scene_state.assets.mesh.forEach((mesh) => {
         if (!mesh.is_animated) {
             if (_.isObject(mesh.geometry)) {
@@ -442,7 +445,7 @@ function _init_lods() {
                         0.0075,
                         1
                     )
-                    console.log(mesh_metric.radius)
+
                     let lod = new LOD()
                     let parent = mesh.parent
 
@@ -453,9 +456,9 @@ function _init_lods() {
 
                     lod.addLevel(mesh, 0)
                     // lod.addLevel(_generate_lod(mesh, 0.5),5 + 5 * curve)
-                    lod.addLevel(_generate_lod2(mesh, 0.75) , 500 * Math.pow(curve, 1.5))
-                    lod.addLevel(_generate_lod2(mesh, 0.25) , 600 * Math.pow(curve, 1.5))
-                    lod.addLevel(EMPTY_OBJECT.clone()       , 700 * Math.pow(curve, 1.5))
+                    lod.addLevel(_generate_lod(mesh, 0.75), 500 * Math.pow(curve, 1.5))
+                    lod.addLevel(_generate_lod(mesh, 0.25), 600 * Math.pow(curve, 1.5))
+                    // lod.addLevel(EMPTY_OBJECT.clone(), 700 * Math.pow(curve, 1.5))
 
                     parent.add(lod)
                 }
@@ -483,10 +486,12 @@ function _generate_lod2(mesh, quality) {
     if (_.isArray(lod_mesh.material)) {
         lod_mesh.material.forEach((m, i) => {
             lod_mesh.material[i] = m.clone()
+            scene_state.assets.material.push(lod_mesh.material[i])
         })
         materials = lod_mesh.material;
     } else {
         lod_mesh.material = lod_mesh.material.clone()
+        scene_state.assets.material.push(lod_mesh.material)
         materials = [lod_mesh.material]
     }
     materials.forEach((m) => {
@@ -741,6 +746,18 @@ function init_render() {
                 label: "ssao kernel radius",
                 on_change: notify_render
             },
+        },
+    })
+
+    extend_gui(panes.main.experiments_folder, {
+        type: 'input',
+        min: 0.001,
+        max: 1,
+        step: 0.0001,
+        bind: [state, 'render_use_autolod'],
+        label: "use autolod",
+        on_change: () => {
+            reload_scene()
         }
     })
 

@@ -30,6 +30,12 @@ function read_url(parameter) {
     return new URLSearchParams(window.location.search).get(parameter)
 }
 function build_gui(layout, props, item_data) {
+    if (_.isArray(layout)){
+        return build_gui
+    } else if (_.isObject(layout)){
+
+    }
+
     let item = null
     item_data = item_data || {}
 
@@ -112,12 +118,10 @@ function build_gui(layout, props, item_data) {
             }
             let child_item_data = build_gui(child_layout, props, item_data)
             item_data[ref] = child_item_data.item
-
         })
     }
 
     item_data.item = item
-
     return item_data
 }
 function extend_gui(parent, layout, props) {

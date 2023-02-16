@@ -47,8 +47,6 @@ function init_controls(params) {
             prev_mouse_position.y = evt.pageY
             mouse_captured = true
         }
-
-        
     })
 
     window.addEventListener('mousemove', (evt) => {

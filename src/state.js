@@ -43,7 +43,8 @@ const state = {
     render_emission_scale: 1,
     render_flares_global_intensity: 1,
     render_flares_enabled: true,
-    render_alpha_rendering_mode: 1
+    render_alpha_rendering_mode: 1,
+    render_use_autolod: IS_DEVELOPMENT
 }
 
 window.state = state
