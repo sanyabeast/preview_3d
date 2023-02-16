@@ -456,9 +456,9 @@ function _init_auto_lod() {
 
                     lod.addLevel(mesh, 0)
                     // lod.addLevel(_generate_lod(mesh, 0.5),5 + 5 * curve)
-                    lod.addLevel(_generate_lod(mesh, 0.75), 500 * Math.pow(curve, 1.5))
-                    lod.addLevel(_generate_lod(mesh, 0.25), 600 * Math.pow(curve, 1.5))
-                    // lod.addLevel(EMPTY_OBJECT.clone(), 700 * Math.pow(curve, 1.5))
+                    lod.addLevel(_generate_lod2(mesh, 0.75), 500 * Math.pow(curve, 1.5))
+                    lod.addLevel(_generate_lod2(mesh, 0.25), 600 * Math.pow(curve, 1.5))
+                    lod.addLevel(EMPTY_OBJECT.clone(), 700 * Math.pow(curve, 1.5))
 
                     parent.add(lod)
                 }
