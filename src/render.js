@@ -70,7 +70,9 @@ const SUN_HEIGHT_SCALE = 0.666
 const USE_LOGDEPTHBUF = false
 const DISABLE_SCENE_ALIGN = false
 const SCENIC_LIGHTS_INTENSITY_SCALE = 0.001
-const RENDER_LIGHT_NORMALIZED_INTENSITY_SCALE = 2
+const SCENIC_LIGHTS_INTENSITY_TO_DITANCE_FACTOR = 0.1
+const SCENIC_LIGHT_DISTANCE_TO_DECAY_FACTOR = 10
+const RENDER_LIGHT_NORMALIZED_INTENSITY_SCALE = 1
 
 
 const AlphaRenderingMode = {
@@ -398,6 +400,17 @@ function init_scene() {
                 light._intensity = value
             }
         })
+
+        Object.defineProperty(light, 'distance', {
+            get: () => Math.pow(light._intensity, 2) * SCENIC_LIGHTS_INTENSITY_TO_DITANCE_FACTOR * state.render_scenic_light_intensity_scale
+        })
+
+        Object.defineProperty(light, 'decay', {
+            get: () => clamp(light.distance, 0.1, 1)
+        })
+
+        // light.distance = 1
+
 
         if (!panes.main.scenic_lights_list.children[light_index]) {
             let slider_data = { intensity: light._intensity_scale }
@@ -840,6 +853,7 @@ function render() {
 
                 second_stage.visible = window.RENDER_ONLY_MAIN !== true
                 renderer.render(world, render_state.render_camera);
+                // rt_renderer.render(world, render_state.render_camera);
             }
         }
         last_render_date = last_tick_date
