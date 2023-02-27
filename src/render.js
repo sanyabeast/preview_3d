@@ -393,7 +393,7 @@ function init_scene() {
                 if (state.render_disable_all_scenic_lights) {
                     return 0
                 } else {
-                    return light._intensity * light._intensity_scale * state.render_scenic_light_intensity_scale;
+                    return light._intensity * light._intensity_scale * Math.pow(state.render_scenic_light_intensity_scale, 3);
                 }
             },
             set: (value) => {
@@ -402,7 +402,7 @@ function init_scene() {
         })
 
         Object.defineProperty(light, 'distance', {
-            get: () => Math.pow(light._intensity, 2) * SCENIC_LIGHTS_INTENSITY_TO_DITANCE_FACTOR * state.render_scenic_light_intensity_scale
+            get: () => Math.pow(light._intensity, 0.5) * SCENIC_LIGHTS_INTENSITY_TO_DITANCE_FACTOR * Math.pow(state.render_scenic_light_intensity_scale, 3)
         })
 
         Object.defineProperty(light, 'decay', {

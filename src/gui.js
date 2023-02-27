@@ -173,12 +173,12 @@ function create_main_pane() {
                             step: 0.001,
                             on_change: ({ value }) => set_daytime(value)
                         },
-                        'flares': {
+                        'scenic_lighst_intensity_scale': {
                             type: 'input',
-                            bind: [state, 'render_flares_global_intensity'],
-                            label: "✨ flares",
+                            bind: [state, 'render_scenic_light_intensity_scale'],
+                            label: "🔆 Scenic light",
                             min: 0,
-                            max: 10,
+                            max: 2,
                             step: 0.001,
                             on_change: notify_render
                         },
@@ -193,10 +193,10 @@ function create_main_pane() {
                                     label: "⛔️ disable all",
                                     on_change: notify_render
                                 },
-                                'scenic_lighst_intensity_scale': {
+                                'flares': {
                                     type: 'input',
-                                    bind: [state, 'render_scenic_light_intensity_scale'],
-                                    label: "🔆 overall intensity",
+                                    bind: [state, 'render_flares_global_intensity'],
+                                    label: "✨ flares",
                                     min: 0,
                                     max: 10,
                                     step: 0.001,
