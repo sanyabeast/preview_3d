@@ -23,7 +23,7 @@ const state = {
     application_has_updates: '',
     check_updates: true,
     inspect_mode: '',
-    inspect_show_gizmo: true,
+    inspect_show_gizmo: false,
     inspect_matcap_file: '',
     inspect_matcap_mode: '',
     render_fps_limit: IS_MACOS ? Infinity : Infinity,
@@ -44,7 +44,9 @@ const state = {
     render_flares_global_intensity: 1,
     render_flares_enabled: true,
     render_alpha_rendering_mode: 1,
-    render_use_autolod: false
+    render_use_autolod: false,
+    render_ground_level: 0,
+    render_fog_brightness: 0.5
 }
 
 window.state = state

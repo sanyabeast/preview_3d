@@ -24,7 +24,9 @@ import {
     set_animations_scale,
     set_environment_rotation,
     AlphaRenderingMode,
-    set_alpha_rendering_mode
+    set_alpha_rendering_mode,
+    set_ground_level,
+    set_fog_brightness
 } from './render.js';
 import { state } from './state.js';
 import { load_sample } from './app.js'
@@ -114,6 +116,15 @@ function create_main_pane() {
                                 set_shadows_enabled(value)
                             }
                         },
+                        'ground_level': {
+                            type: 'input',
+                            bind: [state, 'render_ground_level'],
+                            min: -1,
+                            max: 1,
+                            step: 0.01,
+                            label: 'Ground Level',
+                            on_change: ({ value }) => set_ground_level(value)
+                        },
                         'alpha_rendering_method': {
                             type: 'input',
                             bind: [state, 'render_alpha_rendering_mode'],
@@ -134,6 +145,7 @@ function create_main_pane() {
                             label: 'FPS Cap',
                             on_click: ({ cell }) => set_fps_limit(cell.title)
                         },
+
                     }
                 },
                 'camera_settings_folder': {
@@ -176,38 +188,20 @@ function create_main_pane() {
                         'scenic_lighst_intensity_scale': {
                             type: 'input',
                             bind: [state, 'render_scenic_light_intensity_scale'],
-                            label: "🔆 Scenic light",
+                            label: "🔆 Scenic lights intensity",
                             min: 0,
                             max: 2,
                             step: 0.001,
                             on_change: notify_render
                         },
-                        'scenic_lights_folder': {
-                            type: 'folder',
-                            title: '💡 Scenic Lights',
-                            expanded: false,
-                            children: {
-                                'disable_lights': {
-                                    type: 'input',
-                                    bind: [state, 'render_disable_all_scenic_lights'],
-                                    label: "⛔️ disable all",
-                                    on_change: notify_render
-                                },
-                                'flares': {
-                                    type: 'input',
-                                    bind: [state, 'render_flares_global_intensity'],
-                                    label: "✨ flares",
-                                    min: 0,
-                                    max: 10,
-                                    step: 0.001,
-                                    on_change: notify_render
-                                },
-                                'scenic_lights_list': {
-                                    type: 'folder',
-                                    title: 'lights list',
-                                    expanded: true
-                                }
-                            }
+                        'flares': {
+                            type: 'input',
+                            bind: [state, 'render_flares_global_intensity'],
+                            label: "✨ flares",
+                            min: 0,
+                            max: 10,
+                            step: 0.001,
+                            on_change: notify_render
                         },
                         'environtment_settings_folder': {
                             type: 'folder',
@@ -325,6 +319,24 @@ function create_main_pane() {
                                 },
                             }
                         },
+                        'scenic_lights_folder': {
+                            type: 'folder',
+                            title: '💡 Scenic Lights settings',
+                            expanded: false,
+                            children: {
+                                'disable_lights': {
+                                    type: 'input',
+                                    bind: [state, 'render_disable_all_scenic_lights'],
+                                    label: "⛔️ disable all",
+                                    on_change: notify_render
+                                },
+                                'scenic_lights_list': {
+                                    type: 'folder',
+                                    title: 'lights list',
+                                    expanded: true
+                                }
+                            }
+                        },
                     }
                 },
                 'animations_folder': {
@@ -382,7 +394,50 @@ function create_main_pane() {
                 'experiments_folder': {
                     type: 'folder',
                     title: "🥼 Experiments",
-                    children: {}
+                    children: {
+                        fog_settings: {
+                            type: 'folder',
+                            title: 'fog',
+                            children: {
+                                'fog_density': {
+                                    type: 'input',
+                                    bind: [world.fog, 'density'],
+                                    min: 0,
+                                    max: 1,
+                                    step: 0.01,
+                                    label: 'fog_density',
+                                    on_change: notify_render
+                                },
+                                'fog_height_distribution': {
+                                    type: 'input',
+                                    bind: [world.fog, 'fogHeightDistribution'],
+                                    min: -5,
+                                    max: 5,
+                                    step: 0.01,
+                                    label: 'fog_height_distribution',
+                                    on_change: notify_render
+                                },
+                                'fog_height_distribution_offset': {
+                                    type: 'input',
+                                    bind: [world.fog, 'fogHeightDistributionOffset'],
+                                    min: -1,
+                                    max: 1,
+                                    step: 0.01,
+                                    label: 'fog_height_distribution_offset',
+                                    on_change: notify_render
+                                },
+                                'fog_brightness': {
+                                    type: 'input',
+                                    bind: [state, 'render_fog_brightness'],
+                                    min: 0,
+                                    max: 1,
+                                    step: 0.01,
+                                    label: 'fog_brightness',
+                                    on_change: ({ value }) => set_fog_brightness(value)
+                                },
+                            }
+                        }
+                    }
                 },
             }
         },

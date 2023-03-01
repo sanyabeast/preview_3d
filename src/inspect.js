@@ -120,6 +120,7 @@ function init_inspect() {
     grid_helper.material.opacity = 0.1;
     grid_helper.material.depthWrite = false;
     grid_helper.material.transparent = true;
+    grid_helper.visible = state.inspect_show_gizmo
     second_stage.add(grid_helper);
     axes_helper.visible = false
 

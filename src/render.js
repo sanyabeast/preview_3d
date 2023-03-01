@@ -34,7 +34,8 @@ import {
     PointLightHelper,
     SpotLightHelper,
     BackSide,
-    DoubleSide
+    DoubleSide,
+    FogExp2
 } from 'three';
 import { RoomEnvironment } from 'three/addons/environments/RoomEnvironment.js';
 import { EffectComposer } from 'three/addons/postprocessing/EffectComposer.js';
@@ -55,6 +56,7 @@ import { init_contact_shadows, render_contact_shadows, contact_shadow_state } fr
 import { frame_object, watch_controls } from './controls.js';
 import { SimplifyModifier } from 'three/addons/modifiers/SimplifyModifier.js';
 import { reload_scene } from './app.js';
+import { gizmo } from './inspect.js';
 
 /** overriding alpha test code with custom alpha dithering implementation */
 ShaderChunk.alphatest_fragment = ASSETS.texts.dither_alphatest_glsl
@@ -155,7 +157,8 @@ function preinit_render() {
 
     renderer.setPixelRatio(window.devicePixelRatio * 1);
     renderer.setSize(window.innerWidth, window.innerHeight);
-    renderer.toneMappingExposure = 1;
+    renderer.toneMappingExposure = 0;
+    console.log(renderer.outputEncoding)
     renderer.outputEncoding = sRGBEncoding;
     renderer.gammaFactor = 1
     renderer.shadowMap.enabled = state.render_shadows_enabled;
@@ -197,6 +200,11 @@ function init_world() {
 
     world.backgroundBlurriness = 1
     world.backgroundIntensity = 1
+
+    world.fog = new FogExp2(0x808080, 0.5)
+    world.fog.fogHeightDistribution = 1
+    world.fog.fogHeightDistributionOffset = 0
+    set_fog_brightness(state.render_fog_brightness)
 
     Object.defineProperty(world, 'render_flares', {
         get() {
@@ -250,9 +258,11 @@ function init_world() {
 }
 function reset_things() {
 
+
     user_sun_azimuth_offset = Math.PI / 1.9
     user_environment_azimuth_offset = 0.1;
 
+    set_ground_level(0)
     state.render_flares_global_intensity = 1
     state.render_emission_scale = 1
     state.render_global_timescale = 1
@@ -316,10 +326,8 @@ function _align_scene() {
     /**updaing metrics after transformation! */
     scene_metric = scene_state.metric = get_object_metric(scene)
 
-    scene_state.scene.position.y = Math.abs(scene_metric.nudge) > 0.25 ? -scene_metric.box.min.y : 0;
-    if (scene_metric.box.min.y > 0) {
-        scene_state.scene.position.y = -scene_metric.box.min.y
-    }
+    // scene_state.scene.position.y = Math.abs(scene_metric.nudge) > 0.25 ? -scene_metric.box.min.y : 0;
+    set_ground_level(scene_metric.box.min.y, true)
     scene_state.scene.position.x = -scene_metric.center.x;
     scene_state.scene.position.z = -scene_metric.center.z;
 
@@ -1020,6 +1028,22 @@ function modify_sun_azimuth(delta) {
     set_sun_azimuth(state.render_sun_azimuth)
 }
 
+function set_ground_level(value, update_gui = false) {
+    console.log(value)
+    state.render_ground_level = value - 0.0025
+    contact_shadow_state.shadow.group.position.y = value - 0.0025
+    gizmo.grid_helper.position.y = value
+    if (update_gui) {
+        panes.main.ground_level.refresh();
+    }
+    update_matrix()
+}
+
+function set_fog_brightness(value) {
+    world.fog.color.setRGB(value, value, value)
+    notify_render()
+}
+
 preinit_render()
 
 window.scene_state = scene_state
@@ -1060,5 +1084,7 @@ export {
     modify_environment_rotation,
     modify_sun_azimuth,
     AlphaRenderingMode,
-    set_alpha_rendering_mode
+    set_alpha_rendering_mode,
+    set_ground_level,
+    set_fog_brightness
 }
