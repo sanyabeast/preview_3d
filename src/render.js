@@ -148,11 +148,12 @@ function preinit_render() {
     document.body.classList.add(window.IS_DEVELOPMENT ? 'development' : 'production')
 
     renderer = new WebGLRenderer({
-        antialias: true,
+        antialias: !IS_LINUX,
         logarithmicDepthBuffer: USE_LOGDEPTHBUF,
         stencil: true,
         depth: true,
-        preserveDrawingBuffer: true
+        preserveDrawingBuffer: !IS_LINUX,
+        precision: 'lowp'
     });
 
     renderer.setPixelRatio(window.devicePixelRatio * 1);
@@ -201,10 +202,6 @@ function init_world() {
     world.backgroundBlurriness = 1
     world.backgroundIntensity = 1
 
-    world.fog = new FogExp2(0x808080, 0.5)
-    world.fog.fogHeightDistribution = 1
-    world.fog.fogHeightDistributionOffset = 0
-    set_fog_brightness(state.render_fog_brightness)
 
     Object.defineProperty(world, 'render_flares', {
         get() {
@@ -445,6 +442,14 @@ function init_scene() {
     panes.main.scenic_lights_folder.hidden = scene_state.assets.light.length === 0;
     panes.main.scenic_lights_list.children.forEach((child, index) => {
         child.hidden = index >= scene_state.assets.light.length
+    })
+
+    scene_state.assets.material.forEach((material, index)=>{
+        if (IS_LINUX){
+            material.normalMap = null;
+            material.bumpMap = null;
+            console.log(material)
+        }
     })
 
     /**lods */
@@ -1039,11 +1044,6 @@ function set_ground_level(value, update_gui = false) {
     update_matrix()
 }
 
-function set_fog_brightness(value) {
-    world.fog.color.setRGB(value, value, value)
-    notify_render()
-}
-
 preinit_render()
 
 window.scene_state = scene_state
@@ -1085,6 +1085,5 @@ export {
     modify_sun_azimuth,
     AlphaRenderingMode,
     set_alpha_rendering_mode,
-    set_ground_level,
-    set_fog_brightness
+    set_ground_level
 }

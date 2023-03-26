@@ -19,6 +19,7 @@ const shell = require('electron').shell;
 window.IS_MAIN_WINDOW = true
 window.IS_WINDOW_FOCUSED = true
 window.IS_MACOS = process.platform === 'darwin'
+window.IS_LINUX = process.platform === 'linux'
 
 window.open_browser = (url) => {
     shell.openExternal(url)

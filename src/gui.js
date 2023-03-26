@@ -25,8 +25,7 @@ import {
     set_environment_rotation,
     AlphaRenderingMode,
     set_alpha_rendering_mode,
-    set_ground_level,
-    set_fog_brightness
+    set_ground_level
 } from './render.js';
 import { state } from './state.js';
 import { load_sample } from './app.js'
@@ -393,51 +392,7 @@ function create_main_pane() {
                 },
                 'experiments_folder': {
                     type: 'folder',
-                    title: "🥼 Experiments",
-                    children: {
-                        fog_settings: {
-                            type: 'folder',
-                            title: 'fog',
-                            children: {
-                                'fog_density': {
-                                    type: 'input',
-                                    bind: [world.fog, 'density'],
-                                    min: 0,
-                                    max: 1,
-                                    step: 0.01,
-                                    label: 'fog_density',
-                                    on_change: notify_render
-                                },
-                                'fog_height_distribution': {
-                                    type: 'input',
-                                    bind: [world.fog, 'fogHeightDistribution'],
-                                    min: -5,
-                                    max: 5,
-                                    step: 0.01,
-                                    label: 'fog_height_distribution',
-                                    on_change: notify_render
-                                },
-                                'fog_height_distribution_offset': {
-                                    type: 'input',
-                                    bind: [world.fog, 'fogHeightDistributionOffset'],
-                                    min: -1,
-                                    max: 1,
-                                    step: 0.01,
-                                    label: 'fog_height_distribution_offset',
-                                    on_change: notify_render
-                                },
-                                'fog_brightness': {
-                                    type: 'input',
-                                    bind: [state, 'render_fog_brightness'],
-                                    min: 0,
-                                    max: 1,
-                                    step: 0.01,
-                                    label: 'fog_brightness',
-                                    on_change: ({ value }) => set_fog_brightness(value)
-                                },
-                            }
-                        }
-                    }
+                    title: "🥼 Experiments"
                 },
             }
         },
@@ -543,6 +498,7 @@ function create_file_pane() {
                     export_as_image_folder: {
                         type: 'folder',
                         title: 'png',
+                        hidden: IS_LINUX,
                         children: {
                             export_frame_as_image: {
                                 type: 'button',
