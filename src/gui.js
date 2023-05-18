@@ -392,7 +392,15 @@ function create_main_pane() {
                 },
                 'experiments_folder': {
                     type: 'folder',
-                    title: "🥼 Experiments"
+                    title: "🥼 Experiments",
+                    children: {
+                        'render_use_vertex_colors': {
+                            type: 'input',
+                            bind: [state, 'render_use_vertex_colors'],
+                            label: "Vertex Colors",
+                            on_change: notify_render
+                        }
+                    }
                 },
             }
         },

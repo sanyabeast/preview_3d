@@ -344,7 +344,7 @@ function init_scene() {
     /** transaprent materials */
     set_alpha_rendering_mode(state.render_alpha_rendering_mode, false)
 
-    scene_state.assets.material_emissive.forEach((material) => {
+    scene_state.assets.material.forEach((material) => {
         material._emissiveIntensity = material.emissiveIntensity;
         Object.defineProperty(material, 'emissiveIntensity', {
             get() {
@@ -444,12 +444,18 @@ function init_scene() {
         child.hidden = index >= scene_state.assets.light.length
     })
 
-    scene_state.assets.material.forEach((material, index)=>{
-        if (IS_LINUX){
+    scene_state.assets.material.forEach((material, index) => {
+        if (IS_LINUX) {
             material.normalMap = null;
             material.bumpMap = null;
             console.log(material)
         }
+
+        Object.defineProperty(material, 'vertexColors', {
+            get() {
+                return state.render_use_vertex_colors
+            }
+        })
     })
 
     /**lods */
