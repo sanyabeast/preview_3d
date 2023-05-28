@@ -46,7 +46,11 @@ const state = {
     render_alpha_rendering_mode: 1,
     render_use_autolod: false,
     render_ground_level: 0,
-    render_fog_brightness: 0.5
+    render_fog_brightness: 0.5,
+    render_vertex_color: true,
+    render_baked_light_intensity: 0.99,
+    render_baked_light_decay: 0.99,
+    render_baked_light_tint: 0
 }
 
 window.state = state

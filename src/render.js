@@ -444,12 +444,36 @@ function init_scene() {
         child.hidden = index >= scene_state.assets.light.length
     })
 
-    scene_state.assets.material.forEach((material, index)=>{
-        if (IS_LINUX){
+    scene_state.assets.material.forEach((material, index) => {
+        if (IS_LINUX) {
             material.normalMap = null;
             material.bumpMap = null;
             console.log(material)
         }
+
+        Object.defineProperty(material, 'bakedLightIntensity', {
+            get() {
+                return state.render_baked_light_intensity
+            }
+        })
+
+        Object.defineProperty(material, 'bakedLightDecay', {
+            get() {
+                return state.render_baked_light_decay
+            }
+        })
+
+        Object.defineProperty(material, 'bakedLightTint', {
+            get() {
+                return state.render_baked_light_tint
+            }
+        })
+
+        Object.defineProperty(material, 'vertexColors', {
+            get() {
+                return state.render_vertex_color
+            }
+        })
     })
 
     /**lods */
@@ -1042,6 +1066,50 @@ function set_ground_level(value, update_gui = false) {
         panes.main.ground_level.refresh();
     }
     update_matrix()
+}
+function patch_material(mat) {
+    console.log(mat)
+    // mat.onBeforeCompile = function (shader) {
+    // print(shader.uniforms);
+    // shader.uniforms.bakedLightIntensity = {
+    //     get value() {
+    //         return 1
+    //     }
+    // }
+
+    // shader.uniforms.bakedLightDecay = {
+    //     get value() {
+    //         return 1
+    //     }
+    // }
+
+    // let pars_code = `
+    // #if defined(USE_COLOR)
+    //     uniform float bakedLightIntensity;
+    //     uniform float bakedLightDecay;
+    // #endif
+    // `
+    // let main_code = `
+    // #if defined( USE_COLOR )
+    //     irradiance += (vColor.rgb * 3.14) * bakedLightIntensity;
+    //     float blDecay = max(0.5, bakedLightDecay);
+    //     reflectedLight.indirectDiffuse += (vec3(pow(vColor.r, blDecay), pow(vColor.g, blDecay), pow(vColor.b, blDecay)) * 3.14) * bakedLightIntensity;
+    // #endif
+    // `
+
+    // let main_code2 = `
+    // #if defined( USE_COLOR )
+    //     /** stubbed */
+    // #endif
+    // `
+
+    // shader.fragmentShader = `
+    //     ${pars_code}
+    //     ${shader.fragmentShader
+    //         .replace("#include <lights_fragment_begin>", `#include <lights_fragment_begin>\n${main_code}`)
+    //         .replace("#include <color_fragment>", `${main_code2}\n`)}
+    // `
+    // }
 }
 
 preinit_render()

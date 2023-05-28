@@ -336,6 +336,49 @@ function create_main_pane() {
                                 }
                             }
                         },
+                        'baked_lights_settings': {
+                            type: 'folder',
+                            title: '💡 Baked Lights (Vertex Color)',
+                            expanded: false,
+                            children: {
+                                'render_vertex_color_enabled': {
+                                    type: 'input',
+                                    bind: [state, 'render_vertex_color'],
+                                    label: 'Enabled',
+                                    on_change: ({ value }) => {
+                                        refresh_gui();
+                                        notify_render();
+                                    }
+                                },
+                                'render_baked_light_intensity': {
+                                    type: 'input',
+                                    bind: [state, 'render_baked_light_intensity'],
+                                    label: "Light Intensity",
+                                    min: 0,
+                                    max: 4,
+                                    step: 0.001,
+                                    on_change: notify_render
+                                },
+                                'render_baked_light_decay': {
+                                    type: 'input',
+                                    bind: [state, 'render_baked_light_decay'],
+                                    label: "Light Decay",
+                                    min: 0,
+                                    max: 2,
+                                    step: 0.001,
+                                    on_change: notify_render
+                                },
+                                'render_baked_light_tint': {
+                                    type: 'input',
+                                    bind: [state, 'render_baked_light_tint'],
+                                    label: "Tint (Default VColor Processing)",
+                                    min: 0,
+                                    max: 1,
+                                    step: 0.001,
+                                    on_change: notify_render
+                                },
+                            }
+                        },
                     }
                 },
                 'animations_folder': {
