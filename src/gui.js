@@ -338,7 +338,7 @@ function create_main_pane() {
                         },
                         'baked_lights_settings': {
                             type: 'folder',
-                            title: '💡 Baked Lights (Vertex Color)',
+                            title: '🔥 Baked Lights (Vertex Color)',
                             expanded: false,
                             children: {
                                 'render_vertex_color_enabled': {
@@ -368,9 +368,9 @@ function create_main_pane() {
                                     step: 0.001,
                                     on_change: notify_render
                                 },
-                                'render_baked_light_tint': {
+                                'render_baked_light_shadowing': {
                                     type: 'input',
-                                    bind: [state, 'render_baked_light_tint'],
+                                    bind: [state, 'render_baked_light_shadowing'],
                                     label: "Tint (Default VColor Processing)",
                                     min: 0,
                                     max: 1,

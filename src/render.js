@@ -463,9 +463,9 @@ function init_scene() {
             }
         })
 
-        Object.defineProperty(material, 'bakedLightTint', {
+        Object.defineProperty(material, 'bakedLightShadowing', {
             get() {
-                return state.render_baked_light_tint
+                return state.render_baked_light_shadowing
             }
         })
 
