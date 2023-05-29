@@ -371,7 +371,7 @@ function create_main_pane() {
                                 'render_baked_light_shadowing': {
                                     type: 'input',
                                     bind: [state, 'render_baked_light_shadowing'],
-                                    label: "Tint (Default VColor Processing)",
+                                    label: "Shadowing",
                                     min: 0,
                                     max: 1,
                                     step: 0.001,
