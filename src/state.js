@@ -50,7 +50,7 @@ const state = {
     render_vertex_color: true,
     render_baked_light_intensity: 1,
     render_baked_light_decay: 1,
-    render_baked_light_shadowing: 0.5
+    render_baked_light_shadowing: 0.5,
 }
 
 window.state = state

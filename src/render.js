@@ -451,6 +451,8 @@ function init_scene() {
             console.log(material)
         }
 
+        let has_vertex_color_attr = material._original_mesh.geometry.attributes['color'] != undefined
+
         Object.defineProperty(material, 'bakedLightIntensity', {
             get() {
                 return state.render_baked_light_intensity
@@ -468,10 +470,12 @@ function init_scene() {
                 return state.render_baked_light_shadowing
             }
         })
+        
+       
 
         Object.defineProperty(material, 'vertexColors', {
             get() {
-                return state.render_vertex_color
+                return has_vertex_color_attr && state.render_vertex_color
             }
         })
     })
