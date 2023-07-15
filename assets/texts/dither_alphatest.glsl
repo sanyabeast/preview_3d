@@ -1,3 +1,5 @@
+
+
 #ifdef USE_ALPHATEST
 float ad_pi = 3.14159;
 float ad_dsq2 = 2.;
@@ -19,11 +21,7 @@ float ad_pat_b = (ad_x_cosine_b + ad_y_cosine_b);
 	// 	2.
 	// );
 
-alpha_dithered = mix(
-	((ad_pat_a + ad_pat_b) / ad_dsq2) * (ad_orig_alpha) * ad_dsq2, 
-	((ad_pat_a + ad_pat_b) / ad_dsq2) + (ad_orig_alpha) * ad_dsq2, 
-	ad_orig_alpha
-);
+alpha_dithered = mix(((ad_pat_a + ad_pat_b) / ad_dsq2) * (ad_orig_alpha) * ad_dsq2, ((ad_pat_a + ad_pat_b) / ad_dsq2) + (ad_orig_alpha) * ad_dsq2, ad_orig_alpha);
 
 if(alpha_dithered < alphaTest) discard;
 #endif

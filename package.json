@@ -11,6 +11,7 @@
         "start-sample": "npm run prebuild && cross-env NODE_ENV=development electron . assets/samples/Teapot.glb",
         "start-sample-alt": "npm run prebuild && cross-env NODE_ENV=development electron . assets/samples/Teapot.glb",
         "start": "npm run prebuild && cross-env NODE_ENV=development electron .",
+        "web": "npm run prebuild && cross-env NODE_ENV=development http-server -p 8000",
         "release": "npm version patch --no-git-tag-version",
         "make": "npm run prebuild && electron-builder --dir --config build.config.json",
         "bundle": "npm run prebuild && electron-builder --config build.config.json"

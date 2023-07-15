@@ -59,8 +59,13 @@ import { reload_scene } from './app.js';
 import { gizmo } from './inspect.js';
 
 /** overriding alpha test code with custom alpha dithering implementation */
-ShaderChunk.alphatest_fragment = ASSETS.texts.dither_alphatest_glsl
+// ShaderChunk.alphatest_fragment = ASSETS.texts.dither_alphatest2_glsl
 
+const screenDoorTexture = texture_loader.load('./assets/screendoor.png')
+
+
+ShaderChunk.dither_alphatest =  ASSETS.texts.dither_alphatest_glsl;
+ShaderChunk.dither_alphatest2 = ASSETS.texts.dither_alphatest2_glsl;
 
 const WIREFRAME_MAT = new MeshBasicMaterial({ wireframe: true });
 const EMPTY_OBJECT = new Group()
@@ -451,6 +456,8 @@ function init_scene() {
             console.log(material)
         }
 
+        material.screenDoorTexture = screenDoorTexture
+
         let has_vertex_color_attr = material._original_mesh.geometry.attributes['color'] != undefined
 
         Object.defineProperty(material, 'bakedLightIntensity', {
@@ -470,8 +477,8 @@ function init_scene() {
                 return state.render_baked_light_shadowing
             }
         })
-        
-       
+
+
 
         Object.defineProperty(material, 'vertexColors', {
             get() {
